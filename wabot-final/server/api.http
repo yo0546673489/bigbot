@@ -1,0 +1,488 @@
+### Variables
+@baseUrl = http://localhost:7878/api
+# @baseUrl = https://bot.pro-digital.org/api
+@phoneNumber = 84975868449
+@businessId = 1078756750807219
+
+### Registration Flow Tests
+# Step 1: Start
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg1",
+          "timestamp": "1234567890",
+          "text": {
+            "body": "menu"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Registration Flow Tests
+# Step 1: Start Registration
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg1",
+          "timestamp": "1234567890",
+          "text": {
+            "body": "register"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Step 2: Send Full Name
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg2",
+          "timestamp": "1234567891",
+          "text": {
+            "body": "John Doe"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Step 3: Send Dob
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg3",
+          "timestamp": "1234567892",
+          "text": {
+            "body": "12/10/1991"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Step 4: Send Vehicle Type
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg6",
+          "timestamp": "1234567895",
+          "text": {
+            "body": "1"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Step 6: Send Clothing Type
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg6",
+          "timestamp": "1234567895",
+          "text": {
+            "body": "2"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+
+### Step 10: Confirm Registration
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg10",
+          "timestamp": "1234567899",
+          "text": {
+            "body": "confirm"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Test Menu After Registration
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.menu1",
+          "timestamp": "1234567900",
+          "text": {
+            "body": "menu"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Test Registration for Already Registered Driver
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg11",
+          "timestamp": "1234567901",
+          "text": {
+            "body": "register"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Test Hebrew Registration Flow
+# Step 1: Start Registration in Hebrew
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg12",
+          "timestamp": "1234567902",
+          "text": {
+            "body": "הרשמה"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Test Invalid Input During Registration
+# Send invalid email
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg13",
+          "timestamp": "1234567903",
+          "text": {
+            "body": "invalid-email"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+### Test Cancel Registration
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.reg14",
+          "timestamp": "1234567904",
+          "text": {
+            "body": "cancel"
+          },
+          "type": "text"
+        }]
+      }
+    }]
+  }]
+}
+
+ 
+### Test Interactive Message with URL Button
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": "whatsapp_business_account",
+  "entry": [{
+    "id": "{{businessId}}",
+    "changes": [{
+      "value": {
+        "messaging_product": "whatsapp",
+        "metadata": {
+          "display_phone_number": "PHONE_NUMBER",
+          "phone_number_id": "PHONE_NUMBER_ID"
+        },
+        "messages": [{
+          "from": "{{phoneNumber}}",
+          "id": "wamid.test1",
+          "timestamp": "1234567901",
+          "interactive": {
+            "type": "button",
+            "button_reply": {
+              "id": "support",
+              "title": "Support"
+            }
+          },
+          "type": "interactive"
+        }]
+      }
+    }]
+  }]
+}
+
+### Test Interactive Message with URL Button
+POST {{baseUrl}}/travelbot/webhook
+Content-Type: application/json
+
+{
+  "object": { "test": 123},
+  "entry": [
+    {
+      "changes": [
+        {
+          "value": {
+            "messages": [
+              {
+                "context": {
+                  "from": "15557626964",
+                  "id": "wamid.HBgLODQ5NzU4Njg0NDkVAgARGBJFMkUyMTY4NTkyM0VGRUVEMjIA"
+                },
+                "from": "84975868449",
+                "id": "wamid.HBgLODQ5NzU4Njg0NDkVAgASGBQzQTNCN0IxQUEzNEI3Q0Y5MEEwRAA=",
+                "timestamp": "1749744161",
+                "type": "interactive",
+                "interactive": {
+                  "type": "button_reply",
+                  "button_reply": {
+                    "id": "driverResponseToGroupButton_120363421138171784@g.us_false_120363421138171784@g.us_6C7E17D4B27E4D82D9CB52AA3EB758E3_187978437656721@lid",
+                    "title": "ת"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+   
+ }
+
+### Test WhatsApp API - Send Interactive Message with URL Button
+POST https://graph.facebook.com/v23.0/{{$dotenv WHATSAPP_PHONE_NUMBER_ID}}/messages
+Content-Type: application/json
+Authorization: Bearer {{$dotenv WHATSAPP_TOKEN}}
+
+{
+  "messaging_product": "whatsapp",
+  "to": "{{phoneNumber}}",
+  "type": "template",
+  "template": {
+    "name": "support_button_he",
+    "language": {
+      "code": "he"
+    },
+    "components": [
+      {
+        "type": "body" 
+      }
+    ]
+  }
+}
+
+###
+POST https://api.invoice4u.co.il/api/payment/CreatePayment
+Content-Type: application/json
+Authorization: Bearer 3e7c8fe1-65d6-4b56-b6c8-38024de8936b
+
+Body:
+{
+  "amount": 22,
+  "currency": "ILS",
+  "description": "Bot service payment",
+  "redirectUrl": "https://yourwebsite.com/thankyou",
+  "notifyUrl": "https://yourserver.com/api/invoice4u/webhook",
+  "customFields": {
+    "phone": "0541234567",
+    "userId": "driver_928"
+  }
+}
+
+###
+POST {{baseUrl}}/payment/webhook/credit
+Content-Type: application/json
+
+{
+  "paymentsNum": "1",
+  "ownerId": "326042843",
+  "cardSuffix": "9628",
+  "cardExpDate": "0430",
+  "clientName": "The nanme",
+  "clientPhone": "972508917834",
+  "clientEmail": "a0583226155@gmail.com",
+  "clearingConfirmation": "088920",
+  "productIdI4U": "45267",
+  "productName": "The product name",
+  "jsonParamsBase64": "ewogICJwYXltZW50c051bSI6ICIxIiwKICAib3duZXJJZCI6ICIzMjYwNDI4NDMiLAogICJjYXJkU3VmZml4IjogIjk2MjgiLAogICJjYXJkRXhwRGF0ZSI6ICIwNDMwIiwKICAiY2xpZW50TmFtZSI6ICJUaGUgbmFubWUiLAogICJjbGllbnRQaG9uZSI6ICI5NzI1MDg5MTc4MzQiLAogICJjbGllbnRFbWFpbCI6ICJhMDU4MzIyNjE1NUBnbWFpbC5jb20iLAogICJjbGVhcmluZ0NvbmZpcm1hdGlvbiI6ICIwODg5MjAiLAogICJwcm9kdWN0SWRJNFUiOiAiNDUyNjciLAogICJwcm9kdWN0TmFtZSI6ICJUaGUgcHJvZHVjdCBuYW1lIgp9"
+}

@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Go binaries
+wabot-final/wabot/wabot.exe
+*.exe
+
+# Environment files
+.env
+.env.local
+.env.*.local
+wabot-final/server/.env
+wabot-final/wabot/.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Database files
+*.db
+*.sqlite
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Claude
+.claude/
+
+# Temporary
+*.tmp
+*.temp
+
+# Coverage
+coverage/
+.nyc_output
+
+# PM2
+.pm2/

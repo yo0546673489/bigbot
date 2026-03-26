@@ -1,0 +1,6 @@
+dist
+node_modules
+waweb-data
+.env
+.env
+.wwebjs_cache

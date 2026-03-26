@@ -1,0 +1,17 @@
+version: '3'
+services:
+  travelbot-backend:
+    build: ./server
+    image: travelbot-backend:latest
+    container_name: travelbot-backend-build
+
+  travelbot-frontend:
+    build: ./client
+    image: travelbot-frontend:latest
+    container_name: travelbot-frontend-build
+
+  wabot:
+    build: ./wabot
+    image: wabot:latest
+    container_name: wabot-build
+    

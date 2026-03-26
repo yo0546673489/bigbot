@@ -1,0 +1,25 @@
+version: '3.8'
+
+# סביבת פיתוח מקומית - MongoDB + Redis בלבד
+# השרת והבוט רצים ישירות (לא בdocker) לנוחות פיתוח
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: wabot_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - wabot_mongo_data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: wabot_redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+volumes:
+  wabot_mongo_data:

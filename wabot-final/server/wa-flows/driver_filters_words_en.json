@@ -1,0 +1,76 @@
+{
+    "name": "driver_filters_words_en",
+    "header": "Select items",
+    "body": "Accepting trips by vehicle type, such as minibus and more",
+    "cta": "Start",
+    "flow_token": "driver_filters_vehicle_type",
+    "data": {
+        "version": "7.1",
+        "screens": [
+            {
+                "id": "driver_filters_words_en",
+                "title": "Select items",
+                "terminal": true,
+                "success": true,
+                "data": {},
+                "layout": {
+                    "type": "SingleColumnLayout",
+                    "children": [
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "vehicle_types",
+                            "label": "Select all vehicle types you would like to receive rides from",
+                            "data-source": [
+                                {
+                                    "id": "allTypes",
+                                    "title": "All | 🚗",
+                                    "description": "Receive all trips of all types of vehicles"
+                                },
+                                {
+                                    "id": "4Seats",
+                                    "title": "4 Seats | 🚗",
+                                    "description": "Receive rides for standard 4-seat vehicles only"
+                                },
+                                {
+                                    "id": "station",
+                                    "title": "Station Wagon | 🚗",
+                                    "description": "Receive rides for vehicles with a larger-than-usual trunk"
+                                },
+                                {
+                                    "id": "minivan6",
+                                    "title": "Mini Van - 6 Seats | 🚗",
+                                    "description": "Receive rides for small 6-seat vehicles"
+                                },
+                                {
+                                    "id": "6SpaciousSeats",
+                                    "title": "6 Spacious Seats | 🚐",
+                                    "description": "Receive rides for spacious 6-seat vehicles"
+                                },
+                                {
+                                    "id": "7Seats",
+                                    "title": "7 Seats | 🚐",
+                                    "description": "Receive rides for 7-seat vehicles"
+                                },
+                                {
+                                    "id": "8Seats",
+                                    "title": "8 Seats | 🚌",
+                                    "description": "Receive rides for 8-seat vehicles"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Footer",
+                            "label": "Approved",
+                            "on-click-action": {
+                                "name": "complete",
+                                "payload": {
+                                    "data": "${form.vehicle_types}"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

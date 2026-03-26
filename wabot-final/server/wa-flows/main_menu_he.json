@@ -1,0 +1,139 @@
+{
+    "name": "main_menu_he",
+    "header": "📋 ביצוע פעולות",
+    "body": "בחר אפשרות מהתפריט למטה",
+    "cta": "המשך",
+    "data": {
+        "version": "7.1",
+        "screens": [
+            {
+                "id": "main_menu_he",
+                "title": "📋 ביצוע פעולות",
+                "terminal": true,
+                "success": true,
+                "data": {},
+                "layout": {
+                    "type": "SingleColumnLayout",
+                    "children": [
+                        {
+                            "type": "TextSubheading",
+                            "text": "נסיעות ומיקומים"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "rides_locations",
+                            "label": "בחר אפשרויות נסיעות ומיקום",
+                            "data-source": [
+                                {
+                                    "id": "menuLocationRides",
+                                    "title": "📍 נסיעות במיקומך",
+                                    "description": "מעבר לתפריט ראשי נסיעות במיקומך\nקיצור מהיר: פ"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "TextSubheading",
+                            "text": "הגדרות חיפוש"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "search_settings",
+                            "label": "הגדר העדפות החיפוש שלך",
+                            "data-source": [
+                                {
+                                    "id": "settingsSummarySearches",
+                                    "title": "👀 סיכום והסרת חיפושים",
+                                    "description": "מחיקת יעדים וסיכום כל החיפושים\nניתן לשלוח: סיכום"
+                                },
+                                {
+                                    "id": "settingsFilterWords",
+                                    "title": "💋 סינון לפי מילים",
+                                    "description": "לקבל או לסנן נסיעות לפי מילים בהתאמה אישית"
+                                },
+                                {
+                                    "id": "settingsFilterCarType",
+                                    "title": "🚗 סינון לפי סוג רכב",
+                                    "description": "קבלת נסיעות לפי סוג רכב, לדוגמת מיניק ועוד"
+                                },
+                                {
+                                    "id": "settingsLocationShare",
+                                    "title": "🎯 שיתוף מיקום מדויק",
+                                    "description": "משתפים ומקבלים זמן מדויק לנקודת האיסוף"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "TextSubheading",
+                            "text": "מידע וסרטונים"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "info_videos",
+                            "label": "גישה לעזרה ומידע",
+                            "data-source": [
+                                {
+                                    "id": "infoVideoHelp",
+                                    "title": "🎥 סרטון הסבר",
+                                    "description": "לצפייה בסרטון הסבר על נסיעות במיקומך"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "TextSubheading",
+                            "text": "פרופיל משתמש"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "user_profile",
+                            "label": "ניהול הגדרות הפרופיל שלך",
+                            "data-source": [
+                                {
+                                    "id": "profileViewEdit",
+                                    "title": "👤 הפרופיל שלך",
+                                    "description": "צפייה ועריכת הפרטים שלך, החלפת סוג רכב"
+                                },
+                                {
+                                    "id": "profileVerification",
+                                    "title": "🌟 אימות פרופיל",
+                                    "description": "הפרופיל שלך ממתין לאימות"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "TextSubheading",
+                            "text": "תמיכה"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "support",
+                            "label": "קבל עזרה ותמיכה",
+                            "data-source": [
+                                {
+                                    "id": "supportHuman",
+                                    "title": "👩‍⚖️ תמיכה אנושית",
+                                    "description": "תרגישו חופשי לדבר איתנו 24/6"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Footer",
+                            "label": "בחר",
+                            "on-click-action": {
+                                "name": "complete",
+                                "payload": {
+                                    "data": {
+                                        "rides_locations": "${form.rides_locations}",
+                                        "search_settings": "${form.search_settings}",
+                                        "info_videos": "${form.info_videos}",
+                                        "user_profile": "${form.user_profile}",
+                                        "support": "${form.support}"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+} 

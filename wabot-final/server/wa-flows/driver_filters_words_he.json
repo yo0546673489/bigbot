@@ -1,0 +1,76 @@
+{
+    "name": "driver_filters_words_he",
+    "header": "בחר פריטים",
+    "body": "קבלת נסיעות לפי סוג רכב, כגון מיניבוס ועוד",
+    "cta": "הַתחָלָה",
+    "flow_token": "driver_filters_vehicle_type",
+    "data": {
+        "version": "7.1",
+        "screens": [
+            {
+                "id": "driver_filters_words_he",
+                "title": "בחר פריטים",
+                "terminal": true,
+                "success": true,
+                "data": {},
+                "layout": {
+                    "type": "SingleColumnLayout",
+                    "children": [
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "vehicle_types",
+                            "label": "בחר את כל סוגי הרכבים מהם תרצה לקבל נסיעות",
+                            "data-source": [
+                                {
+                                    "id": "allTypes",
+                                    "title": "הכל | 🚗",
+                                    "description": "קבלת כל הנסיעות של כל סוגי הרכבים"
+                                },
+                                {
+                                    "id": "4Seats",
+                                    "title": "4 מקומות | 🚗",
+                                    "description": "קבלת נסיעות של רכב רגיל בלבד"
+                                },
+                                {
+                                    "id": "station",
+                                    "title": "סטיישן | 🚗",
+                                    "description": "קבלת נסיעות של רכב עם תא מטען גדול מהרגלי"
+                                },
+                                {
+                                    "id": "minivan6",
+                                    "title": "מיניק - 6 מקומות | 🚗",
+                                    "description": "קבלת נסיעות של רכב 6 מקומות קטן"
+                                },
+                                {
+                                    "id": "6SpaciousSeats",
+                                    "title": "6 מקומות מרווח | 🚐",
+                                    "description": "קבלת נסיעות של רכב 6 מקומות מרווח"
+                                },
+                                {
+                                    "id": "7Seats",
+                                    "title": "7 מקומות | 🚐",
+                                    "description": "קבלת נסיעות של רכב 7 מקומות"
+                                },
+                                {
+                                    "id": "8Seats",
+                                    "title": "8 מקומות | 🚌",
+                                    "description": "קבלת נסיעות של רכב 8 מקומות"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Footer",
+                            "label": "אישור",
+                            "on-click-action": {
+                                "name": "complete",
+                                "payload": {
+                                    "data": "${form.vehicle_types}"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

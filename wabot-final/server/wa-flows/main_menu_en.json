@@ -1,0 +1,139 @@
+{
+    "name": "main_menu_en",
+    "header": "📋 Perform Actions",
+    "body": "Select an option from the menu below",
+    "cta": "Continue",
+    "data": {
+        "version": "7.1",
+        "screens": [
+            {
+                "id": "main_menu_en",
+                "title": "📋 Perform Actions",
+                "terminal": true,
+                "success": true,
+                "data": {},
+                "layout": {
+                    "type": "SingleColumnLayout",
+                    "children": [
+                        {
+                            "type": "TextSubheading",
+                            "text": "Rides and Locations"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "rides_locations",
+                            "label": "Select rides and location options",
+                            "data-source": [
+                                {
+                                    "id": "menuLocationRides",
+                                    "title": "📍 Rides in Your Area",
+                                    "description": "Go to main menu for rides in your location\nQuick shortcut: P"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "TextSubheading",
+                            "text": "Search Settings"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "search_settings",
+                            "label": "Configure your search preferences",
+                            "data-source": [
+                                {
+                                    "id": "settingsSummarySearches",
+                                    "title": "👀 Summary & Remove Searches",
+                                    "description": "Delete destinations and view all searches summary\nSend: Summary"
+                                },
+                                {
+                                    "id": "settingsFilterWords",
+                                    "title": "💋 Filter by Words",
+                                    "description": "Receive or filter rides based on custom keywords"
+                                },
+                                {
+                                    "id": "settingsFilterCarType",
+                                    "title": "🚗 Filter by Car Type",
+                                    "description": "Get rides by car type, like minivan etc."
+                                },
+                                {
+                                    "id": "settingsLocationShare",
+                                    "title": "🎯 Precise Location",
+                                    "description": "Share and get an accurate time to pickup point"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "TextSubheading",
+                            "text": "Info & Videos"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "info_videos",
+                            "label": "Access help and information",
+                            "data-source": [
+                                {
+                                    "id": "infoVideoHelp",
+                                    "title": "🎥 Help Video",
+                                    "description": "Watch a tutorial video about rides in your area"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "TextSubheading",
+                            "text": "User Profile"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "user_profile",
+                            "label": "Manage your profile settings",
+                            "data-source": [
+                                {
+                                    "id": "profileViewEdit",
+                                    "title": "👤 Your Profile",
+                                    "description": "View and edit your details, change car type"
+                                },
+                                {
+                                    "id": "profileVerification",
+                                    "title": "🌟 Profile Verification",
+                                    "description": "Your profile is waiting for verification"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "TextSubheading",
+                            "text": "Support"
+                        },
+                        {
+                            "type": "RadioButtonsGroup",
+                            "name": "support",
+                            "label": "Get help and support",
+                            "data-source": [
+                                {
+                                    "id": "supportHuman",
+                                    "title": "👩‍⚖️ Human Support",
+                                    "description": "Feel free to talk to us 24/6"
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Footer",
+                            "label": "Select",
+                            "on-click-action": {
+                                "name": "complete",
+                                "payload": {
+                                    "data": {
+                                        "rides_locations": "${form.rides_locations}",
+                                        "search_settings": "${form.search_settings}",
+                                        "info_videos": "${form.info_videos}",
+                                        "user_profile": "${form.user_profile}",
+                                        "support": "${form.support}"
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

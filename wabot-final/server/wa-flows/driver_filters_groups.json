@@ -1,0 +1,64 @@
+{
+    "flow_token": "driver_filters_groups",
+    "data": {
+        "version": "7.1",
+        "screens": [
+            {
+                "id": "driver_filters_groups",
+                "title": "${data.title}",
+                "terminal": true,
+                "data": {
+                    "groups_options": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "description": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "__example__": [
+                            {
+                                "id": "group1",
+                                "title": "Group 1",
+                                "description": "Group 1 description"
+                            }
+                        ]
+                    },
+                    "groups_label": {
+                        "type": "string",
+                        "__example__": "Select all groups you would like to filter out"
+                    }
+                },
+                "layout": {
+                    "type": "SingleColumnLayout",
+                    "children": [
+                        {
+                            "type": "CheckboxGroup",
+                            "name": "groups",
+                            "label": "${data.groups_label}",
+                            "data-source": "${data.groups_options}"
+                        },
+                        {
+                            "type": "Footer",
+                            "label": "${data.cta}",
+                            "on-click-action": {
+                                "name": "complete",
+                                "payload": {
+                                    "data": "${form.groups}"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

@@ -1,0 +1,25 @@
+version: '3'
+services:
+  travelbot-backend:
+    build: ./server
+    ports:
+      - "7878:7878"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/travelbot
+    container_name: travelbot-backend
+
+  travelbot-frontend:
+    build: ./client
+    ports:
+      - "3000:3000"
+    container_name: travelbot-frontend
+
+  mongodb:
+    image: mongo:8
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - ~/var/opt:/data/db

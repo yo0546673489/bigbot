@@ -1,0 +1,51 @@
+### Environment Variables
+# Set this in your HTTP client (e.g., VS Code REST Client extension)
+### WhatsApp Bot API Test Client
+@baseUrl = http://195.20.17.83:7879
+# @baseUrl = http://localhost:7879
+
+### Health Check
+GET {{baseUrl}}/health
+
+### Get WhatsApp Status
+GET {{baseUrl}}/status
+
+### List All Sessions
+GET {{baseUrl}}/sessions
+
+### Send Message
+POST {{baseUrl}}/send
+Content-Type: application/json
+
+{
+  "fromPhone": "84347914184",
+  "toPhone": "84975868449",
+  "message": "Hello from API test!"
+}
+
+### Pair with Code
+POST {{baseUrl}}/pair
+Content-Type: application/json
+
+{
+  "phone": "972533312219"
+}
+
+### Pair with Code
+POST {{baseUrl}}/pair
+Content-Type: application/json
+
+{
+  "phone": "84347914184"
+}
+
+  
+### Pair with Code
+POST {{baseUrl}}/pair
+Content-Type: application/json
+
+{
+  "phone": "84975868449"
+}
+
+  

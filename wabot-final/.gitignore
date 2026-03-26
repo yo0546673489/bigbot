@@ -1,0 +1,7 @@
+dist
+node_modules
+waweb-data
+.env
+.env
+wabot.db
+wabot_build
