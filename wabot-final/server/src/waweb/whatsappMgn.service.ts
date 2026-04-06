@@ -28,6 +28,7 @@ import { WhatsAppGroupsService } from 'src/whatsapp-groups/whatsapp-groups.servi
 import { AreasService } from 'src/areas/areas.service';
 import { WabotService } from 'src/services/wabot.service';
 import { Queue, Worker } from 'bullmq';
+import { DriverWsServer } from '../drivers/driver-ws.server';
 
 // ✅ FIX 8: In-memory areas cache to avoid 4 Redis calls per message
 interface AreasCache {
@@ -624,11 +625,14 @@ ${fixBoldMultiLine(obj.body)}`;
           title: this.localizationService.getMessage('specialGroupButton', language)
         });
       } else if (waLink) {
-        const { phoneNumber, messageText } = extractPhoneAndTextFromWaMeLink(waLink) || {};
-        if (!phoneNumber || !messageText) return false;
-        const privateMessageBase64 = Buffer.from(messageText).toString('base64');
-        const formattedMessage = await this.formatWhatsAppMessage(obj.body);
-        if (!formattedMessage) return false;
+        // FIX: allow empty messageText — use default "ת" if link format is non-standard
+        const parsed = extractPhoneAndTextFromWaMeLink(waLink);
+        const linkPhoneNumber = parsed?.phoneNumber;
+        const linkMessageText = parsed?.messageText || 'ת';
+        if (!linkPhoneNumber) return false; // only require phone number
+        const privateMessageBase64 = Buffer.from(linkMessageText).toString('base64');
+        // FIX: if Groq formatting fails, fall back to original body instead of blocking
+        const formattedMessage = await this.formatWhatsAppMessage(obj.body) || obj.body;
         msgTemplate = `${this.localizationService.getMessage('newRidesMessage', language)}
 ${fixBoldMultiLine(formattedMessage)}
 \u200F${this.localizationService.getMessage('senderName', language)} ${obj.fromName}
@@ -638,7 +642,7 @@ ${this.localizationService.getMessage('keyWordSignAppName', language)}`;
 ${fixBoldMultiLine(formattedMessage)}`;
         buttons.pop();
         buttons.push({
-          id: `sendPrivateMessageButton_${phoneNumber}_BASE64${privateMessageBase64}_${obj.groupId}_${obj.messageId}`,
+          id: `sendPrivateMessageButton_${linkPhoneNumber}_BASE64${privateMessageBase64}_${obj.groupId}_${obj.messageId}`,
           title: this.localizationService.getMessage('sendPrivateMessageButton', language)
         });
       }
@@ -654,6 +658,33 @@ ${fixBoldMultiLine(formattedMessage)}`;
       this.driverMessageTrackerService.trackMessage(phone, obj.senderPhone, originAndDestination);
 
       await this.whatsAppMessagingService.sendInteractiveMessage({ phone, language, buttons, message: msgTemplate });
+
+      // ✅ Send ride to Android app via WebSocket if driver is connected
+      try {
+        const wsServer = DriverWsServer.getInstance();
+        if (wsServer.isConnected(phone)) {
+          const [origin, destination] = originAndDestination.split('_');
+          const parsedLink = waLink ? extractPhoneAndTextFromWaMeLink(waLink) : null;
+          wsServer.sendRide(phone, {
+            messageId: obj.messageId,
+            groupName: obj.groupName || '',
+            origin: origin || '',
+            destination: destination || '',
+            price: '',
+            seats: '',
+            rawText: obj.body || '',
+            timestamp: +obj.timestamp,
+            isUrgent: false,
+            hasLink: !!waLink,
+            linkPhone: parsedLink?.phoneNumber || '',
+            linkText: parsedLink?.messageText || (waLink ? 'ת' : ''),
+            senderPhone: obj.senderPhone || '',
+          });
+          this.logger.log(`>> Sent ride to Android app: ${phone} -> ${originAndDestination}`);
+        }
+      } catch (wsErr) {
+        this.logger.warn(`Failed to send ride to Android app for ${phone}: ${wsErr?.message}`);
+      }
 
       const end = Date.now();
       const messageTimestamp = +obj.timestamp * 1000;

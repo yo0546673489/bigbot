@@ -7,6 +7,7 @@ import { WhatsappFlowService } from './whatsappflow/whatsappflow.service';
 import * as cookieParser from 'cookie-parser';
 import * as express from 'express';
 import { WhatsappServiceMgn } from './waweb/whatsappMgn.service';
+import { DriverWsServer } from './drivers/driver-ws.server';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -62,6 +63,11 @@ async function bootstrap() {
   console.log(
     `Swagger documentation is available at: http://localhost:${port}/api`
   );
+
+  // Attach WebSocket server for Android driver app on /drivers path
+  const httpServer = app.getHttpServer();
+  DriverWsServer.getInstance().attach(httpServer);
+  console.log(`Driver WebSocket server attached at ws://localhost:${port}/drivers`);
 
   // app.get(WhatsappFlowService).init();
   // app.get(WhatsappServiceMgn).listenToKafkaMessages();
