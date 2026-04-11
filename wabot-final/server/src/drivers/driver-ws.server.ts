@@ -19,6 +19,9 @@ export interface DriverWsConnection {
 type RideActionCallback = (phone: string, data: any) => void;
 type ChatMessageCallback = (driverPhone: string, data: any) => void;
 type WaStatusProvider = (phone: string) => Promise<boolean>;
+type AvailabilityCallback = (phone: string, available: boolean) => void;
+type KmFilterCallback = (phone: string, km: number | null) => void;
+type MinPriceCallback = (phone: string, minPrice: number | null) => void;
 
 /**
  * Standalone WebSocket server for Android driver app connections.
@@ -41,11 +44,14 @@ export class DriverWsServer {
   // ride is lost during a disconnect window (NAT timeout, Doze mode, network
   // handoff). Bounded by size + age.
   private buffers = new Map<string, BufferedMessage[]>();
-  private readonly BUFFER_MAX = 200;
+  private readonly BUFFER_MAX = 50;
   private readonly BUFFER_TTL_MS = 5 * 60 * 1000; // 5 min
   private readonly logger = new Logger('DriverWsServer');
   private onRideActionCb?: RideActionCallback;
   private onChatMessageCb?: ChatMessageCallback;
+  private onAvailabilityCb?: AvailabilityCallback;
+  private onKmFilterCb?: KmFilterCallback;
+  private onMinPriceCb?: MinPriceCallback;
   private waStatusProvider?: WaStatusProvider;
 
   private constructor() {}
@@ -169,11 +175,20 @@ export class DriverWsServer {
     const { type, data } = msg || {};
 
     switch (type) {
-      case 'set_availability':
-        conn.available = !!data?.available;
+      case 'set_availability': {
+        const available = !!data?.available;
+        conn.available = available;
         if (Array.isArray(data?.keywords)) conn.keywords = data.keywords;
         if (Array.isArray(data?.pausedKeywords)) conn.pausedKeywords = data.pausedKeywords;
+        // Persist to Mongo/Redis so the dispatch filter (which reads
+        // driver.isBusy from the Redis cache) actually respects the toggle.
+        if (this.onAvailabilityCb) {
+          try { this.onAvailabilityCb(phone, available); } catch (e: any) {
+            this.logger.warn(`availability cb failed for ${phone}: ${e?.message}`);
+          }
+        }
         break;
+      }
       case 'add_keyword':
         if (data?.keyword && !conn.keywords.includes(data.keyword)) conn.keywords.push(data.keyword);
         break;
@@ -189,6 +204,33 @@ export class DriverWsServer {
       case 'set_auto_mode':
         conn.autoMode = !!data?.enabled;
         break;
+      case 'set_min_price': {
+        const raw = data?.minPrice;
+        const minPrice: number | null = (raw == null || raw === '' || Number(raw) <= 0)
+          ? null
+          : Number(raw);
+        if (this.onMinPriceCb) {
+          try { this.onMinPriceCb(phone, minPrice); } catch (e: any) {
+            this.logger.warn(`min price cb failed for ${phone}: ${e?.message}`);
+          }
+        }
+        break;
+      }
+      case 'set_km_filter': {
+        // data.km: number | null — range in km, or null to clear the filter.
+        // Persisted via onKmFilterCb to Mongo+Redis so the dispatch filter
+        // (which reads driver.kmFilter from the Redis cache) picks it up.
+        const raw = data?.km;
+        const km: number | null = (raw == null || raw === '' || Number(raw) <= 0)
+          ? null
+          : Number(raw);
+        if (this.onKmFilterCb) {
+          try { this.onKmFilterCb(phone, km); } catch (e: any) {
+            this.logger.warn(`km filter cb failed for ${phone}: ${e?.message}`);
+          }
+        }
+        break;
+      }
       case 'get_status':
         if (this.waStatusProvider) {
           this.waStatusProvider(phone)
@@ -215,6 +257,18 @@ export class DriverWsServer {
 
   onChatMessage(cb: ChatMessageCallback): void {
     this.onChatMessageCb = cb;
+  }
+
+  onAvailability(cb: AvailabilityCallback): void {
+    this.onAvailabilityCb = cb;
+  }
+
+  onKmFilter(cb: KmFilterCallback): void {
+    this.onKmFilterCb = cb;
+  }
+
+  onMinPrice(cb: MinPriceCallback): void {
+    this.onMinPriceCb = cb;
   }
 
   setWaStatusProvider(provider: WaStatusProvider): void {
@@ -287,6 +341,12 @@ export class DriverWsServer {
 
   getConnection(phone: string): DriverWsConnection | undefined {
     return this.connections.get(phone);
+  }
+
+  /** Clear any buffered rides for a phone — used when the driver turns off
+   *  availability so reconnects don't replay stale rides. */
+  clearBuffer(phone: string): void {
+    this.buffers.delete(phone);
   }
 
   get connectedPhones(): string[] {
