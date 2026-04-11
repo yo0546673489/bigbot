@@ -64,11 +64,27 @@ export class Driver {
   @Prop({ default: 'monthly' })
   billingCycle: string;
 
+  @Prop({ default: true })
+  acceptDeliveries: boolean;
+
   @Prop({ default: false })
   ignorePayment: boolean;
 
   @Prop({ default: PaymentPackage.REGULAR })
   paymentPackage: PaymentPackage;
+
+  // Optional km-range filter set from the BigBot Android app. When present,
+  // the ride dispatcher only forwards rides whose origin city is within
+  // [kmFilter] kilometers of any of the driver's keyword cities. null/missing
+  // means "no range limit" (legacy keyword-only matching).
+  @Prop({ required: false, default: null })
+  kmFilter?: number;
+
+  // Optional minimum ride price (₪) set from the BigBot Android app. Rides
+  // whose parsed price is below this threshold are filtered out. Rides with
+  // no detectable price pass through (fail-open).
+  @Prop({ required: false, default: null })
+  minPrice?: number;
 
   @Prop({})
   createdAt: Date;

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BigBot — מערכת נסיעות חכמה</title>
+    <meta name="description" content="הבוט שמביא לך נסיעות מקבוצות הוואטסאפ ישירות לאפליקציה — בלי לפספס נסיעה אחת." />
+    <style>
+        :root {
+            --green: #2e7d32;
+            --green-dark: #1b5e20;
+            --green-light: #e8f5e9;
+            --slate: #37474f;
+            --gray: #90a4ae;
+        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; font-family: -apple-system, "Segoe UI", Heebo, Arial, sans-serif; color: var(--slate); background: linear-gradient(180deg, #f1f8e9 0%, #fff 60%); }
+        .wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; text-align: center; }
+        .logo { font-size: 56px; font-weight: 900; color: var(--green-dark); letter-spacing: -1px; margin: 0 0 8px; }
+        .tag { font-size: 18px; color: var(--gray); margin: 0 0 40px; }
+        .hero { background: white; border: 1px solid #c8e6c9; border-radius: 24px; padding: 32px 24px; box-shadow: 0 8px 32px rgba(46, 125, 50, 0.08); }
+        h1 { font-size: 26px; color: var(--green-dark); margin: 0 0 12px; }
+        p.sub { font-size: 15px; color: var(--slate); line-height: 1.6; margin: 0 0 28px; }
+        .download-btn { display: inline-block; background: var(--green-dark); color: white; text-decoration: none; padding: 16px 40px; border-radius: 14px; font-size: 18px; font-weight: bold; box-shadow: 0 4px 16px rgba(27, 94, 32, 0.32); transition: transform .15s, box-shadow .15s; }
+        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(27, 94, 32, 0.4); }
+        .small { display: block; font-size: 11px; opacity: .85; font-weight: normal; margin-top: 4px; }
+        .features { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 36px; text-align: right; }
+        .feature { background: var(--green-light); border-radius: 14px; padding: 16px 18px; }
+        .feature h3 { margin: 0 0 6px; font-size: 14px; color: var(--green-dark); }
+        .feature p { margin: 0; font-size: 12px; color: var(--slate); line-height: 1.5; }
+        @media (max-width: 520px) { .features { grid-template-columns: 1fr; } .logo { font-size: 44px; } h1 { font-size: 22px; } }
+        footer { margin-top: 56px; font-size: 12px; color: var(--gray); }
+        footer a { color: var(--gray); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="logo">BigBot</div>
+        <p class="tag">מערכת נסיעות חכמה דרך WhatsApp</p>
+
+        <div class="hero">
+            <h1>🚗 הנסיעות שלך — בלחיצת כפתור</h1>
+            <p class="sub">
+                BigBot סורק את כל קבוצות הוואטסאפ שאתה חבר בהן, מזהה נסיעות שמתאימות לך,
+                ושולח אותן ישירות לאפליקציה — בזמן אמת, גם כשהאפליקציה סגורה.
+            </p>
+            <a class="download-btn" href="/bigbot.apk">
+                ⬇️ הורד את האפליקציה
+                <span class="small">Android · קובץ APK</span>
+            </a>
+
+            <div class="features">
+                <div class="feature">
+                    <h3>⚡ זמן אמת</h3>
+                    <p>נסיעות מגיעות לטלפון תוך פחות משנייה מרגע הפרסום בקבוצה</p>
+                </div>
+                <div class="feature">
+                    <h3>🔔 התראות חכמות</h3>
+                    <p>התראות עם כפתורי שליחה ישירים — בלי לפתוח את האפליקציה</p>
+                </div>
+                <div class="feature">
+                    <h3>🗣️ קריינות</h3>
+                    <p>הקראה אוטומטית של כל נסיעה חדשה — בקול גברי בעברית</p>
+                </div>
+                <div class="feature">
+                    <h3>🎯 לפי מסלולים</h3>
+                    <f>בחר את הערים שמעניינות אותך — וקבל רק נסיעות שמתאימות</f>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            © BigBot · <a href="mailto:admin@bigbotdrivers.com">admin@bigbotdrivers.com</a>
+        </footer>
+    </div>
+</body>
+</html>

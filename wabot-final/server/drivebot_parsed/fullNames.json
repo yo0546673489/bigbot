@@ -1,0 +1,232 @@
+[
+  {
+    "name": "נתניה",
+    "count": 442,
+    "known": false
+  },
+  {
+    "name": "אשדוד",
+    "count": 43,
+    "known": false
+  },
+  {
+    "name": "ראשון",
+    "count": 17,
+    "known": true
+  },
+  {
+    "name": "מודיעין",
+    "count": 16,
+    "known": false
+  },
+  {
+    "name": "נתיבות",
+    "count": 12,
+    "known": false
+  },
+  {
+    "name": "אשתאול",
+    "count": 10,
+    "known": false
+  },
+  {
+    "name": "נחלים",
+    "count": 8,
+    "known": false
+  },
+  {
+    "name": "רחובות",
+    "count": 7,
+    "known": false
+  },
+  {
+    "name": "אשקלון",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "רעננה",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "חולון",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "הרצליה",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "שדרות",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "טבריה",
+    "count": 4,
+    "known": false
+  },
+  {
+    "name": "אחיסמך",
+    "count": 4,
+    "known": false
+  },
+  {
+    "name": "קסריה",
+    "count": 3,
+    "known": false
+  },
+  {
+    "name": "מבשרת",
+    "count": 2,
+    "known": false
+  },
+  {
+    "name": "גבעתיים",
+    "count": 2,
+    "known": false
+  },
+  {
+    "name": "חשמונאים",
+    "count": 2,
+    "known": false
+  },
+  {
+    "name": "מירון",
+    "count": 2,
+    "known": false
+  },
+  {
+    "name": "כרמיאל",
+    "count": 2,
+    "known": false
+  },
+  {
+    "name": "אופקים",
+    "count": 2,
+    "known": false
+  },
+  {
+    "name": "עטרות",
+    "count": 2,
+    "known": true
+  },
+  {
+    "name": "ספסופה",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "אחיעזר",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "ירוחם",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "דימונה",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "יסודות",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "ירושלים",
+    "count": 49,
+    "known": false
+  },
+  {
+    "name": "עפולה",
+    "count": 27,
+    "known": false
+  },
+  {
+    "name": "רכסים",
+    "count": 23,
+    "known": false
+  },
+  {
+    "name": "קיסריה",
+    "count": 15,
+    "known": false
+  },
+  {
+    "name": "סביון",
+    "count": 14,
+    "known": false
+  },
+  {
+    "name": "קדימה",
+    "count": 13,
+    "known": false
+  },
+  {
+    "name": "נחשונים",
+    "count": 11,
+    "known": false
+  },
+  {
+    "name": "בנימינה",
+    "count": 9,
+    "known": false
+  },
+  {
+    "name": "נהריה",
+    "count": 7,
+    "known": false
+  },
+  {
+    "name": "זכריה",
+    "count": 7,
+    "known": false
+  },
+  {
+    "name": "היהודי",
+    "count": 7,
+    "known": false
+  },
+  {
+    "name": "גלילות",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "אשכול",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "סגולה",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "הרובע",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "הגליל",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "יערים",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "אולגה",
+    "count": 5,
+    "known": false
+  }
+]

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Query } from '@nestjs/common';
 import { WhatsappServiceMgn } from './whatsappMgn.service';
 
 @Controller('waweb')
@@ -89,6 +89,18 @@ export class WawebController {
       return { success: true, message: 'Group created successfully' };
     } catch (error) {
       return { success: false, message: error.message };
+    }
+  }
+
+  /** Proxy to Go bot — returns WhatsApp profile picture URL for a phone number */
+  @Get('profile-picture')
+  async getProfilePicture(@Query('phone') phone: string) {
+    if (!phone) return { url: '' };
+    try {
+      const url = await this.whatsappServiceMgn.getProfilePictureUrl(phone);
+      return { url };
+    } catch {
+      return { url: '' };
     }
   }
 

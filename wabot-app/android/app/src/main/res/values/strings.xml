@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ביגבוט</string>
+    <string name="notification_channel_rides">נסיעות חדשות</string>
+    <string name="notification_channel_service">שירות רקע</string>
+</resources>

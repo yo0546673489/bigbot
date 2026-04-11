@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layoutDirection="rtl"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="✅ קיבלת את הנסיעה!"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#1B5E20"
+        android:gravity="center"
+        android:paddingBottom="4dp" />
+
+    <!-- Route: origin ← destination -->
+    <TextView
+        android:id="@+id/success_route"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="#2E7D32"
+        android:gravity="center"
+        android:paddingBottom="4dp" />
+
+    <!-- Dispatcher name -->
+    <TextView
+        android:id="@+id/success_dispatcher"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text=""
+        android:textSize="11sp"
+        android:textColor="#558B2F"
+        android:gravity="center"
+        android:paddingBottom="12dp" />
+
+    <!-- Buttons row: Chat (right) | Waze (left) -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="0dp"
+        android:paddingEnd="0dp">
+
+        <!-- WhatsApp chat button (ימין) -->
+        <LinearLayout
+            android:id="@+id/success_btn_chat"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:layout_marginEnd="5dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/notif_btn_whatsapp"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/success_icon_chat"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/logo_whatsapp"
+                android:scaleType="centerCrop"
+                android:contentDescription="" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="פתח צ'אט"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:paddingStart="6dp" />
+        </LinearLayout>
+
+        <!-- Waze button (שמאל) -->
+        <LinearLayout
+            android:id="@+id/success_btn_waze"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_weight="1"
+            android:layout_marginStart="5dp"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:background="@drawable/notif_btn_waze"
+            android:clickable="true"
+            android:focusable="true">
+
+            <ImageView
+                android:id="@+id/success_icon_waze"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:src="@drawable/logo_waze"
+                android:scaleType="centerCrop"
+                android:contentDescription="" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="נווט עכשיו"
+                android:textSize="12sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:paddingStart="6dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</LinearLayout>

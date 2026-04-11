@@ -1,0 +1,382 @@
+[
+  {
+    "name": "בב",
+    "count": 274,
+    "known": true
+  },
+  {
+    "name": "ים",
+    "count": 243,
+    "known": true
+  },
+  {
+    "name": "שמש",
+    "count": 192,
+    "known": true
+  },
+  {
+    "name": "שדה",
+    "count": 38,
+    "known": true
+  },
+  {
+    "name": "אלעד",
+    "count": 29,
+    "known": false
+  },
+  {
+    "name": "פת",
+    "count": 26,
+    "known": true
+  },
+  {
+    "name": "ספר",
+    "count": 24,
+    "known": true
+  },
+  {
+    "name": "תא",
+    "count": 17,
+    "known": true
+  },
+  {
+    "name": "תהש",
+    "count": 11,
+    "known": true
+  },
+  {
+    "name": "חדרה",
+    "count": 11,
+    "known": false
+  },
+  {
+    "name": "יהוד",
+    "count": 8,
+    "known": false
+  },
+  {
+    "name": "רג",
+    "count": 6,
+    "known": true
+  },
+  {
+    "name": "יבנה",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "לוד",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "חיפה",
+    "count": 3,
+    "known": false
+  },
+  {
+    "name": "גת",
+    "count": 3,
+    "known": true
+  },
+  {
+    "name": "רמלה",
+    "count": 3,
+    "known": false
+  },
+  {
+    "name": "אחוד",
+    "count": 2,
+    "known": false
+  },
+  {
+    "name": "צפת",
+    "count": 2,
+    "known": false
+  },
+  {
+    "name": "פסגז",
+    "count": 1,
+    "known": true
+  },
+  {
+    "name": "סב",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "תפרח",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "גדרה",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "ערד",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "אורה",
+    "count": 1,
+    "known": false
+  },
+  {
+    "name": "רמת",
+    "count": 230,
+    "known": false
+  },
+  {
+    "name": "תל",
+    "count": 187,
+    "known": false
+  },
+  {
+    "name": "בת",
+    "count": 179,
+    "known": false
+  },
+  {
+    "name": "עין",
+    "count": 138,
+    "known": false
+  },
+  {
+    "name": "רמות",
+    "count": 127,
+    "known": true
+  },
+  {
+    "name": "הר",
+    "count": 125,
+    "known": false
+  },
+  {
+    "name": "כפר",
+    "count": 113,
+    "known": false
+  },
+  {
+    "name": "נווה",
+    "count": 94,
+    "known": false
+  },
+  {
+    "name": "סבא",
+    "count": 69,
+    "known": false
+  },
+  {
+    "name": "וגן",
+    "count": 60,
+    "known": false
+  },
+  {
+    "name": "טלז",
+    "count": 56,
+    "known": false
+  },
+  {
+    "name": "העין",
+    "count": 56,
+    "known": false
+  },
+  {
+    "name": "גני",
+    "count": 49,
+    "known": false
+  },
+  {
+    "name": "בני",
+    "count": 46,
+    "known": false
+  },
+  {
+    "name": "חריש",
+    "count": 43,
+    "known": false
+  },
+  {
+    "name": "ברק",
+    "count": 35,
+    "known": false
+  },
+  {
+    "name": "מצפה",
+    "count": 30,
+    "known": false
+  },
+  {
+    "name": "חפץ",
+    "count": 30,
+    "known": false
+  },
+  {
+    "name": "שמגר",
+    "count": 29,
+    "known": true
+  },
+  {
+    "name": "שבע",
+    "count": 27,
+    "known": false
+  },
+  {
+    "name": "שלמה",
+    "count": 27,
+    "known": false
+  },
+  {
+    "name": "מבוא",
+    "count": 25,
+    "known": false
+  },
+  {
+    "name": "יש",
+    "count": 23,
+    "known": false
+  },
+  {
+    "name": "אונו",
+    "count": 21,
+    "known": false
+  },
+  {
+    "name": "פסגת",
+    "count": 17,
+    "known": false
+  },
+  {
+    "name": "שורש",
+    "count": 16,
+    "known": false
+  },
+  {
+    "name": "מושב",
+    "count": 14,
+    "known": false
+  },
+  {
+    "name": "פתח",
+    "count": 14,
+    "known": false
+  },
+  {
+    "name": "משלם",
+    "count": 13,
+    "known": false
+  },
+  {
+    "name": "שוהם",
+    "count": 11,
+    "known": false
+  },
+  {
+    "name": "קאסם",
+    "count": 10,
+    "known": false
+  },
+  {
+    "name": "מחר",
+    "count": 9,
+    "known": false
+  },
+  {
+    "name": "כנות",
+    "count": 9,
+    "known": false
+  },
+  {
+    "name": "גפן",
+    "count": 9,
+    "known": false
+  },
+  {
+    "name": "מוצא",
+    "count": 8,
+    "known": false
+  },
+  {
+    "name": "נוה",
+    "count": 8,
+    "known": false
+  },
+  {
+    "name": "מונד",
+    "count": 8,
+    "known": false
+  },
+  {
+    "name": "הדר",
+    "count": 7,
+    "known": false
+  },
+  {
+    "name": "גוש",
+    "count": 7,
+    "known": false
+  },
+  {
+    "name": "תקוה",
+    "count": 7,
+    "known": false
+  },
+  {
+    "name": "שילת",
+    "count": 7,
+    "known": false
+  },
+  {
+    "name": "תקוע",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "סיטי",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "מגדל",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "העמק",
+    "count": 6,
+    "known": false
+  },
+  {
+    "name": "מקור",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "נחם",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "אזור",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "עוצם",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "לד",
+    "count": 5,
+    "known": false
+  },
+  {
+    "name": "איש",
+    "count": 5,
+    "known": false
+  }
+]

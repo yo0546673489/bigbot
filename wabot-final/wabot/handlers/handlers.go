@@ -308,6 +308,30 @@ func (h *WhatsAppHandlers) PairWithCodeHandler(w http.ResponseWriter, r *http.Re
 		h.bot.DeleteClient(req.Phone)
 	}
 
+	// Also clean up any orphan device records in DB for this phone number.
+	// This is critical when a previous session was logged out (device removed
+	// from WhatsApp) but the device row in wabot.db was never deleted, which
+	// causes WhatsApp to reject new pairing codes with refresh_code.
+	{
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		allDevices, derr := h.bot.GetDB().GetAllDevices(ctx)
+		cancel()
+		if derr == nil {
+			for _, dev := range allDevices {
+				if dev.ID != nil && dev.ID.User == req.Phone {
+					h.bot.GetLogger().Infof("Removing orphan device store for %s (jid=%s)", req.Phone, dev.ID.String())
+					ctx2, cancel2 := context.WithTimeout(context.Background(), 5*time.Second)
+					if derr := dev.Delete(ctx2); derr != nil {
+						h.bot.GetLogger().Warnf("Failed to delete orphan device for %s: %v", req.Phone, derr)
+					}
+					cancel2()
+				}
+			}
+		} else {
+			h.bot.GetLogger().Warnf("Failed to enumerate devices for cleanup: %v", derr)
+		}
+	}
+
 	// Parse phone number - ensure it's in the correct format
 	phoneNumber := req.Phone
 	if phoneNumber[0] == '+' {
@@ -547,6 +571,7 @@ func (h *WhatsAppHandlers) SendMessageToGroupHandler(w http.ResponseWriter, r *h
 			Message: "Failed to send message to group",
 		})
 		h.bot.GetLogger().Infof("Failed to send message to group %s: %v", req.GroupId, err)
+		_ = resp
 		return
 	}
 
@@ -555,4 +580,38 @@ func (h *WhatsAppHandlers) SendMessageToGroupHandler(w http.ResponseWriter, r *h
 		Message: "Message sent successfully",
 		ID:      resp.ID,
 	})
+}
+
+// ProfilePictureHandler returns the profile picture URL for a given phone number
+// GET /profile-picture?bot=BOT_PHONE&phone=TARGET_PHONE
+func (h *WhatsAppHandlers) ProfilePictureHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	botPhone := r.URL.Query().Get("bot")
+	phone := r.URL.Query().Get("phone")
+	if botPhone == "" || phone == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "bot and phone required"})
+		return
+	}
+	client, err := h.bot.GetClient(botPhone)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(map[string]string{"error": "bot not found"})
+		return
+	}
+	if len(phone) > 0 && phone[0] == '+' {
+		phone = phone[1:]
+	}
+	jid, err := h.bot.ParseJID(phone + "@s.whatsapp.net")
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "invalid phone"})
+		return
+	}
+	pic, err := client.GetProfilePictureInfo(r.Context(), jid, &whatsmeow.GetProfilePictureParams{Preview: false})
+	if err != nil || pic == nil {
+		json.NewEncoder(w).Encode(map[string]string{"url": ""})
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]string{"url": pic.URL})
 }

@@ -5,6 +5,7 @@ import { useDriversStore } from '@/store/driversStore';
 import type { Driver } from '@/store/driversStore';
 import MainLayout from "@/components/layout/MainLayout";
 import MessageModal from "@/components/drivers/MessageModal";
+import EditDriverModal from "@/components/drivers/EditDriverModal";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 import toast from 'react-hot-toast';
 import debounce from 'lodash/debounce';
@@ -43,6 +44,8 @@ export function DriversClient() {
   const [isSendNotifyModalOpen, setIsSendNotifyModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [driverToDelete, setDriverToDelete] = useState<Driver | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [driverToEdit, setDriverToEdit] = useState<Driver | null>(null);
   const [filters, setFilters] = useState({
     category: '',
     clothing: '',
@@ -80,6 +83,7 @@ export function DriversClient() {
     sendApprovalMessage,
     deleteDriver,
     updateDriverIgnorePayment,
+    updateDriverFull,
     setPage,
     setLimit,
     clearError,
@@ -423,6 +427,16 @@ export function DriversClient() {
                           >
                             {driver.isApproved ? 'Reject' : 'Approve'}
                           </button>
+                          {/* Edit driver */}
+                          <button
+                            onClick={() => { setDriverToEdit(driver); setIsEditModalOpen(true); }}
+                            className="p-1 text-blue-400 hover:text-blue-600"
+                            title="Edit driver"
+                          >
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
                           <button
                             onClick={() => handleOpenMessageModal(driver)}
                             className="p-1 text-gray-400 hover:text-gray-500"
@@ -474,6 +488,17 @@ export function DriversClient() {
             </table>
           </div>
         </div>
+
+        {/* Edit Driver Modal */}
+        <EditDriverModal
+          isOpen={isEditModalOpen}
+          driver={driverToEdit}
+          onClose={() => { setIsEditModalOpen(false); setDriverToEdit(null); }}
+          onSave={async (phone, data) => {
+            await updateDriverFull(phone, data);
+            toast.success('Driver updated successfully');
+          }}
+        />
 
         {/* Message Modal */}
         {selectedDriver && (

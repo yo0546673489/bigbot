@@ -20,6 +20,25 @@ export interface GetWhatsAppGroupsResponse {
   hasPreviousPage: boolean;
 }
 
+export async function updateWhatsAppGroup(groupId: string, data: { name?: string; description?: string }): Promise<WhatsAppGroup> {
+  try {
+    const response = await api.put(`/api/whatsapp-groups/${groupId}`, data);
+    return response.data;
+  } catch (error: unknown) {
+    if (isAxiosError(error)) throw new Error(error.response?.data?.message || 'Failed to update group');
+    throw error;
+  }
+}
+
+export async function deleteWhatsAppGroup(groupId: string): Promise<void> {
+  try {
+    await api.delete(`/api/whatsapp-groups/${groupId}`);
+  } catch (error: unknown) {
+    if (isAxiosError(error)) throw new Error(error.response?.data?.message || 'Failed to delete group');
+    throw error;
+  }
+}
+
 export async function getWhatsAppGroups(params: GetWhatsAppGroupsParams): Promise<GetWhatsAppGroupsResponse> {
   const queryParams = new URLSearchParams();
   

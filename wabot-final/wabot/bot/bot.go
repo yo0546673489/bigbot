@@ -45,10 +45,15 @@ func NewWhatsAppBotManager() (*WhatsAppBotManager, error) {
 		Router:     http.NewServeMux(),
 		HTTPClient: &types.HTTPClient{
 			Client: &http.Client{
-				Timeout: 10 * time.Second,
+				// 5s timeout — was 10s. Server is local; if it hangs, we want
+				// to fail fast rather than block goroutines.
+				Timeout: 5 * time.Second,
 				Transport: &http.Transport{
-					MaxIdleConns:        100,
-					MaxIdleConnsPerHost: 20,
+					// Bumped to handle 500+ groups firing simultaneously.
+					// All requests target the same host (localhost:7878) so
+					// PerHost is what matters most. Was 100/20.
+					MaxIdleConns:        500,
+					MaxIdleConnsPerHost: 500,
 					IdleConnTimeout:     90 * time.Second,
 				},
 			},

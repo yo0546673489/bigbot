@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Custom ride notification layout — mirrors the in-app RideCard pixel-for-pixel:
+    white card, rounded, thin green border, green side bar
+    top:       [● עכשיו] ............... groupName
+    route:     origin (big) ● ─ < ─ ● destination (big)
+               full-city-name                   full-city-name
+    info:      (price chip) • seats • type
+    raw text preview
+    buttons:   [ת לקבוצה] [ת לפרטי] [ת לשניהם]   (green / blue / purple)
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:layoutDirection="rtl">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Top row: status chip + group name -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/notif_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="● עכשיו"
+                android:textSize="10sp"
+                android:textColor="#1B5E20"
+                android:textStyle="bold"
+                android:background="@drawable/notif_chip_green"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp" />
+
+            <TextView
+                android:id="@+id/notif_group"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text=""
+                android:textSize="10sp"
+                android:textColor="#B0BEC5"
+                android:maxLines="1"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:paddingStart="8dp" />
+        </LinearLayout>
+
+        <!-- Route row: origin ● ─ < ─ ● destination -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingTop="6dp"
+            android:paddingBottom="2dp">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:id="@+id/notif_origin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="20sp"
+                    android:textColor="#1B5E20"
+                    android:textStyle="bold"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/notif_origin_full"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="10sp"
+                    android:textColor="#90A4AE"
+                    android:maxLines="1" />
+            </LinearLayout>
+
+            <!-- Arrow: ● ─── < ─── ● — rebuilt to match the RideCard exactly.
+                 Round dots come from an oval drawable (bare backgrounds are
+                 square rectangles in RemoteViews). -->
+            <LinearLayout
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layoutDirection="ltr">
+                <ImageView
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:src="@drawable/notif_dot_green"
+                    android:contentDescription="" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="2dp"
+                    android:layout_weight="1"
+                    android:background="#2E7D32"
+                    android:text="" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="&lt;"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="#2E7D32"
+                    android:paddingStart="3dp"
+                    android:paddingEnd="3dp" />
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="2dp"
+                    android:layout_weight="1"
+                    android:background="#2E7D32"
+                    android:text="" />
+                <ImageView
+                    android:layout_width="10dp"
+                    android:layout_height="10dp"
+                    android:src="@drawable/notif_dot_green"
+                    android:contentDescription="" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:id="@+id/notif_destination"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="20sp"
+                    android:textColor="#1B5E20"
+                    android:textStyle="bold"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/notif_destination_full"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textSize="10sp"
+                    android:textColor="#90A4AE"
+                    android:maxLines="1" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Info row: (price) • seats • type -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:paddingTop="2dp"
+            android:paddingBottom="6dp">
+
+            <TextView
+                android:id="@+id/notif_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="12sp"
+                android:textColor="#1B5E20"
+                android:textStyle="bold"
+                android:background="@drawable/notif_price_chip"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/notif_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4 מקומות • רגיל"
+                android:textSize="11sp"
+                android:textColor="#546E7A"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp" />
+        </LinearLayout>
+
+        <!-- Waze icon (left) + Address (right) — same layout as the in-app
+             RideCard: big round Waze logo on the left, address text on its
+             right side, both vertically centered. -->
+        <RelativeLayout
+            android:id="@+id/notif_waze_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="2dp"
+            android:paddingBottom="4dp"
+            android:visibility="gone">
+
+            <!-- Waze icon pinned to the START (right in RTL) — same as card -->
+            <ImageView
+                android:id="@+id/notif_waze_icon"
+                android:layout_width="38dp"
+                android:layout_height="38dp"
+                android:src="@drawable/logo_waze"
+                android:contentDescription="Waze"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true" />
+
+            <!-- Address centered in the remaining space -->
+            <TextView
+                android:id="@+id/notif_address_with_waze"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text=""
+                android:textSize="14sp"
+                android:textColor="#37474F"
+                android:textStyle="bold"
+                android:maxLines="1" />
+        </RelativeLayout>
+
+        <!-- Address without Waze (fallback — hidden when Waze row is shown) -->
+        <TextView
+            android:id="@+id/notif_address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="14sp"
+            android:textColor="#37474F"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:maxLines="1"
+            android:paddingBottom="4dp"
+            android:visibility="gone" />
+
+        <!-- ETA chip (🚗 X דק' ממיקומך) — blue rounded chip, centered,
+             matching the in-app card. Only visible when etaMinutes > 0. -->
+        <TextView
+            android:id="@+id/notif_eta"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text=""
+            android:textSize="11sp"
+            android:textColor="#1565C0"
+            android:textStyle="bold"
+            android:background="@drawable/notif_chip_blue"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:paddingTop="3dp"
+            android:paddingBottom="3dp"
+            android:layout_marginBottom="6dp"
+            android:visibility="gone" />
+
+        <!-- Raw text preview (centered, like the address line in the card) -->
+        <TextView
+            android:id="@+id/notif_raw"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="11sp"
+            android:textColor="#37474F"
+            android:gravity="center"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:paddingBottom="8dp" />
+
+        <!-- regular_text: 3 reply buttons -->
+        <LinearLayout
+            android:id="@+id/notif_row_regular"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/notif_btn_group"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:gravity="center"
+                android:text="ת לקבוצה"
+                android:textSize="13sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/notif_btn_green"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/notif_btn_private"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginStart="2dp"
+                android:layout_marginEnd="2dp"
+                android:gravity="center"
+                android:text="ת לפרטי"
+                android:textSize="13sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/notif_btn_blue"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/notif_btn_both"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:gravity="center"
+                android:text="ת לשניהם"
+                android:textSize="13sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/notif_btn_purple"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- single_link: one big button -->
+        <LinearLayout
+            android:id="@+id/notif_row_single"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/notif_btn_take_ride"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:gravity="center"
+                android:text="⚡ קח את הנסיעה"
+                android:textSize="14sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/notif_btn_purple"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- two_links: request + chat buttons -->
+        <LinearLayout
+            android:id="@+id/notif_row_two"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/notif_btn_request_ride"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="4dp"
+                android:gravity="center"
+                android:text="🚗 בקש נסיעה"
+                android:textSize="13sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/notif_btn_purple"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/notif_btn_chat_dispatcher"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginStart="4dp"
+                android:gravity="center"
+                android:text="💬 צ'אט עם סדרן"
+                android:textSize="13sp"
+                android:textColor="#FFFFFF"
+                android:textStyle="bold"
+                android:background="@drawable/notif_btn_blue"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>

@@ -6,11 +6,42 @@ import { WhatsAppGroup } from '@/types/whatsapp-group';
 import MainLayout from "@/components/layout/MainLayout";
 import toast from 'react-hot-toast';
 
+function EditGroupModal({ group, onClose, onSave }: { group: WhatsAppGroup; onClose: () => void; onSave: (data: { name: string; description: string }) => Promise<void> }) {
+  const [name, setName] = useState(group.name || '');
+  const [description, setDescription] = useState(group.description || '');
+  const [saving, setSaving] = useState(false);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try { await onSave({ name, description }); onClose(); }
+    finally { setSaving(false); }
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">עריכת קבוצה</h3>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">שם</label>
+            <input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">תיאור</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="submit" disabled={saving} className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50">{saving ? 'שומר...' : 'שמור'}</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200">ביטול</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export function WhatsAppGroupsClient() {
-  const [filters, setFilters] = useState({
-    search: '',
-    sortBy: 'createdAt',
-  });
+  const [filters, setFilters] = useState({ search: '', sortBy: 'createdAt' });
+  const [editGroup, setEditGroup] = useState<WhatsAppGroup | null>(null);
 
   let timerDebounce: NodeJS.Timeout;
 
@@ -25,6 +56,8 @@ export function WhatsAppGroupsClient() {
     loading,
     error,
     fetchWhatsAppGroups,
+    updateGroup,
+    deleteGroup,
     setPage,
     setLimit,
     clearError,
@@ -162,6 +195,9 @@ export function WhatsAppGroupsClient() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Members
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -193,6 +229,34 @@ export function WhatsAppGroupsClient() {
                           {whatsappGroup.participantsCount}
                         </div>
                       </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditGroup(whatsappGroup)}
+                            className="p-1 text-blue-400 hover:text-blue-600"
+                            title="Edit group"
+                          >
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`למחוק את הקבוצה "${whatsappGroup.name}"?`)) return;
+                              try {
+                                await deleteGroup(whatsappGroup._id);
+                                toast.success('Group deleted');
+                              } catch { toast.error('Failed to delete group'); }
+                            }}
+                            className="p-1 text-red-400 hover:text-red-600"
+                            title="Delete group"
+                          >
+                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -208,6 +272,17 @@ export function WhatsAppGroupsClient() {
           </div>
         </div>
       </div>
+
+      {editGroup && (
+        <EditGroupModal
+          group={editGroup}
+          onClose={() => setEditGroup(null)}
+          onSave={async (data) => {
+            await updateGroup(editGroup._id, data);
+            toast.success('Group updated');
+          }}
+        />
+      )}
     </MainLayout>
   );
 } 

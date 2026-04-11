@@ -158,32 +158,45 @@ func (r *RedisService) DeleteGroupInfo(ctx context.Context, groupID string) erro
 	return nil
 }
 
-// SetMessage caches message information in Redis with TTL
+// SetMessage caches message information in Redis with TTL.
+// Uses a GLOBAL key (no botPhone) so any user — not just the one that won
+// the dedup race and forwarded the message — can later look it up to build
+// a quoted reply. Per-user keys are also written for legacy code paths.
 func (r *RedisService) SetMessage(ctx context.Context, messageID string, botPhone string, message *events.Message) error {
-	key := fmt.Sprintf("messagev2:%s:%s", botPhone, messageID)
-
 	// Serialize message to JSON
 	data, err := json.Marshal(message)
 	if err != nil {
 		return fmt.Errorf("failed to marshal message: %v", err)
 	}
 
-	// Set with TTL of 2 hours
-	err = r.client.Set(ctx, key, data, 2*time.Hour).Err()
-	if err != nil {
-		return fmt.Errorf("failed to set message in Redis: %v", err)
+	globalKey := fmt.Sprintf("messagev2:%s", messageID)
+	if err := r.client.Set(ctx, globalKey, data, 2*time.Hour).Err(); err != nil {
+		return fmt.Errorf("failed to set global message in Redis: %v", err)
+	}
+
+	// Backwards compat: also write the per-bot key so any code that still
+	// looks up by (botPhone, messageID) keeps working.
+	if botPhone != "" {
+		perBotKey := fmt.Sprintf("messagev2:%s:%s", botPhone, messageID)
+		_ = r.client.Set(ctx, perBotKey, data, 2*time.Hour).Err()
 	}
 
 	return nil
 }
 
-// GetMessage retrieves message information from Redis cache
+// GetMessage retrieves message information from Redis cache.
+// Tries the GLOBAL key first (so any user can look up any forwarded message),
+// then falls back to the per-bot key for legacy data.
 func (r *RedisService) GetMessage(ctx context.Context, messageID string, botPhone string) (*events.Message, error) {
-	key := fmt.Sprintf("messagev2:%s:%s", botPhone, messageID)
-
-	data, err := r.client.Get(ctx, key).Result()
+	globalKey := fmt.Sprintf("messagev2:%s", messageID)
+	data, err := r.client.Get(ctx, globalKey).Result()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get message from Redis: %v", err)
+		// Fallback to legacy per-bot key
+		perBotKey := fmt.Sprintf("messagev2:%s:%s", botPhone, messageID)
+		data, err = r.client.Get(ctx, perBotKey).Result()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get message from Redis: %v", err)
+		}
 	}
 
 	var message events.Message

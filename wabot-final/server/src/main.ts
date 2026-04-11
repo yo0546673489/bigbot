@@ -40,8 +40,15 @@ async function bootstrap() {
 
   // Enable CORS
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'], // Allow both ports
-    credentials: true, // Allow credentials (cookies, authorization headers)
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://bigbotdrivers.com',
+      'https://www.bigbotdrivers.com',
+      'https://admin.bigbotdrivers.com',
+      'https://api.bigbotdrivers.com',
+    ],
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });

@@ -16,6 +16,16 @@ export class AreaShortcut {
 
   @Prop({ type: String, required: true, trim: true })
   fullName: string;
+
+  // Geographic coordinates (populated by backfill_areashortcuts_coords.js via
+  // Nominatim). Used by the km-range filter feature to compute real distances
+  // between the ride origin and the driver's keyword city. Optional — a city
+  // without coords is treated as "fail open" (passes the filter).
+  @Prop({ type: Number, required: false })
+  lat?: number;
+
+  @Prop({ type: Number, required: false })
+  lng?: number;
 }
 export type AreaShortcutDocument = AreaShortcut & Document;
 export const AreaShortcutSchema = SchemaFactory.createForClass(AreaShortcut);

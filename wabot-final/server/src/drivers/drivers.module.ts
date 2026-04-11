@@ -2,6 +2,9 @@ import { Module, forwardRef } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DriversService } from './drivers.service';
 import { DriversController } from './drivers.controller';
+import { AdminAreasController } from './admin-areas.controller';
+import { AppDriverController } from './app-driver.controller';
+import { EtaService } from './eta.service';
 import { RegistrationStateService } from './registration-state.service';
 import { Driver, DriverSchema } from './schemas/driver.schema';
 import { WawebModule } from '../waweb/waweb.module';
@@ -20,8 +23,8 @@ import { LocalizationModule } from 'src/common/localization/localization.module'
     WhatsAppMessagingModule,
     LocalizationModule,
   ],
-  controllers: [DriversController],
-  providers: [DriversService, RegistrationStateService],
-  exports: [DriversService, RegistrationStateService],
+  controllers: [DriversController, AppDriverController, AdminAreasController],
+  providers: [DriversService, RegistrationStateService, EtaService],
+  exports: [DriversService, RegistrationStateService, EtaService],
 })
-export class DriversModule {} 
+export class DriversModule {}

@@ -50,7 +50,7 @@ export async function getDrivers(params: GetDriversParams): Promise<GetDriversRe
   }
 }
 
-export async function updateDriver(phone: string, data: { isApproved?: boolean; ignorePayment?: boolean }): Promise<Driver> {
+export async function updateDriver(phone: string, data: { name?: string; vehicle?: string; clothing?: string; isApproved?: boolean; isActive?: boolean; ignorePayment?: boolean }): Promise<Driver> {
   try {
     const response = await api.patch(`/api/drivers/${phone}`, data);
     return response.data;

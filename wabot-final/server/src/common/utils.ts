@@ -116,6 +116,130 @@ export function extractPhoneAndTextFromWaMeLink(link: string): { phoneNumber: st
     return { phoneNumber, messageText };
 }
 
+// ======================================================================
+// Ride message parser
+// ----------------------------------------------------------------------
+// 4 message types per spec:
+//   regular_text  — 0 links              → buttons: reply group / private / both
+//   single_link   — 1 link               → button:  bot ride request
+//   two_links     — 2 links              → buttons: bot ride request + dispatcher chat
+//   multi_ride    — 4+ links (≥2 rides)  → split into blocks, one ride card each
+//
+// Rules:
+//   - Link order is FIXED: links[0] = bot (ride request), links[1] = dispatcher (chat)
+//   - Multi-ride blocks split by 🚗 / 🔷 / numbered prefix / "פנוי ב..."
+//   - Chat link is OPEN-ONLY: never auto-sends a message
+// ======================================================================
+
+export type RideMessageType = 'regular_text' | 'single_link' | 'two_links' | 'multi_ride';
+
+export interface ParsedRideBlock {
+    type: 'regular_text' | 'single_link' | 'two_links';
+    rawText: string;
+    rideRequestLink: string;     // First link if present (bot ride request)
+    rideRequestPhone: string;    // Phone number from rideRequestLink
+    rideRequestText: string;     // Pre-filled text from rideRequestLink (e.g. "ת")
+    chatLink: string;            // Second link if present (dispatcher chat)
+    chatPhone: string;           // Phone number from chatLink
+    chatText: string;            // Pre-filled text from chatLink (e.g. "צ kx8 ...")
+}
+
+export interface ParsedRideMessage {
+    type: RideMessageType;
+    blocks: ParsedRideBlock[];   // 1 entry for types 1-3, multiple for multi_ride
+}
+
+const LINK_REGEX = /(https?:\/\/\S+|wa\.me\/\S+)/g;
+
+function extractAllLinks(text: string): string[] {
+    return text.match(LINK_REGEX) || [];
+}
+
+function buildBlock(blockText: string): ParsedRideBlock {
+    const links = extractAllLinks(blockText);
+    let rideRequestLink = '', rideRequestPhone = '', rideRequestText = '';
+    let chatLink = '', chatPhone = '', chatText = '';
+
+    if (links.length >= 1) {
+        rideRequestLink = links[0];
+        const parsed = extractPhoneAndTextFromWaMeLink(rideRequestLink);
+        if (parsed) {
+            rideRequestPhone = parsed.phoneNumber;
+            rideRequestText = parsed.messageText || 'ת';
+        }
+    }
+    if (links.length >= 2) {
+        chatLink = links[1];
+        const parsed = extractPhoneAndTextFromWaMeLink(chatLink);
+        if (parsed) {
+            chatPhone = parsed.phoneNumber;
+            chatText = parsed.messageText || 'צ';
+        }
+    }
+
+    let type: ParsedRideBlock['type'];
+    if (links.length === 0) type = 'regular_text';
+    else if (links.length === 1) type = 'single_link';
+    else type = 'two_links';
+
+    return { type, rawText: blockText, rideRequestLink, rideRequestPhone, rideRequestText, chatLink, chatPhone, chatText };
+}
+
+// Lines that mark the start of a new ride inside a multi-ride message.
+function isNewRideIndicator(line: string): boolean {
+    const trimmed = line.trim();
+    if (!trimmed) return false;
+    if (trimmed.includes('🚗') || trimmed.includes('🔷')) return true;
+    if (/^\s*\d+[.)]\s/.test(trimmed)) return true;            // "1. ..." / "2) ..."
+    if (/(^|\s)פנוי\s*ב/.test(trimmed)) return true;          // "פנוי בב..."
+    if (/(^|\s)נסיעה\s*\d/.test(trimmed)) return true;        // "נסיעה 1"
+    return false;
+}
+
+function splitMessageToRideBlocks(text: string): string[] {
+    const lines = text.split('\n');
+    const blocks: string[] = [];
+    let current: string[] = [];
+    for (const line of lines) {
+        if (isNewRideIndicator(line) && current.length > 0) {
+            blocks.push(current.join('\n'));
+            current = [line];
+        } else {
+            current.push(line);
+        }
+    }
+    if (current.length > 0) blocks.push(current.join('\n'));
+    return blocks.map(b => b.trim()).filter(b => b.length > 0);
+}
+
+/**
+ * Parse a WhatsApp group message into ride blocks per the BigBot spec.
+ * Always returns at least one block.
+ */
+export function parseRideMessage(text: string): ParsedRideMessage {
+    const allLinks = extractAllLinks(text);
+
+    // 4+ links → potential multi-ride. Try to split into blocks; only treat
+    // it as multi_ride if the split actually produces ≥2 blocks each containing
+    // at least one link. Otherwise fall back to a single block.
+    if (allLinks.length >= 4) {
+        const rawBlocks = splitMessageToRideBlocks(text);
+        const blocks = rawBlocks.map(buildBlock);
+        const linkedBlocks = blocks.filter(b => b.rideRequestLink || b.chatLink);
+        if (linkedBlocks.length >= 2) {
+            return { type: 'multi_ride', blocks: linkedBlocks };
+        }
+    }
+
+    // 0-2 links (or 4+ that didn't split well) → single block
+    const block = buildBlock(text);
+    let type: RideMessageType;
+    if (block.type === 'regular_text') type = 'regular_text';
+    else if (block.type === 'single_link') type = 'single_link';
+    else type = 'two_links';
+    return { type, blocks: [block] };
+}
+
 export const fixBoldMultiLine = (str: string) => {
     return str.replace(/\*/g, '')
         .split('\n')
@@ -141,6 +265,133 @@ export const isNeedToPay = (user: Driver) => {
 
 export const getTimezone = (language: string) => {
     return language === 'he' ? 'Asia/Jerusalem' : 'Asia/Ho_Chi_Minh';
+}
+
+// ======================================================================
+// App vehicle filters (Hebrew labels chosen by the user from the Android app)
+// ----------------------------------------------------------------------
+// Each label maps to the Hebrew keywords it should match in a ride message.
+// '4 מקומות' is special: it matches when NO specialized keyword appears at
+// all (i.e. the default unspecified ride). 'כולם' bypasses all filtering.
+// ======================================================================
+
+export const APP_VEHICLE_FILTER_LABELS = [
+    '4 מקומות',
+    'מיניק',
+    'מיניבוס',
+    '6 מקומות',
+    '7 מקומות',
+    '8 מקומות',
+    '9 מקומות',
+    'ספיישל',
+    'רכב גדול',
+    'כולם',
+] as const;
+
+// ======================================================================
+// Ride-message analysis helpers
+// ======================================================================
+
+/**
+ * Words/phrases in ride messages that carry extra info but are NOT location
+ * identifiers. Strip them before trying to match a city/street.
+ */
+export const RIDE_EXCLUSION_PHRASES = [
+    'פיצי מעל', 'מעל', 'ללא פון', 'נסיעה כשרה', 'אני משלם',
+    'פיי', 'ביט בסיום', 'פתק', 'נחת עכשיו', 'בדרכונים', 'בחוץ',
+    'נהג זורם', 'תופס פאגש', 'לפיש', 'תחנות בתוספת', 'שקית קטנה',
+    'כסא תינוק', 'סלקל', 'רכב נוח', 'מנהלים', 'קבלה חובה', 'קבלה בתוספת',
+    'א1', 'א 1', '2 ג', '1 ק',
+];
+
+// Keywords in a ride message that indicate a LARGE vehicle (≥6 seats) is required.
+// Each entry carries the minimum seat count it implies.
+const LARGE_VEHICLE_PATTERNS: { keywords: string[]; minSeats: number }[] = [
+    { keywords: ['9 מקומות', 'תשע מקומות', 'מיניק מרווח', 'סיינה מעל'], minSeats: 9 },
+    { keywords: ['8 מקומות', 'שמונה מקומות', 'ויטו', 'רודיוס', 'מיניבוס'], minSeats: 8 },
+    { keywords: ['7 מקומות', 'שבע מקומות', 'סיינה', 'סייאנה', 'מיניק'], minSeats: 7 },
+    { keywords: ['6 מקומות', 'שש מקומות', '6 גדול', 'רכב גדול'], minSeats: 6 },
+    { keywords: ['4 מקומות', 'ארבע מקומות'], minSeats: 4 },
+];
+
+/**
+ * Returns the minimum seat count a ride message requires.
+ * 4 = regular (no large-vehicle keyword, or explicit "4 מקומות").
+ * 6/7/8/9 = various large vehicles.
+ */
+export function detectRideSeatRequirement(message: string): number {
+    const lower = (message || '').toLowerCase();
+    for (const { keywords, minSeats } of LARGE_VEHICLE_PATTERNS) {
+        if (keywords.some(k => lower.includes(k.toLowerCase()))) return minSeats;
+    }
+    return 4; // no keyword → standard regular ride
+}
+
+// How many seats a driver's selected filter label implies they have.
+const DRIVER_FILTER_CAPACITY: Record<string, number> = {
+    '4 מקומות': 4,
+    '6 מקומות': 6,
+    '7 מקומות': 7,
+    '8 מקומות': 8,
+    '9 מקומות': 9,
+    'מיניק':    8,   // מיניק is typically a 7-8 seat vehicle
+    'מיניבוס':  9,   // מיניבוס can carry 9+
+    'ספיישל':   99,  // special/VIP — accepts everything
+    'רכב גדול': 99,  // generic large — accepts any large + regular
+    'כולם':     99,  // all types
+};
+
+/**
+ * Returns true if the ride message matches at least one of the driver's
+ * selected vehicle-type filters, applying the hierarchical capacity rule:
+ *
+ *   A driver with N seats can take any ride requiring ≤ N seats.
+ *
+ * - empty list / 'כולם' → accept all
+ * - '4 מקומות'          → accept only regular (minSeats ≤ 4)
+ * - '6 מקומות'          → accept regular + 6-seat rides
+ * - '7 מקומות'          → accept regular + 6 + 7
+ * - '8 מקומות'          → accept regular + 6 + 7 + 8
+ * - '9 מקומות'          → accept all
+ * - 'רכב גדול'          → accept all (large vehicle can also do regular runs)
+ */
+export function matchAppVehicleFilter(message: string, selectedFilters: string[]): boolean {
+    if (!selectedFilters || selectedFilters.length === 0) return true;
+    if (selectedFilters.includes('כולם')) return true;
+
+    const rideSeats = detectRideSeatRequirement(message);
+
+    for (const filter of selectedFilters) {
+        const capacity = DRIVER_FILTER_CAPACITY[filter];
+        if (capacity !== undefined && rideSeats <= capacity) return true;
+    }
+    return false;
+}
+
+// ======================================================================
+// Delivery detection
+// ======================================================================
+
+const DELIVERY_KEYWORDS = ['משלוח', 'משלוחים', 'נחת'];
+const DELIVERY_TIME_PATTERN = /עד\s+(שעה|שעתיים|\d+\s*שעות)/;
+// "תופס פאגש" is explicitly NOT a delivery indicator per spec.
+const DELIVERY_EXCLUSION = ['תופס פאגש'];
+
+/**
+ * Returns true if the ride message describes a delivery (not a regular
+ * passenger ride). A ride is a delivery when it contains:
+ *  - "משלוח" / "משלוחים"
+ *  - a time phrase like "עד שעה / עד שעתיים / עד X שעות"
+ *
+ * Phrases in DELIVERY_EXCLUSION explicitly opt-out of the delivery label
+ * even when other keywords appear.
+ */
+export function isDeliveryRide(message: string): boolean {
+    const lower = (message || '').toLowerCase();
+    if (DELIVERY_EXCLUSION.some(ex => lower.includes(ex.toLowerCase()))) return false;
+    if (DELIVERY_KEYWORDS.some(k => lower.includes(k.toLowerCase()))) return true;
+    if (DELIVERY_TIME_PATTERN.test(lower)) return true;
+    return false;
 }
 
 export const isDriverEligible = (

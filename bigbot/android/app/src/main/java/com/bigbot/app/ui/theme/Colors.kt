@@ -1,0 +1,28 @@
+package com.bigbot.app.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+val Primary = Color(0xFF2E7D32)
+val PrimaryLight = Color(0xFFA5D6A7)
+val PrimaryBg = Color(0xFFE8F5E9)
+val PageBg = Color(0xFFF6FBF7)
+val CardBg = Color(0xFFFFFFFF)
+val Border = Color(0xFFE0F2E9)
+val Blue = Color(0xFF1565C0)
+val Purple = Color(0xFF5E35B1)
+val AppRed = Color(0xFFC62828)
+val AppOrange = Color(0xFFF9A825)
+val Waze = Color(0xFF33CCFF)
+val TextPrimary = Color(0xFF212121)
+val TextSecondary = Color(0xFF78909C)
+val TextGreen = Color(0xFF1B5E20)
+val GreenDark = Color(0xFF1B5E20)
+val GreenLight = Color(0xFF66BB6A)
+val GreenBorder = Color(0xFFC8E6C9)
+val GreenBg = Color(0xFFE8F5E9)
+val RedBg = Color(0xFFFFEBEE)
+val OrangeBg = Color(0xFFFFF8E1)
+val PurpleBg = Color(0xFFEDE7F6)
+val BlueBg = Color(0xFFE3F2FD)
+val SlateGray = Color(0xFF455A64)
+val DividerColor = Color(0xFFF1F8F2)

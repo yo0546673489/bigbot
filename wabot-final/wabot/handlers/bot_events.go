@@ -79,11 +79,24 @@ func (h *WhatsAppHandlers) handleLoggedOutEvent(eventData *types.EventData) {
 func (s *WhatsAppHandlers) handleMessage(msg *events.Message, botPhone string) {
 	if msg.Info.IsFromMe {
 		s.handleMessageFromMe(msg, botPhone)
+		// Also forward outgoing PRIVATE messages so the app's chat shows
+		// messages the user typed directly in WhatsApp on their phone.
+		if msg.Info.Chat.Server == "s.whatsapp.net" || msg.Info.Chat.Server == "lid" {
+			body := s.getMessageText(msg)
+			if body != "" {
+				// For from-me messages, the "chat partner" is the recipient (Chat),
+				// not the bot itself.
+				recipient := msg.Info.Chat.User
+				go s.forwardPrivateMessageToServerWithFlag(msg, recipient, botPhone, true)
+			}
+		}
 		return
 	}
 
-	// ✅ FIX 1: Global deduplication - only ONE bot processes each message
-	// Even if 50 bots are in the same group, only one will process the message
+	// Global deduplication — only ONE forwarding per message regardless of
+	// how many users are members of the group. The server-side matching
+	// iterates over every user who's a member of the group and checks their
+	// keywords individually, so duplicate forwards are wasteful.
 	if s.redisService != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()
@@ -91,8 +104,7 @@ func (s *WhatsAppHandlers) handleMessage(msg *events.Message, botPhone string) {
 		dedupeKey := "wa:msg:seen:" + msg.Info.ID
 		acquired, err := s.redisService.GetClient().SetNX(ctx, dedupeKey, botPhone, 30*time.Second).Result()
 		if err == nil && !acquired {
-			// Another bot instance already processing this message
-			s.bot.GetLogger().Debugf("Message %s already being processed, skipping (bot: %s)", msg.Info.ID, botPhone)
+			s.bot.GetLogger().Debugf("Message %s already forwarded by another user, skipping (user: %s)", msg.Info.ID, botPhone)
 			return
 		}
 	}
@@ -122,24 +134,110 @@ func (s *WhatsAppHandlers) handlePresence(presence *events.Presence) {
 }
 
 func (s *WhatsAppHandlers) extractPhoneFromMessage(msg *events.Message) string {
+	// Group messages: prefer SenderAlt (real phone) over Sender (which may be a LID)
 	if msg.Info.Chat.Server == "g.us" && msg.Info.SenderAlt.Server == "s.whatsapp.net" {
 		return msg.Info.SenderAlt.User
 	}
+	// Private chats with a real phone number
 	if msg.Info.Chat.Server == "s.whatsapp.net" {
 		return msg.Info.Chat.User
 	}
 	if msg.Info.Sender.Server == "s.whatsapp.net" {
 		return msg.Info.Sender.User
 	}
+	// Private chats from a LID (linked id) — try to resolve to a real phone
+	if msg.Info.SenderAlt.Server == "s.whatsapp.net" {
+		return msg.Info.SenderAlt.User
+	}
 	return msg.Info.Chat.User
 }
 
 func (s *WhatsAppHandlers) getMessageText(msg *events.Message) string {
-	body := msg.Message.GetConversation()
-	if msg.Message.GetExtendedTextMessage() != nil {
-		body = msg.Message.GetExtendedTextMessage().GetText()
+	// Plain conversation
+	if t := msg.Message.GetConversation(); t != "" {
+		return t
 	}
-	return body
+	// Text with link preview
+	if et := msg.Message.GetExtendedTextMessage(); et != nil {
+		if t := et.GetText(); t != "" {
+			return t
+		}
+	}
+	// Image / video / document captions
+	if im := msg.Message.GetImageMessage(); im != nil {
+		if c := im.GetCaption(); c != "" {
+			return c
+		}
+	}
+	if vm := msg.Message.GetVideoMessage(); vm != nil {
+		if c := vm.GetCaption(); c != "" {
+			return c
+		}
+	}
+	if dm := msg.Message.GetDocumentMessage(); dm != nil {
+		if c := dm.GetCaption(); c != "" {
+			return c
+		}
+	}
+	// Buttons message (the kind drivebot uses to send rides with action buttons)
+	if bm := msg.Message.GetButtonsMessage(); bm != nil {
+		if t := bm.GetContentText(); t != "" {
+			return t
+		}
+		if t := bm.GetText(); t != "" {
+			return t
+		}
+	}
+	// List message
+	if lm := msg.Message.GetListMessage(); lm != nil {
+		if t := lm.GetDescription(); t != "" {
+			return t
+		}
+		if t := lm.GetTitle(); t != "" {
+			return t
+		}
+	}
+	// Template message (hydrated four-row card)
+	if tm := msg.Message.GetTemplateMessage(); tm != nil {
+		if h := tm.GetHydratedTemplate(); h != nil {
+			if t := h.GetHydratedContentText(); t != "" {
+				return t
+			}
+		}
+	}
+	// Interactive message (modern WhatsApp business API rich content)
+	if im := msg.Message.GetInteractiveMessage(); im != nil {
+		if b := im.GetBody(); b != nil {
+			if t := b.GetText(); t != "" {
+				return t
+			}
+		}
+		if h := im.GetHeader(); h != nil {
+			if t := h.GetTitle(); t != "" {
+				return t
+			}
+		}
+	}
+	// View-once / ephemeral wrapper
+	if v := msg.Message.GetEphemeralMessage(); v != nil && v.GetMessage() != nil {
+		inner := &events.Message{Message: v.GetMessage()}
+		if t := s.getMessageText(inner); t != "" {
+			return t
+		}
+	}
+	if v := msg.Message.GetViewOnceMessage(); v != nil && v.GetMessage() != nil {
+		inner := &events.Message{Message: v.GetMessage()}
+		if t := s.getMessageText(inner); t != "" {
+			return t
+		}
+	}
+	if v := msg.Message.GetViewOnceMessageV2(); v != nil && v.GetMessage() != nil {
+		inner := &events.Message{Message: v.GetMessage()}
+		if t := s.getMessageText(inner); t != "" {
+			return t
+		}
+	}
+	return ""
 }
 
 func (s *WhatsAppHandlers) getMessageType(msg *events.Message) string {
@@ -176,15 +274,42 @@ func (s *WhatsAppHandlers) getMessageType(msg *events.Message) string {
 	return "unknown"
 }
 
-// forwardPrivateMessageToServer forwards private (non-group) messages to the server
+// forwardPrivateMessageToServer forwards an INCOMING private message to the server
 func (s *WhatsAppHandlers) forwardPrivateMessageToServer(msg *events.Message, senderPhone string, botPhone string) {
+	s.forwardPrivateMessageToServerWithFlag(msg, senderPhone, botPhone, false)
+}
+
+// forwardPrivateMessageToServerWithFlag forwards a private message with an explicit isFromMe flag.
+// For incoming messages, partnerPhone is the actual sender. For from-me messages, it is the recipient.
+func (s *WhatsAppHandlers) forwardPrivateMessageToServerWithFlag(msg *events.Message, partnerPhone string, botPhone string, isFromMe bool) {
+	// If partnerPhone is a LID (Chat.Server == "lid"), try to resolve to a real phone
+	if msg.Info.Chat.Server == "lid" || msg.Info.Sender.Server == "lid" {
+		client, err := s.bot.GetClient(botPhone)
+		if err == nil && client != nil && client.Store != nil && client.Store.LIDs != nil {
+			lidJID := msg.Info.Chat
+			if lidJID.Server != "lid" && msg.Info.Sender.Server == "lid" {
+				lidJID = msg.Info.Sender
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			pnJID, lerr := client.Store.LIDs.GetPNForLID(ctx, lidJID)
+			cancel()
+			if lerr == nil && pnJID.Server == "s.whatsapp.net" && pnJID.User != "" {
+				s.bot.GetLogger().Infof("Resolved LID %s -> phone %s", lidJID.User, pnJID.User)
+				partnerPhone = pnJID.User
+			} else if lerr != nil {
+				s.bot.GetLogger().Warnf("Failed to resolve LID %s: %v", lidJID.User, lerr)
+			}
+		}
+	}
+
 	payload := map[string]interface{}{
-		"senderPhone": senderPhone,
+		"senderPhone": partnerPhone,
 		"botPhone":    botPhone,
 		"body":        s.getMessageText(msg),
 		"messageId":   msg.Info.ID,
 		"fromName":    msg.Info.PushName,
 		"timestamp":   msg.Info.Timestamp.Unix(),
+		"isFromMe":    isFromMe,
 	}
 
 	jsonData, err := json.Marshal(payload)
@@ -203,7 +328,7 @@ func (s *WhatsAppHandlers) forwardPrivateMessageToServer(msg *events.Message, se
 		return
 	}
 	defer resp.Body.Close()
-	s.bot.GetLogger().Debugf("Private message from %s forwarded to server", senderPhone)
+	s.bot.GetLogger().Debugf("Private message (isFromMe=%v) with %s forwarded to server", isFromMe, partnerPhone)
 }
 
 // forwardMessageToServerHTTP forwards messages to the main server via Redis Queue or HTTP fallback

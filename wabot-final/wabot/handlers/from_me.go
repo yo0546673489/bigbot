@@ -249,6 +249,7 @@ func (s *WhatsAppHandlers) sendPrivateQuotedReplyToUser(client *whatsmeow.Client
 // sendReplyToGroup sends a quoted reply to a group
 // ✅ FIX 3 applied here too: clean QuotedMessage without MentionedJids
 func (s *WhatsAppHandlers) sendReplyToGroup(botPhone, groupId, messageId, displayText string) {
+	t0 := time.Now()
 	s.bot.GetLogger().Infof("Sending reply to group: groupId=%s, messageId=%s", groupId, messageId)
 
 	client, err := s.bot.GetClient(botPhone)
@@ -268,35 +269,41 @@ func (s *WhatsAppHandlers) sendReplyToGroup(botPhone, groupId, messageId, displa
 		return
 	}
 
-	if s.redisService == nil {
-		s.bot.GetLogger().Errorf("Redis service not available")
-		return
+	// Try to load the original message for a clean quoted reply, but don't
+	// block on Redis: if it's missing (different bot won the dedup race and
+	// hasn't pushed to the global key yet), fall back to sending a plain
+	// text "ת" so the user doesn't wait for the round-trip.
+	var contextInfo *waE2E.ContextInfo
+	if s.redisService != nil {
+		messageStore, err := s.redisService.GetMessage(context.Background(), messageId, botPhone)
+		if err == nil && messageStore != nil {
+			originalText := getTextFromMessage(messageStore.Message)
+			cleanQuotedMsg := &waE2E.Message{
+				Conversation: proto.String(originalText),
+			}
+			// Participant is required for quoted replies in groups — WhatsApp
+			// won't render the quote bubble without the sender's JID.
+			var participant *string
+			if messageStore.Info.Sender.User != "" {
+				p := messageStore.Info.Sender.String()
+				participant = &p
+			}
+			contextInfo = &waE2E.ContextInfo{
+				StanzaID:      proto.String(messageId),
+				Participant:   participant,
+				RemoteJID:     proto.String(groupId),
+				QuotedMessage: cleanQuotedMsg,
+			}
+		} else if err != nil {
+			s.bot.GetLogger().Warnf("sendReplyToGroup: message %s not in Redis (%v) — sending plain text", messageId, err)
+		}
 	}
-
-	messageStore, err := s.redisService.GetMessage(context.Background(), messageId, botPhone)
-	if err != nil {
-		s.bot.GetLogger().Errorf("Failed to get message from Redis: %v", err)
-		return
-	}
-
-	// ✅ FIX 3: Clean QuotedMessage - extract only text, discard MentionedJid list!
-	// Original bug: QuotedMessage: messageStore.Message  <- this includes MentionedJid
-	// which causes WhatsApp to tag ALL drivers who received the notification
-	originalText := getTextFromMessage(messageStore.Message)
-	cleanQuotedMsg := &waE2E.Message{
-		Conversation: proto.String(originalText),
-		// ✅ No MentionedJid field at all!
-	}
+	tRedis := time.Now()
 
 	message := &waE2E.Message{
 		ExtendedTextMessage: &waE2E.ExtendedTextMessage{
-			Text: proto.String(displayText),
-			ContextInfo: &waE2E.ContextInfo{
-				StanzaID:      proto.String(messageId),
-				RemoteJID:     proto.String(groupId),
-				// Participant field intentionally omitted - prevents individual mentions
-				QuotedMessage: cleanQuotedMsg, // ✅ Clean - won't tag anyone!
-			},
+			Text:        proto.String(displayText),
+			ContextInfo: contextInfo, // nil = plain text, not nil = quoted reply
 		},
 	}
 
@@ -305,8 +312,14 @@ func (s *WhatsAppHandlers) sendReplyToGroup(botPhone, groupId, messageId, displa
 		s.bot.GetLogger().Errorf("Failed to send quoted message to group: %v", err)
 		return
 	}
+	tSend := time.Now()
 
-	s.bot.GetLogger().Infof("Reply sent to group %s: %s", groupId, resp.ID)
+	s.bot.GetLogger().Infof("Reply sent to group %s: %s (redis=%dms send=%dms total=%dms)",
+		groupId, resp.ID,
+		tRedis.Sub(t0).Milliseconds(),
+		tSend.Sub(tRedis).Milliseconds(),
+		tSend.Sub(t0).Milliseconds(),
+	)
 }
 
 func (s *WhatsAppHandlers) handleSendPrivateMessage(botPhone, phoneNumber, privateMessageBase64 string) {

@@ -28,8 +28,8 @@ export default function BotConnection() {
       const response = await fetch('/api/waweb/whatsapp-status');
       if (!response.ok) throw new Error();
       const data = await response.json();
-      const connected = Array.isArray(data) && data.some((d: any) => d.isHealthy);
-      const phone = Array.isArray(data) && data.find((d: any) => d.isHealthy)?.phone;
+      const connected = Array.isArray(data) && data.some((d: { isHealthy: boolean }) => d.isHealthy);
+      const phone = Array.isArray(data) && data.find((d: { isHealthy: boolean; phone?: string }) => d.isHealthy)?.phone;
       setStatus({ isConnected: connected, phoneNumber: phone || undefined });
       if (connected) setStep('connected');
     } catch {
@@ -57,8 +57,9 @@ export default function BotConnection() {
       }
       setPairingCode(data.code);
       setStep('showing-code');
-    } catch (error: any) {
-      toast.error('שגיאה: ' + (error.message || 'לא ניתן לקבל קוד חיבור'));
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'לא ניתן לקבל קוד חיבור';
+      toast.error('שגיאה: ' + msg);
     } finally {
       setIsRequesting(false);
     }

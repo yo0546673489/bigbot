@@ -28,6 +28,7 @@ interface DriversState {
   error: string | null;
   fetchDrivers: (params: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: 'asc' | 'desc', append?: boolean }) => Promise<void>;
   updateDriverStatus: (phone: string, isApproved: boolean) => Promise<void>;
+  updateDriverFull: (phone: string, data: { name?: string; vehicle?: string; clothing?: string; isApproved?: boolean }) => Promise<void>;
   sendApprovalMessage: (phone: string) => Promise<void>;
   deleteDriver: (phone: string) => Promise<void>;
   updateDriverIgnorePayment: (phone: string, ignorePayment: boolean) => Promise<void>;
@@ -87,6 +88,26 @@ export const useDriversStore = create<DriversState>((set, get) => ({
       } else {
         set({ loading: false, error: 'Failed to update driver status' });
       }
+    }
+  },
+
+  updateDriverFull: async (phone, data) => {
+    set({ loading: true, error: null });
+    try {
+      const response = await updateDriver(phone, data);
+      set((state) => ({
+        items: state.items.map((driver) =>
+          driver.phone === phone ? { ...driver, ...response } : driver
+        ),
+        loading: false,
+      }));
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        set({ loading: false, error: error.response?.data?.message || 'Failed to update driver' });
+      } else {
+        set({ loading: false, error: 'Failed to update driver' });
+      }
+      throw error;
     }
   },
 

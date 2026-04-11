@@ -33,6 +33,9 @@ func SetupRoutes(handlers *handlers.WhatsAppHandlers) http.Handler {
 	// Send a message to a group by groupId (optionally specify phone)
 	mux.HandleFunc("POST /send-message-to-group", handlers.SendMessageToGroupHandler)
 
+	// Get profile picture URL for a phone number
+	mux.HandleFunc("GET /profile-picture", handlers.ProfilePictureHandler)
+
 	// Setup CORS
 	c := cors.New(cors.Options{
 		AllowedOrigins: []string{"*"},

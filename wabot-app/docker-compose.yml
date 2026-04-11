@@ -1,0 +1,56 @@
+version: '3.9'
+
+services:
+  server:
+    build: ./server
+    container_name: wabot-app-server
+    ports:
+      - "7879:7879"
+    environment:
+      - PORT=7879
+      - MONGO_URI=mongodb://mongo:27017
+      - MONGO_DB=wabot_dev
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=wabot-secret-change-in-prod
+      - LOG_LEVEL=info
+      - SPECIAL_GROUP=120363024226519232@g.us
+      - WABOT_DB_PATH=/app/data/wabot.db
+    depends_on:
+      - redis
+      - mongo
+    volumes:
+      - wabot_db:/app/data
+    restart: unless-stopped
+    networks:
+      - wabot-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: wabot-app-redis
+    ports:
+      - "6381:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    networks:
+      - wabot-net
+
+  mongo:
+    image: mongo:7
+    container_name: wabot-app-mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    networks:
+      - wabot-net
+
+volumes:
+  redis_data:
+  mongo_data:
+  wabot_db:
+
+networks:
+  wabot-net:
+    driver: bridge
