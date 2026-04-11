@@ -24,7 +24,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val driverPhone by viewModel.driverPhone.collectAsState()
     val waConnected by viewModel.waConnected.collectAsState()
     val autoMode by viewModel.autoMode.collectAsState()
-    val quickReplies by viewModel.quickReplies.collectAsState()
     val autoSend by viewModel.autoSend.collectAsState()
     val defaultEta by viewModel.defaultEta.collectAsState()
     val autoLocation by viewModel.autoLocation.collectAsState()
@@ -36,23 +35,13 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val vehicleTypes by viewModel.vehicleTypes.collectAsState()
     val silentMode by viewModel.silentMode.collectAsState()
     val serviceMode by viewModel.serviceMode.collectAsState()
-    val acceptDeliveries by viewModel.acceptDeliveries.collectAsState()
-    val kmFilterVisible by viewModel.kmFilterVisible.collectAsState()
-    val etaEnabled by viewModel.etaEnabled.collectAsState()
-    val minPrice by viewModel.minPrice.collectAsState()
     val statusMessage by viewModel.statusMessage.collectAsState()
-    var showMinPriceDialog by remember { mutableStateOf(false) }
-    var minPriceInput by remember { mutableStateOf("") }
 
     var showEtaDialog by remember { mutableStateOf(false) }
     var etaInput by remember { mutableStateOf(defaultEta.toString()) }
     var showMsgDialog by remember { mutableStateOf(false) }
     var msgInput by remember { mutableStateOf(customMessage) }
     var showVehicleDialog by remember { mutableStateOf(false) }
-    var showQrEditDialog by remember { mutableStateOf(false) }
-    var qrEditOld by remember { mutableStateOf("") }
-    var qrEditNew by remember { mutableStateOf("") }
-    var newQrText by remember { mutableStateOf("") }
 
     statusMessage?.let { msg ->
         LaunchedEffect(msg) {
@@ -183,58 +172,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 }
             }
 
-            // Section: Quick Replies
-            item {
-                SettingsSection("⚡ תשובות מהירות") {
-                    quickReplies.forEachIndexed { idx, reply ->
-                        if (idx > 0) HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(reply, fontSize = 13.sp, color = TextPrimary, modifier = Modifier.weight(1f))
-                            Text(
-                                "✏️", fontSize = 14.sp,
-                                modifier = Modifier.clickable {
-                                    qrEditOld = reply; qrEditNew = reply; showQrEditDialog = true
-                                }.padding(horizontal = 8.dp)
-                            )
-                            Text(
-                                "🗑", fontSize = 14.sp,
-                                modifier = Modifier.clickable { viewModel.removeQuickReply(reply) }
-                                    .padding(horizontal = 8.dp)
-                            )
-                        }
-                    }
-                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = newQrText,
-                            onValueChange = { newQrText = it },
-                            placeholder = { Text("תשובה חדשה...", fontSize = 12.sp) },
-                            singleLine = true,
-                            modifier = Modifier.weight(1f).heightIn(min = 42.dp),
-                            textStyle = androidx.compose.ui.text.TextStyle(fontSize = 13.sp)
-                        )
-                        Button(
-                            onClick = {
-                                if (newQrText.isNotBlank()) {
-                                    viewModel.addQuickReply(newQrText.trim())
-                                    newQrText = ""
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Primary),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                        ) { Text("הוסף", fontSize = 12.sp) }
-                    }
-                }
-            }
-
             // Section: Filters
             item {
                 SettingsSection("🔧 סינון") {
@@ -251,37 +188,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                             }
                             Text(label, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = GreenDark)
                         }
-                    }
-                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
-                    SettingsRow("קבלת משלוחים") {
-                        AppSwitch(acceptDeliveries) { viewModel.setAcceptDeliveries(it) }
-                    }
-                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
-                    // Toggle: show the km-range filter row on the home screen.
-                    // When OFF the row is hidden and any active selection is
-                    // cleared on the server (see SettingsViewModel.setKmFilterVisible).
-                    SettingsRow("זמן הגעה (ETA) על נסיעות") {
-                        AppSwitch(etaEnabled) { viewModel.setEtaEnabled(it) }
-                    }
-                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
-                    SettingsRow("סינון לפי ק״מ במסך הראשי") {
-                        AppSwitch(kmFilterVisible) { viewModel.setKmFilterVisible(it) }
-                    }
-                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
-                    // Minimum ride price filter. 0 = disabled. Tap to open a
-                    // number input dialog. Shows the current value next to
-                    // the label so the user can see what's set at a glance.
-                    SettingsRow("מחיר מינימלי לנסיעה") {
-                        Text(
-                            if (minPrice > 0) "₪$minPrice" else "לא מוגדר",
-                            fontSize = 12.sp,
-                            color = if (minPrice > 0) Primary else TextSecondary,
-                            fontWeight = FontWeight.Medium,
-                            modifier = Modifier.clickable {
-                                minPriceInput = if (minPrice > 0) minPrice.toString() else ""
-                                showMinPriceDialog = true
-                            }
-                        )
                     }
                     HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
                     SettingsRow("סינון קבוצות") {
@@ -306,37 +212,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     }
 
     // ETA dialog
-    // Min price dialog — number input, empty/0 clears the filter.
-    if (showMinPriceDialog) {
-        AlertDialog(
-            onDismissRequest = { showMinPriceDialog = false },
-            title = { Text("מחיר מינימלי לנסיעה") },
-            text = {
-                Column {
-                    Text(
-                        "נסיעות מתחת למחיר הזה לא יתקבלו. השאר ריק או 0 לביטול.",
-                        fontSize = 12.sp, color = TextSecondary
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = minPriceInput,
-                        onValueChange = { s -> minPriceInput = s.filter { it.isDigit() }.take(5) },
-                        label = { Text("₪") }, singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    val v = minPriceInput.toIntOrNull() ?: 0
-                    viewModel.setMinPrice(v)
-                    showMinPriceDialog = false
-                }) { Text("שמור") }
-            },
-            dismissButton = { TextButton(onClick = { showMinPriceDialog = false }) { Text("ביטול") } }
-        )
-    }
-
     if (showEtaDialog) {
         AlertDialog(
             onDismissRequest = { showEtaDialog = false },
@@ -383,27 +258,6 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     // Vehicle type dialog — multi-select with checkboxes.
     // "כולם" is mutually exclusive with the rest (selecting it clears the others;
     // selecting any other clears "כולם").
-    // Quick-reply edit dialog
-    if (showQrEditDialog) {
-        AlertDialog(
-            onDismissRequest = { showQrEditDialog = false },
-            title = { Text("ערוך תשובה מהירה") },
-            text = {
-                OutlinedTextField(
-                    value = qrEditNew, onValueChange = { qrEditNew = it },
-                    singleLine = true, modifier = Modifier.fillMaxWidth()
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (qrEditNew.isNotBlank()) viewModel.editQuickReply(qrEditOld, qrEditNew)
-                    showQrEditDialog = false
-                }) { Text("שמור") }
-            },
-            dismissButton = { TextButton(onClick = { showQrEditDialog = false }) { Text("ביטול") } }
-        )
-    }
-
     if (showVehicleDialog) {
         var selected by remember(vehicleTypes) {
             mutableStateOf(if (vehicleTypes.isEmpty()) setOf("כולם") else vehicleTypes.toSet())

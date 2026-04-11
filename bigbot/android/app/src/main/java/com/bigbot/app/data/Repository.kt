@@ -42,19 +42,6 @@ class Repository @Inject constructor(
         val KEY_REGISTERED = booleanPreferencesKey("registered")
         val KEY_DOB = stringPreferencesKey("dob")
         val KEY_VEHICLE = stringPreferencesKey("vehicle")
-        val KEY_ACCEPT_DELIVERIES = booleanPreferencesKey("accept_deliveries")
-        val KEY_VOICE_CONTROL_ENABLED = booleanPreferencesKey("voice_control_enabled")
-        // Km-range filter: user picks a max distance and the server only
-        // forwards rides whose origin city is within that range of their
-        // keyword city. Null = no filter (default).
-        val KEY_KM_OPTIONS = stringPreferencesKey("km_options")
-        val KEY_KM_SELECTED = intPreferencesKey("km_selected")
-        val KEY_KM_FILTER_VISIBLE = booleanPreferencesKey("km_filter_visible")
-        val KEY_ETA_ENABLED = booleanPreferencesKey("eta_enabled")
-        // Minimum ride price (₪) — user-defined threshold, 0/missing = no
-        // filter. Rides below this price are filtered out by the server.
-        val KEY_MIN_PRICE = intPreferencesKey("min_price")
-        val KEY_QUICK_REPLIES = stringPreferencesKey("quick_replies")
     }
 
     val chatConversationsJson: Flow<String> = context.dataStore.data.map { it[KEY_CHAT_CONVERSATIONS] ?: "" }
@@ -125,57 +112,4 @@ class Repository @Inject constructor(
     suspend fun saveRegistered(v: Boolean) = context.dataStore.edit { it[KEY_REGISTERED] = v }
     suspend fun saveDob(v: String) = context.dataStore.edit { it[KEY_DOB] = v }
     suspend fun saveVehicle(v: String) = context.dataStore.edit { it[KEY_VEHICLE] = v }
-
-    /** Whether the driver accepts delivery rides (default true = everyone gets deliveries). */
-    val acceptDeliveries: Flow<Boolean> = context.dataStore.data.map { it[KEY_ACCEPT_DELIVERIES] ?: true }
-    suspend fun saveAcceptDeliveries(v: Boolean) = context.dataStore.edit { it[KEY_ACCEPT_DELIVERIES] = v }
-
-    /** Voice control: after a ride announcement, listen for "אחד/שתיים/שלוש"
-     *  and trigger the matching button. Default OFF — user opts in. */
-    val voiceControlEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_VOICE_CONTROL_ENABLED] ?: false }
-    suspend fun saveVoiceControlEnabled(v: Boolean) = context.dataStore.edit { it[KEY_VOICE_CONTROL_ENABLED] = v }
-
-    /**
-     * Km-range filter — user's custom list of distance options (e.g. [10, 20, 30])
-     * shown as chips on the home screen below the keyword row. Defaults to
-     * [10, 20, 30] on first launch; the user can add/remove values freely.
-     */
-    val kmOptions: Flow<List<Int>> = context.dataStore.data.map {
-        val raw = it[KEY_KM_OPTIONS]
-        if (raw == null) listOf(10, 20, 30)
-        else raw.split(",")
-            .mapNotNull { s -> s.trim().toIntOrNull() }
-            .filter { v -> v > 0 }
-            .distinct()
-            .sorted()
-    }
-    suspend fun saveKmOptions(options: List<Int>) = context.dataStore.edit {
-        it[KEY_KM_OPTIONS] = options.distinct().sorted().joinToString(",")
-    }
-
-    /** Currently selected km range. 0/null = no filter active. */
-    val selectedKm: Flow<Int> = context.dataStore.data.map { it[KEY_KM_SELECTED] ?: 0 }
-    suspend fun saveSelectedKm(v: Int) = context.dataStore.edit { it[KEY_KM_SELECTED] = v }
-
-    /** Whether the km-filter row is shown on the home screen. Default OFF so
-     *  existing users don't suddenly see an unfamiliar row. */
-    val kmFilterVisible: Flow<Boolean> = context.dataStore.data.map { it[KEY_KM_FILTER_VISIBLE] ?: false }
-    suspend fun saveKmFilterVisible(v: Boolean) = context.dataStore.edit { it[KEY_KM_FILTER_VISIBLE] = v }
-
-    val etaEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_ETA_ENABLED] ?: true }
-    suspend fun saveEtaEnabled(v: Boolean) = context.dataStore.edit { it[KEY_ETA_ENABLED] = v }
-
-    /** Minimum ride price in shekels. 0 = no filter (default). Rides whose
-     *  parsed price is below this value are filtered out by the server. */
-    val minPrice: Flow<Int> = context.dataStore.data.map { it[KEY_MIN_PRICE] ?: 0 }
-    suspend fun saveMinPrice(v: Int) = context.dataStore.edit { it[KEY_MIN_PRICE] = v }
-
-    /** Customizable quick-reply buttons shown in the chat screen. */
-    val quickReplies: Flow<List<String>> = context.dataStore.data.map {
-        val raw = it[KEY_QUICK_REPLIES]
-        if (raw == null) listOf("אני בדרך", "עוד 5 דקות", "הגעתי", "תתקשר אליי", "שלח מיקום", "איחור קצר", "בדרך חזרה")
-        else raw.split("|||").filter { s -> s.isNotBlank() }
-    }
-    suspend fun saveQuickReplies(replies: List<String>) =
-        context.dataStore.edit { it[KEY_QUICK_REPLIES] = replies.joinToString("|||") }
 }

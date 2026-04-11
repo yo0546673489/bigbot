@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bigbot.app.data.ApiService
 import com.bigbot.app.data.ChatStore
-import com.bigbot.app.data.EtaCalculator
 import com.bigbot.app.data.LocationTracker
 import com.bigbot.app.data.Repository
 import com.bigbot.app.data.TtsManager
@@ -27,8 +26,7 @@ class HomeViewModel @Inject constructor(
     private val api: ApiService,
     private val chatStore: ChatStore,
     private val tts: TtsManager,
-    private val locationTracker: LocationTracker,
-    private val etaCalculator: EtaCalculator
+    private val locationTracker: LocationTracker
 ) : ViewModel() {
 
     private val _rides = MutableStateFlow<List<Ride>>(emptyList())
@@ -54,10 +52,6 @@ class HomeViewModel @Inject constructor(
     private val _locationCity = MutableStateFlow("")
     val locationCity: StateFlow<String> = _locationCity
 
-    // Driver's current GPS coordinates for ETA calculation
-    private var driverLat = 0.0
-    private var driverLng = 0.0
-
     // true = "פנוי מיקום" is active → GPS tracking is running
     private val _locationTrackingActive = MutableStateFlow(false)
     val locationTrackingActive: StateFlow<Boolean> = _locationTrackingActive
@@ -81,8 +75,7 @@ class HomeViewModel @Inject constructor(
                 if (ridesJson.isNotBlank()) {
                     val type = object : TypeToken<List<Ride>>() {}.type
                     val list: List<Ride> = gson.fromJson(ridesJson, type) ?: emptyList()
-                    // Reset stuck "calculating" ETA states from previous session
-                    _rides.value = list.map { if (it.etaMinutes == 0) it.copy(etaMinutes = -1) else it }
+                    _rides.value = list
                 }
                 val btnJson = repo.sentButtonsJson.first()
                 if (btnJson.isNotBlank()) {
@@ -92,11 +85,6 @@ class HomeViewModel @Inject constructor(
                 }
             } catch (_: Exception) { /* corrupt cache */ }
             ridesLoaded = true
-            // Calculate ETA for rides that don't have one yet (etaMinutes == -1)
-            val etaOn = repo.etaEnabled.first()
-            if (etaOn) {
-                _rides.value.filter { it.etaMinutes == -1 && it.uiState == RideUiState.IDLE }.take(5).forEach { calcEtaForRide(it) }
-            }
         }
         // Persist rides whenever the list changes
         viewModelScope.launch {
@@ -131,33 +119,13 @@ class HomeViewModel @Inject constructor(
         }
         viewModelScope.launch {
             repo.wsService.rides.collect { ride ->
-                // Min price filter — skip ride if below threshold
-                val minPriceVal = repo.minPrice.first()
-                if (minPriceVal > 0) {
-                    var ridePrice = ride.price.replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0
-                    if (ridePrice == 0 && ride.rawText.isNotEmpty()) {
-                        // Match price: "90₪" or "90 ₪" or "90ש" or just a standalone number
-                        val m = Regex("(?:^|\\s)(\\d{2,4})\\s*[₪ש\"ח]?(?:\\s|$)", RegexOption.MULTILINE).find(ride.rawText)
-                        ridePrice = m?.groupValues?.get(1)?.toIntOrNull() ?: 0
-                    }
-                    android.util.Log.d("PriceFilter", "minPrice=$minPriceVal ridePrice=$ridePrice ride.price='${ride.price}' raw='${ride.rawText.take(50)}'")
-                    if (ridePrice in 1 until minPriceVal) {
-                        android.util.Log.d("PriceFilter", "BLOCKED ride $ridePrice < $minPriceVal")
-                        return@collect
-                    }
-                }
                 val minAgo = if (ride.timestamp > 0) ((System.currentTimeMillis() / 1000 - ride.timestamp) / 60).toInt().coerceAtLeast(0) else 0
                 // Auto mode: instantly take the ride and mark as AUTO_PENDING
                 val isAuto = autoMode.value && isAvailable.value
                 val initialState = if (isAuto) RideUiState.AUTO_PENDING else RideUiState.IDLE
-                val etaOn = repo.etaEnabled.first()
-                val newRide = ride.copy(minutesAgo = minAgo, uiState = initialState, etaMinutes = if (etaOn) 0 else -1)
-                android.util.Log.d("EtaDebug", "New ride: ${ride.origin} etaOn=$etaOn")
                 _rides.update { current ->
-                    (listOf(newRide) + current.filter { it.messageId != ride.messageId }).take(50)
+                    (listOf(ride.copy(minutesAgo = minAgo, uiState = initialState)) + current.filter { it.messageId != ride.messageId }).take(50)
                 }
-                // Calculate ETA for this ride
-                calcEtaForRide(newRide)
                 // Narrate "<origin full-name> <destination full-name>" if TTS is on.
                 // Uses full city names (e.g. "בני ברק ירושלים") so the engine
                 // pronounces them correctly rather than reading short codes.
@@ -272,155 +240,55 @@ class HomeViewModel @Inject constructor(
     fun setAvailability(available: Boolean) {
         viewModelScope.launch {
             repo.saveAvailable(available)
-            if (!available) {
-                // Turn off EVERYTHING
-                // Location
-                if (_locationTrackingActive.value) {
-                    locationTrackingJob?.cancel()
-                    locationTrackingJob = null
-                    _locationTrackingActive.value = false
-                    _locationCity.value = ""
-                    locationKeyword = ""
-                }
-                // Auto mode
-                repo.saveAutoMode(false)
-                repo.wsService.setAutoMode(false)
-                // TTS
-                repo.saveTtsEnabled(false)
-                tts.enabled = false
-                tts.stop()
-                // Voice control
-                repo.saveVoiceControlEnabled(false)
-                // Pause all keywords
-                val kws = repo.keywords.first()
-                repo.savePausedKeywords(kws)
-                repo.wsService.setAvailability(false, kws.toList(), kws.toList())
-            } else {
-                val kws = repo.keywords.first()
-                val paused = repo.pausedKeywords.first()
-                repo.wsService.setAvailability(true, kws, paused)
-            }
+            val kws = repo.keywords.first()
+            val paused = repo.pausedKeywords.first()
+            repo.wsService.setAvailability(available, kws, paused)
         }
     }
 
     /** Toggle GPS location tracking. Called when user taps "פנוי מיקום". */
     fun toggleLocationTracking() {
         if (_locationTrackingActive.value) {
-            // Turn off tracking — restore all keywords to active
+            // Turn off tracking only — don't change availability
             locationTrackingJob?.cancel()
             locationTrackingJob = null
             _locationTrackingActive.value = false
             _locationCity.value = ""
-            locationKeyword = ""
-            viewModelScope.launch {
-                // Turn off all keywords when location is disabled
-                val kws = repo.keywords.first()
-                repo.savePausedKeywords(kws)
-                repo.wsService.setAvailability(isAvailable.value, kws.toList(), kws.toList())
-            }
         } else {
-            // Turn on — save current paused state before overriding
+            // Turn on
             _locationTrackingActive.value = true
             locationTrackingJob = viewModelScope.launch {
-                // Save paused state FIRST before location modifies it
-                pausedBeforeLocation = repo.pausedKeywords.first()
                 locationTracker.cityUpdates().collect { loc ->
                     _locationCity.value = loc.city
-                    driverLat = loc.lat
-                    driverLng = loc.lng
                     setAvailabilityWithCity(loc.city)
-                    recalcAllEta()
                 }
             }
         }
     }
 
-    private var locationKeyword: String = ""
-    private var pausedBeforeLocation: List<String> = emptyList()
-
     fun setAvailabilityWithCity(city: String) {
         viewModelScope.launch {
             _locationCity.value = city
-            if (city.startsWith("מיקום")) return@launch
-
-            val cityCode = cityToCode(city)
             val kws = repo.keywords.first().toMutableList()
-
-            // Add the city code as keyword if not already there
+            val cityCode = cityToCode(city)
             if (!kws.contains(cityCode)) kws.add(cityCode)
             repo.saveKeywords(kws)
-
-            // Pause all keywords except the location-based one
-            val allOthers = kws.filter { it != cityCode }
-            repo.savePausedKeywords(allOthers)
-
-            // Track which keyword is the location one (to unpause later if needed)
-            locationKeyword = cityCode
-
             repo.saveAvailable(true)
-            repo.wsService.setAvailability(true, kws, allOthers)
+            val paused = repo.pausedKeywords.first()
+            repo.wsService.setAvailability(true, kws, paused)
         }
     }
 
     private fun cityToCode(city: String): String {
-        val c = city.replace("-", " ").replace("–", " ").replace("־", " ").replace("‑", " ")
         return when {
-            c.contains("בני ברק") || c.contains("בניברק") -> "בב"
-            c.contains("ירושלים") -> "ים"
-            c.contains("תל אביב") || c.contains("תלאביב") -> "תא"
-            c.contains("פתח תקווה") || c.contains("פתח תקוה") -> "פת"
-            c.contains("בית שמש") -> "שמש"
-            c.contains("נתניה") -> "נת"
-            c.contains("מודיעין") -> "ספר"
-            c.contains("ראשון לציון") || c.contains("ראשון") -> "ראשלצ"
-            c.contains("חולון") -> "חולון"
-            c.contains("אשדוד") -> "אשדוד"
-            c.contains("חיפה") -> "חיפה"
-            c.contains("באר שבע") || c.contains("באר שבע") -> "באש"
-            c.contains("רמת גן") -> "רג"
-            c.contains("הרצליה") -> "הרצ"
-            c.contains("נתניה") -> "נת"
-            c.contains("רחובות") -> "רחובות"
-            c.contains("אלעד") -> "אלעד"
-            c.contains("לוד") -> "לוד"
-            c.contains("רמלה") -> "רמלה"
+            city.contains("בני ברק") || city.contains("בניברק") -> "בב"
+            city.contains("ירושלים") -> "ים"
+            city.contains("תל אביב") || city.contains("תלאביב") -> "תא"
+            city.contains("פתח תקווה") -> "פת"
+            city.contains("בית שמש") -> "שמש"
+            city.contains("נתניה") -> "נת"
+            city.contains("מודיעין") -> "ספר"
             else -> city
-        }
-    }
-
-    // ─── ETA ──────────────────────────────────────────────────────────────────
-
-    private fun calcEtaForRide(ride: Ride) {
-        val address = fullCityName(ride.origin).ifBlank { ride.origin }
-        android.util.Log.d("EtaDebug", "calcEtaForRide: origin=${ride.origin} address=$address")
-        if (address.isBlank()) return
-        viewModelScope.launch {
-            // Check if ETA is enabled in settings
-            val enabled = repo.etaEnabled.first()
-            android.util.Log.d("EtaDebug", "etaEnabled=$enabled")
-            if (!enabled) return@launch
-            // Use known driver location, or fetch from device
-            var lat = driverLat; var lng = driverLng
-            if (lat == 0.0 && lng == 0.0) {
-                val loc = etaCalculator.getDeviceLocation()
-                if (loc != null) { lat = loc.first; lng = loc.second; driverLat = lat; driverLng = lng }
-            }
-            if (lat == 0.0 && lng == 0.0) {
-                _rides.update { list -> list.map { if (it.messageId == ride.messageId) it.copy(etaMinutes = -1) else it } }
-                return@launch
-            }
-            // Set to "calculating" state
-            _rides.update { list -> list.map { if (it.messageId == ride.messageId) it.copy(etaMinutes = 0) else it } }
-            val minutes = etaCalculator.calculateEta(lat, lng, address)
-            _rides.update { list ->
-                list.map { if (it.messageId == ride.messageId) it.copy(etaMinutes = minutes ?: -1) else it }
-            }
-        }
-    }
-
-    private fun recalcAllEta() {
-        _rides.value.forEach { ride ->
-            if (ride.uiState == RideUiState.IDLE || ride.uiState == RideUiState.AUTO_PENDING) calcEtaForRide(ride)
         }
     }
 

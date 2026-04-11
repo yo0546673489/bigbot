@@ -51,7 +51,7 @@ fun RideCard(
             Box(
                 modifier = Modifier.width(3.dp).fillMaxHeight().background(borderColor)
             )
-            Column(modifier = Modifier.weight(1f).padding(horizontal = 10.dp, vertical = 3.dp)) {
+            Column(modifier = Modifier.weight(1f).padding(horizontal = 10.dp, vertical = 5.dp)) {
                 when (ride.uiState) {
                     RideUiState.SENDING -> {
                         StatusBar("⏳ שולח הודעה...", BlueBg, Blue)
@@ -95,6 +95,8 @@ fun RideCard(
                             }
                             Text(ride.groupName, fontSize = 10.sp, color = Color(0xFFB0BEC5))
                         }
+
+                        Spacer(Modifier.height(4.dp))
 
                         // Route section: origin / visual / destination
                         Row(
@@ -171,6 +173,8 @@ fun RideCard(
                             }
                         }
 
+                        Spacer(Modifier.height(4.dp))
+
                         // Info row: price + dot + seats + dot + type
                         run {
                             // Prefer the seat count parsed from the vehicle keyword
@@ -186,7 +190,7 @@ fun RideCard(
                             // the generic "רגיל" tag.
                             val typeText = parsed.vehicleType.ifEmpty { "רגיל" }
                             Row(
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 0.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -195,7 +199,7 @@ fun RideCard(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(10.dp))
                                             .background(GreenBg)
-                                            .padding(horizontal = 12.dp, vertical = 1.dp)
+                                            .padding(horizontal = 12.dp, vertical = 3.dp)
                                     ) {
                                         Text(
                                             "${parsed.price} \u20AA",
@@ -224,12 +228,13 @@ fun RideCard(
                                     fontWeight = FontWeight.Medium
                                 )
                             }
+                            Spacer(Modifier.height(2.dp))
                         }
 
                         // Address row: רחוב ממורכז, Waze בקצה השמאלי
                         if (parsed.street.isNotEmpty() || ride.destination.isNotEmpty()) {
                             Box(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 30.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (parsed.street.isNotEmpty()) {
@@ -247,7 +252,6 @@ fun RideCard(
                                         fontWeight = FontWeight.SemiBold,
                                         color = Color(0xFF37474F),
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                                        lineHeight = 14.sp,
                                         modifier = Modifier.fillMaxWidth().align(Alignment.Center)
                                     )
                                 }
@@ -279,33 +283,7 @@ fun RideCard(
                                     )
                                 }
                             }
-                        }
-
-                        // ETA badge — below address
-                        if (ride.etaMinutes >= 0) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.Center
-                            ) {
-                                // ETA box — only show when we actually have a
-                                // computed ETA (etaMinutes > 0). Hide completely
-                                // when ETA is unknown (no GPS / not computed).
-                                if (ride.etaMinutes > 0) {
-                                    Box(
-                                        modifier = Modifier
-                                            .background(Color(0xFFE3F2FD), RoundedCornerShape(12.dp))
-                                            .padding(horizontal = 10.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = "🚗 ${ride.etaMinutes} דק' ממיקומך",
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = Color(0xFF1565C0)
-                                        )
-                                    }
-                                }
-                            }
-                            Spacer(Modifier.height(6.dp))
+                            Spacer(Modifier.height(4.dp))
                         }
 
                         // Special tags
@@ -318,7 +296,7 @@ fun RideCard(
                                     fontWeight = FontWeight.Medium
                                 )
                             }
-                            Spacer(Modifier.height(1.dp))
+                            Spacer(Modifier.height(8.dp))
                         }
 
                         // Buttons — pick layout by message type per spec:

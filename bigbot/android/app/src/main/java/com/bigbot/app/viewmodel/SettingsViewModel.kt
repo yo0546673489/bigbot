@@ -30,14 +30,6 @@ class SettingsViewModel @Inject constructor(
     val vehicleTypes = repo.vehicleTypes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val silentMode = repo.silentMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val serviceMode = repo.serviceMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    val acceptDeliveries = repo.acceptDeliveries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-    /** Show the km-range filter row on the home screen? User-togglable here. */
-    val kmFilterVisible = repo.kmFilterVisible.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
-    /** Minimum ride price in shekels — 0 = no filter (default). */
-    val minPrice = repo.minPrice.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
-    /** Quick reply buttons for the chat screen. */
-    val quickReplies = repo.quickReplies.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-    val etaEnabled = repo.etaEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     private val _statusMessage = MutableStateFlow<String?>(null)
     val statusMessage: StateFlow<String?> = _statusMessage
@@ -123,69 +115,6 @@ class SettingsViewModel @Inject constructor(
 
     fun setServiceMode(v: Boolean) {
         viewModelScope.launch { repo.saveServiceMode(v) }
-    }
-
-    fun setAcceptDeliveries(v: Boolean) {
-        viewModelScope.launch {
-            repo.saveAcceptDeliveries(v)
-            val phone = repo.driverPhone.first()
-            api.saveSettings(phone, v) {}
-        }
-    }
-
-    fun setKmFilterVisible(v: Boolean) {
-        viewModelScope.launch {
-            repo.saveKmFilterVisible(v)
-            // If the user is hiding the row, also clear any active selection
-            // so no rides get silently blocked by a filter they can't see.
-            if (!v) {
-                repo.saveSelectedKm(0)
-                try { repo.wsService.setKmFilter(null) } catch (_: Exception) {}
-            }
-        }
-    }
-
-    fun setEtaEnabled(v: Boolean) {
-        viewModelScope.launch { repo.saveEtaEnabled(v) }
-    }
-
-    fun addQuickReply(text: String) {
-        viewModelScope.launch {
-            val current = repo.quickReplies.first().toMutableList()
-            val trimmed = text.trim()
-            if (trimmed.isNotBlank() && trimmed !in current) {
-                current.add(trimmed)
-                repo.saveQuickReplies(current)
-            }
-        }
-    }
-
-    fun removeQuickReply(text: String) {
-        viewModelScope.launch {
-            val current = repo.quickReplies.first().toMutableList()
-            current.remove(text)
-            repo.saveQuickReplies(current)
-        }
-    }
-
-    fun editQuickReply(old: String, new: String) {
-        viewModelScope.launch {
-            val current = repo.quickReplies.first().toMutableList()
-            val idx = current.indexOf(old)
-            if (idx >= 0 && new.trim().isNotBlank()) {
-                current[idx] = new.trim()
-                repo.saveQuickReplies(current)
-            }
-        }
-    }
-
-    /** Persist the min-price filter and push it to the server. 0 = disabled. */
-    fun setMinPrice(v: Int) {
-        val clamped = if (v < 0) 0 else v
-        viewModelScope.launch {
-            repo.saveMinPrice(clamped)
-            try { repo.wsService.setMinPrice(if (clamped == 0) null else clamped) } catch (_: Exception) {}
-        }
     }
 
     fun clearStatus() { _statusMessage.value = null }

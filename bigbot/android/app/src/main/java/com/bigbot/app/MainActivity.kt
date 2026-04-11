@@ -37,39 +37,20 @@ class MainActivity : ComponentActivity() {
     @Inject lateinit var chatStore: ChatStore
     @Inject lateinit var repo: Repository
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        handleChatIntent(intent)
-    }
-
-    private fun handleChatIntent(intent: Intent?) {
-        if (intent?.getBooleanExtra("openChat", false) == true) {
-            val phone = intent.getStringExtra("chatPhone") ?: return
-            if (phone.isNotBlank()) chatStore.triggerDirectOpen(phone)
-        }
-    }
-
     // On Android 13+ we must ask for POST_NOTIFICATIONS before we can show
     // ride push notifications from the foreground service.
     private val notifPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { _ ->
+    ) { granted ->
         // Whether or not the user granted, start the service — if denied
         // the service still runs but only the persistent foreground notif
         // will be visible (no ride pop-ups).
         startRideForegroundService()
-        // Then ask for location
-        requestLocationPermission()
     }
-
-    private val locationPermLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { /* user decided — we don't force anything */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        handleChatIntent(intent)
         ensureNotificationPermissionThenStartService()
         setContent {
             BigBotTheme {
@@ -102,18 +83,6 @@ class MainActivity : ComponentActivity() {
             }
         }
         startRideForegroundService()
-        requestLocationPermission()
-    }
-
-    private fun requestLocationPermission() {
-        val fine = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val coarse = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        if (!fine || !coarse) {
-            locationPermLauncher.launch(arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            ))
-        }
     }
 
     private fun startRideForegroundService() {
@@ -128,12 +97,11 @@ fun BigBotApp(chatStore: ChatStore) {
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route ?: "home"
     val tabs = listOf("home", "search", "chat", "notifications", "settings")
     val chatViewModel: ChatViewModel = hiltViewModel()
-    var homeScrollTrigger by remember { mutableStateOf(0) }
 
-    // When a dispatcher chat should open directly (auto-open from WS or notification tap).
+    // When the dispatcher's first reply lands and triggers an auto-open,
+    // navigate to the chat tab automatically.
     LaunchedEffect(Unit) {
-        chatStore.autoOpenChatRequests.collect { phone ->
-            if (phone.isNotBlank()) chatViewModel.openConversation(phone)
+        chatStore.autoOpenChatRequests.collect {
             navController.navigate("chat") {
                 popUpTo(navController.graph.startDestinationId) { saveState = true }
                 launchSingleTop = true
@@ -151,10 +119,7 @@ fun BigBotApp(chatStore: ChatStore) {
                     if (route == "chat") {
                         chatViewModel.closeConversation()
                     }
-                    if (route == "home" && currentRoute == "home") {
-                        // Already on home — scroll to top instead of re-navigating
-                        homeScrollTrigger++
-                    } else {
+                    if (route != currentRoute) {
                         navController.navigate(route) {
                             popUpTo(navController.graph.startDestinationId) { saveState = true }
                             launchSingleTop = true
@@ -172,15 +137,7 @@ fun BigBotApp(chatStore: ChatStore) {
         ) {
             composable("home") {
                 HomeScreen(
-                    onNavigateToChat = { phone ->
-                        chatStore.triggerDirectOpen(phone)
-                        navController.navigate("chat") {
-                            popUpTo(navController.graph.startDestinationId) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    },
-                    scrollToTopTrigger = homeScrollTrigger,
+                    onNavigateToChat = { navController.navigate("chat") },
                     viewModel = hiltViewModel()
                 )
             }

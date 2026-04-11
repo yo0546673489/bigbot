@@ -12,7 +12,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -39,45 +38,59 @@ fun StatusCard(
     var newKeyword by remember { mutableStateOf("") }
 
     Card(
-        // 0 top padding — user wants the card hugging the header row above.
-        modifier = modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 1.dp),
+        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
         colors = CardDefaults.cardColors(containerColor = GreenBg),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(14.dp),
         border = androidx.compose.foundation.BorderStroke(0.5.dp, GreenBorder),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        // Compact card — user asked to shrink it after removing the WA line.
-        Column(modifier = Modifier.padding(start = 12.dp, end = 12.dp, top = 0.dp, bottom = 0.dp)) {
-            // Main row: text "לא פנוי" centered vertically against the Switch
-            // on the other side. Dot indicator removed — user said it looked
-            // weird and asked for the text to be aligned with the button.
+        Column(modifier = Modifier.padding(12.dp, 8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(8.dp).clip(CircleShape)
+                        .background(if (isAvailable) Color(0xFF4CAF50) else Color(0xFF9E9E9E))
+                )
+                Spacer(Modifier.width(7.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(
-                            if (isAvailable) "פנוי עכשיו" else "לא פנוי",
-                            fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                            color = if (isAvailable) GreenDark else TextPrimary
-                        )
-                        if (autoMode) StatusBadge("⚡ אוטומטי", Purple, PurpleBg)
-                        if (autoSend) StatusBadge("✓ אוטו-שליחה", Primary, GreenBg)
-                    }
+                    Text(
+                        if (isAvailable) "פנוי עכשיו" else "לא פנוי",
+                        fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                        color = if (isAvailable) GreenDark else TextPrimary
+                    )
                     if (locationCity.isNotEmpty()) {
                         Text("📍 מיקום: $locationCity", fontSize = 11.sp, color = Color(0xFF558B2F))
                     }
                 }
                 Switch(
                     checked = isAvailable, onCheckedChange = onToggle,
-                    modifier = Modifier.scale(0.8f),
                     colors = SwitchDefaults.colors(
                         checkedTrackColor = Primary,
                         checkedThumbColor = Color.White,
                         uncheckedTrackColor = Color(0xFFCFD8DC),
                         uncheckedThumbColor = Color.White
                     )
+                )
+            }
+
+            if (autoMode || autoSend) {
+                Spacer(Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    if (autoMode) StatusBadge("⚡ מצב חכם: פעיל", Purple, PurpleBg)
+                    if (autoSend) StatusBadge("✓ אוטומציה: פעילה", Primary, GreenBg)
+                }
+            }
+
+            Spacer(Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier.size(7.dp).clip(CircleShape)
+                        .background(if (waConnected) Color(0xFF4CAF50) else Color(0xFFEF5350))
+                )
+                Spacer(Modifier.width(5.dp))
+                Text(
+                    if (waConnected) "WhatsApp מחובר" else "WhatsApp מנותק",
+                    fontSize = 10.sp,
+                    color = if (waConnected) Color(0xFF388E3C) else AppRed
                 )
             }
         }

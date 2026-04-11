@@ -101,15 +101,10 @@ export class AreasService {
     };
   }
 
-  private async bumpCacheVersion() {
-    try { await this.redisClient.set('wa:areas:cache_v', Date.now().toString()); } catch {}
-  }
-
   async createShortcut(dto: CreateAreaShortcutDto) {
     const payload = { shortName: dto.shortName.trim(), fullName: dto.fullName.trim() };
     const doc = await this.areaShortcutModel.create(payload);
     try { await this.redisClient.hset('wa:areas:shortcuts', payload.shortName.toLowerCase(), payload.fullName.toLowerCase()); } catch {}
-    await this.bumpCacheVersion();
     return doc;
   }
 
@@ -126,7 +121,6 @@ export class AreasService {
         if (shortKey) await this.redisClient.hset('wa:areas:shortcuts', shortKey, fullVal);
       } catch {}
     }
-    await this.bumpCacheVersion();
     return updated;
   }
 
@@ -134,7 +128,6 @@ export class AreasService {
     const existing = await this.areaShortcutModel.findById(id);
     await this.areaShortcutModel.findByIdAndDelete(id);
     try { if (existing) await this.redisClient.hdel('wa:areas:shortcuts', existing.shortName.toLowerCase()); } catch {}
-    await this.bumpCacheVersion();
     return { deleted: true };
   }
 

@@ -179,7 +179,6 @@ object NotificationHelper {
 
         val rv = RemoteViews(context.packageName, R.layout.notif_ride)
         rv.setTextViewText(R.id.notif_group, ride.groupName)
-        // Badge — just "● עכשיו", no clock time (user request).
         rv.setTextViewText(R.id.notif_origin, ride.origin)
         rv.setTextViewText(R.id.notif_origin_full, fullCityName(ride.origin))
         rv.setTextViewText(R.id.notif_destination, ride.destination)
@@ -193,33 +192,6 @@ object NotificationHelper {
             rv.setViewVisibility(R.id.notif_price, View.GONE)
         }
 
-        // Address + Waze icon row — mirrors the in-app card exactly:
-        // round Waze logo on the left, address text on the right.
-        val street = parsed?.street?.ifBlank { null }
-        val streetNum = parsed?.streetNumber?.ifBlank { null }
-        if (street != null) {
-            val addr = if (streetNum != null) "📍 $street $streetNum" else "📍 $street"
-            rv.setTextViewText(R.id.notif_address_with_waze, addr)
-            // Make Waze icon circular — same as in-app RideCard
-            val sizePx = (context.resources.displayMetrics.density * 38).toInt()
-            val wazeRound = circularBitmap(context, R.drawable.logo_waze, sizePx)
-            rv.setImageViewBitmap(R.id.notif_waze_icon, wazeRound)
-            rv.setViewVisibility(R.id.notif_waze_row, View.VISIBLE)
-            rv.setViewVisibility(R.id.notif_address, View.GONE)
-        } else {
-            rv.setViewVisibility(R.id.notif_waze_row, View.GONE)
-            rv.setViewVisibility(R.id.notif_address, View.GONE)
-        }
-
-        // ETA line (🚗 X דק' ממיקומך) — only when the ride has a computed ETA
-        android.util.Log.d("NotifETA", "ride=${ride.messageId} etaMinutes=${ride.etaMinutes}")
-        if (ride.etaMinutes > 0) {
-            rv.setTextViewText(R.id.notif_eta, "🚗 ${ride.etaMinutes} דק' ממיקומך")
-            rv.setViewVisibility(R.id.notif_eta, View.VISIBLE)
-        } else {
-            rv.setViewVisibility(R.id.notif_eta, View.GONE)
-        }
-
         // Determine effective message type — same fallback logic as RideCard
         val effectiveType = when {
             ride.messageType.isNotBlank() -> ride.messageType
@@ -228,10 +200,18 @@ object NotificationHelper {
             else -> "regular_text"
         }
 
-        // Raw text — hide when we already have structured data (address,
-        // price, route) so it doesn't duplicate information. Also hide for
-        // link rides (wa.me URL is noisy and irrelevant).
-        rv.setViewVisibility(R.id.notif_raw, View.GONE)
+        // Raw text — hide for link rides (wa.me URL is noisy and irrelevant)
+        if (effectiveType == "regular_text") {
+            val rawPreview = ride.rawText.take(160).replace("\n", " • ")
+            if (rawPreview.isNotBlank()) {
+                rv.setTextViewText(R.id.notif_raw, rawPreview)
+                rv.setViewVisibility(R.id.notif_raw, View.VISIBLE)
+            } else {
+                rv.setViewVisibility(R.id.notif_raw, View.GONE)
+            }
+        } else {
+            rv.setViewVisibility(R.id.notif_raw, View.GONE)
+        }
 
         // Show only the relevant button row, hide the others
         rv.setViewVisibility(R.id.notif_row_regular, if (effectiveType == "regular_text") View.VISIBLE else View.GONE)
@@ -302,9 +282,7 @@ object NotificationHelper {
             .setAutoCancel(false)
             .setCategory(NotificationCompat.CATEGORY_MESSAGE)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            // Always use current device time so Android shows "עכשיו" instead
-            // of "1 דק'" (server timestamp can lag a few seconds behind).
-            .setWhen(System.currentTimeMillis())
+            .setWhen(if (ride.timestamp > 0) ride.timestamp * 1000 else System.currentTimeMillis())
             .build()
     }
 

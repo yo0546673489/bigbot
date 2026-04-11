@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>BigBot Admin · ניהול אזורים</title>
 <style>
-:root{--g:#2e7d32;--gd:#1b5e20;--gl:#e8f5e9;--r:#d32f2f;--sl:#37474f;--gray:#90a4ae;--border:#e0e0e0;--blue:#1565c0;--blueli:#e3f2fd;}
+:root{--g:#2e7d32;--gd:#1b5e20;--gl:#e8f5e9;--r:#d32f2f;--sl:#37474f;--gray:#90a4ae;--border:#e0e0e0;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;overflow:hidden;}
 body{font-family:-apple-system,"Segoe UI",Heebo,Arial,sans-serif;background:#f0f2f5;color:var(--sl);display:flex;flex-direction:column;}
@@ -17,12 +17,10 @@ header h1{font-size:17px;font-weight:700;}
 .topbar{padding:8px 16px;background:white;border-bottom:1px solid var(--border);flex-shrink:0;}
 .topbar input{width:100%;padding:7px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;direction:rtl;}
 
-.cols{display:flex;gap:10px;padding:10px 12px 0;flex:1;overflow:hidden;min-height:0;}
-.col{background:white;border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;flex:1;overflow:hidden;min-width:0;}
+.cols{display:flex;gap:12px;padding:10px 14px 0;flex:1;overflow:hidden;min-height:0;}
+.col{background:white;border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;flex:1;overflow:hidden;}
 .col-header{padding:9px 14px;background:var(--gl);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.col-header.blue{background:var(--blueli);}
 .col-title{font-weight:700;font-size:14px;color:var(--gd);}
-.col-header.blue .col-title{color:var(--blue);}
 .col-count{font-size:12px;color:var(--gray);}
 .col-toolbar{padding:6px 10px;border-bottom:1px solid #f0f0f0;display:flex;gap:6px;flex-shrink:0;}
 .col-body{flex:1;overflow-y:auto;}
@@ -31,11 +29,12 @@ header h1{font-size:17px;font-weight:700;}
 .item{display:flex;align-items:center;gap:6px;padding:5px 10px;border-bottom:1px solid #f5f5f5;transition:background .1s;min-height:36px;}
 .item:hover{background:#fafafa;}
 .item.known{background:#f1f8e9;}
-.item.saving{background:#fffde7 !important;}
+.item.editing{background:#fffde7 !important;}
 
 .item-count{font-size:11px;color:var(--gray);background:#f5f5f5;border-radius:10px;padding:1px 6px;white-space:nowrap;flex-shrink:0;}
 .badge-known{font-size:10px;color:var(--gd);background:#c8e6c9;border-radius:10px;padding:1px 7px;white-space:nowrap;flex-shrink:0;}
 
+/* Editable text */
 .item-short{font-size:13px;font-weight:700;color:var(--gd);min-width:40px;cursor:text;border-radius:4px;padding:1px 4px;}
 .item-short:hover{background:#e8f5e9;outline:1px dashed var(--g);}
 .item-short:focus{background:white;outline:2px solid var(--g);border-radius:4px;}
@@ -47,54 +46,15 @@ header h1{font-size:17px;font-weight:700;}
 .item-name:hover{background:#f5f5f5;outline:1px dashed var(--border);}
 .item-name:focus{background:white;outline:2px solid var(--g);border-radius:4px;}
 
+/* Buttons */
 .btn-del{background:none;border:1px solid #ffcdd2;color:var(--r);border-radius:5px;padding:2px 7px;cursor:pointer;font-size:12px;font-weight:700;flex-shrink:0;}
 .btn-del:hover{background:var(--r);color:white;}
-.btn-del.undo{border-color:#1565c0;color:#1565c0;}
-.btn-del.undo:hover{background:#1565c0;color:white;}
 .saving-indicator{font-size:11px;color:var(--g);flex-shrink:0;display:none;}
 .item.saving .saving-indicator{display:inline;}
-.item.pending-del{background:#ffebee !important;opacity:.75;}
-.item.pending-del .item-short,.item.pending-del .item-full,.item.pending-del .item-name{text-decoration:line-through;color:#b71c1c;}
 
 .tbtn{padding:5px 10px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;}
 .tbtn-g{background:var(--gl);color:var(--gd);}.tbtn-g:hover{background:var(--gd);color:white;}
 .tbtn-r{background:#ffebee;color:var(--r);}.tbtn-r:hover{background:var(--r);color:white;}
-.tbtn-b{background:var(--blueli);color:var(--blue);}.tbtn-b:hover{background:var(--blue);color:white;}
-
-.add-row{display:flex;align-items:center;gap:6px;padding:7px 10px;border-top:2px dashed #c8e6c9;background:#f9fbe7;flex-shrink:0;}
-.add-input{border:1px solid var(--border);border-radius:6px;padding:5px 9px;font-size:13px;font-family:inherit;direction:rtl;outline:none;background:white;}
-.add-input:focus{border-color:var(--g);box-shadow:0 0 0 2px #c8e6c9;}
-.add-short{width:85px;font-weight:700;color:var(--gd);}
-.add-full{flex:1;}
-.add-sep{font-size:11px;color:var(--gray);flex-shrink:0;}
-.btn-add{background:var(--gd);color:white;border:none;border-radius:6px;padding:5px 13px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;white-space:nowrap;}
-.btn-add:hover{background:var(--g);}
-.btn-add:disabled{opacity:.5;cursor:not-allowed;}
-.btn-add.blue{background:var(--blue);}
-.btn-add.blue:hover{background:#0d47a1;}
-
-/* Related areas (city cards) */
-.city-card{border-bottom:1px solid #e8f5e9;background:white;}
-.city-card-header{display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;user-select:none;}
-.city-card-header:hover{background:#f9fbe7;}
-.city-name{font-size:14px;font-weight:700;color:var(--blue);flex:1;}
-.city-nbcount{font-size:11px;color:var(--gray);background:#e3f2fd;border-radius:10px;padding:1px 8px;}
-.city-toggle{font-size:12px;color:var(--gray);transition:transform .2s;}
-.city-card.open .city-toggle{transform:rotate(180deg);}
-.city-neighborhoods{display:none;padding:6px 12px 10px 12px;border-top:1px solid #e3f2fd;background:#fafeff;}
-.city-card.open .city-neighborhoods{display:block;}
-.nb-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;}
-.nb-chip{background:#e3f2fd;color:var(--blue);border-radius:12px;padding:3px 10px;font-size:12px;display:flex;align-items:center;gap:4px;}
-.nb-chip-del{background:none;border:none;color:#90caf9;cursor:pointer;font-size:13px;padding:0;line-height:1;}
-.nb-chip-del:hover{color:var(--r);}
-.nb-add-row{display:flex;gap:6px;margin-top:4px;}
-.nb-add-input{flex:1;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;font-family:inherit;direction:rtl;outline:none;}
-.nb-add-input:focus{border-color:var(--blue);box-shadow:0 0 0 2px #bbdefb;}
-.nb-add-btn{background:var(--blue);color:white;border:none;border-radius:6px;padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;}
-.nb-add-btn:hover{background:#0d47a1;}
-.btn-del-city{background:none;border:1px solid #ffcdd2;color:var(--r);border-radius:5px;padding:2px 6px;cursor:pointer;font-size:11px;font-weight:700;}
-.btn-del-city:hover{background:var(--r);color:white;}
-.add-row-blue{display:flex;align-items:center;gap:6px;padding:7px 10px;border-top:2px dashed #90caf9;background:#e3f2fd22;flex-shrink:0;}
 
 .bottombar{flex-shrink:0;background:white;border-top:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;}
 .save-btn{background:var(--gd);color:white;border:none;border-radius:8px;padding:9px 20px;font-size:14px;font-weight:700;cursor:pointer;}
@@ -115,11 +75,11 @@ header h1{font-size:17px;font-weight:700;}
 </header>
 
 <div class="topbar">
-  <input type="text" id="searchInput" placeholder="🔍 חפש בכל הרשימות..." oninput="onSearch()"/>
+  <input type="text" id="searchInput" placeholder="🔍 חפש בשתי הרשימות..." oninput="onSearch()"/>
 </div>
 
 <div class="cols">
-  <!-- COL 1: Shortcuts -->
+  <!-- RIGHT: Shortcuts -->
   <div class="col">
     <div class="col-header">
       <span class="col-title">🔑 קיצורים</span>
@@ -130,17 +90,9 @@ header h1{font-size:17px;font-weight:700;}
       <button class="tbtn tbtn-r" onclick="removeNew('short')">✕ מחק רק חדשים</button>
     </div>
     <div class="col-body" id="shortBody"></div>
-    <div class="add-row">
-      <input class="add-input add-short" id="newShortKey" placeholder="קיצור" dir="rtl"
-        onkeydown="if(event.key==='Enter') document.getElementById('newShortFull').focus()"/>
-      <span class="add-sep">→</span>
-      <input class="add-input add-full" id="newShortFull" placeholder="שם מלא" dir="rtl"
-        onkeydown="if(event.key==='Enter') addShortcut()"/>
-      <button class="btn-add" id="btnAddShort" onclick="addShortcut()">+ הוסף</button>
-    </div>
   </div>
 
-  <!-- COL 2: Full city names -->
+  <!-- LEFT: Full city names -->
   <div class="col">
     <div class="col-header">
       <span class="col-title">🏙️ ערים מלאות</span>
@@ -151,29 +103,6 @@ header h1{font-size:17px;font-weight:700;}
       <button class="tbtn tbtn-r" onclick="removeNew('city')">✕ מחק רק חדשים</button>
     </div>
     <div class="col-body" id="cityBody"></div>
-    <div class="add-row">
-      <input class="add-input add-full" id="newCityName" placeholder="שם עיר" dir="rtl"
-        onkeydown="if(event.key==='Enter') addCity()"/>
-      <button class="btn-add" id="btnAddCity" onclick="addCity()">+ הוסף</button>
-    </div>
-  </div>
-
-  <!-- COL 3: City hierarchy / neighborhoods -->
-  <div class="col">
-    <div class="col-header blue">
-      <span class="col-title">🗺️ ערים ראשיות ושכונות</span>
-      <span class="col-count" id="relCount">—</span>
-    </div>
-    <div class="col-toolbar">
-      <button class="tbtn tbtn-b" onclick="expandAll()">▼ פתח הכל</button>
-      <button class="tbtn tbtn-b" onclick="collapseAll()">▲ סגור הכל</button>
-    </div>
-    <div class="col-body" id="relBody"></div>
-    <div class="add-row-blue">
-      <input class="add-input add-full" id="newRelCity" placeholder="שם עיר ראשית חדשה" dir="rtl"
-        onkeydown="if(event.key==='Enter') addRelCity()"/>
-      <button class="btn-add blue" id="btnAddRelCity" onclick="addRelCity()">+ הוסף עיר</button>
-    </div>
   </div>
 </div>
 
@@ -188,17 +117,15 @@ header h1{font-size:17px;font-weight:700;}
 const API = 'https://api.bigbotdrivers.com';
 let token = localStorage.getItem('bb_token') || '';
 
-let allShorts = [];
-let allCities = [];
-let allRelated = [];  // [{_id, main, related:[]}]
+let allShorts = [];   // {name, count, known, fullName, dbId}
+let allCities = [];   // {name, count, known, dbId}
 let viewShorts = [];
 let viewCities = [];
 let searchTerm = '';
 let searchTimer = null;
-const pendingDeleteShorts = new Set();  // names marked for deletion
-const pendingDeleteCities = new Set();
+let syncing = false;
 
-// ─── Auth ─────────────────────────────────────────────────────────────────────
+// ─── Auth ────────────────────────────────────────────────────────────────────
 async function ensureToken() {
   if (token) return;
   const res = await fetch(API + '/api/auth/login', {
@@ -212,52 +139,49 @@ async function ensureToken() {
 
 async function apiFetch(path, opts={}) {
   await ensureToken();
-  let res = await fetch(API + path, {
+  const res = await fetch(API + path, {
     ...opts, headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(opts.headers||{})}
   });
-  if (res.status===401){
-    token=''; localStorage.removeItem('bb_token');
-    await ensureToken();
-    res = await fetch(API + path, {
-      ...opts, headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...(opts.headers||{})}
-    });
-  }
-  if (!res.ok){ const d=await res.json().catch(()=>({})); throw new Error(d.message||`שגיאת שרת (${res.status})`); }
+  if (res.status===401){ token=''; localStorage.removeItem('bb_token'); await ensureToken(); throw new Error('פג תוקף'); }
+  if (!res.ok){ const d=await res.json().catch(()=>({})); throw new Error(d.message||'שגיאת שרת'); }
   return res.json();
 }
 
-// ─── Load ─────────────────────────────────────────────────────────────────────
+// ─── Load ────────────────────────────────────────────────────────────────────
 async function init() {
   document.getElementById('shortBody').innerHTML = '<div class="loading">טוען...</div>';
   document.getElementById('cityBody').innerHTML  = '<div class="loading">טוען...</div>';
-  document.getElementById('relBody').innerHTML   = '<div class="loading">טוען...</div>';
   try {
-    const [dbData, relData] = await Promise.all([
-      loadAllDbShortcuts(),
-      loadAllRelated(),
+    // Load JSON files + DB shortcuts in parallel
+    const [shorts, cities, dbData] = await Promise.all([
+      fetch('/data/shortcuts.json').then(r=>r.json()),
+      fetch('/data/fullNames.json').then(r=>r.json()),
+      loadAllDbShortcuts()
     ]);
 
-    // Source of truth is DB only — JSON files are no longer used for display
-    allShorts = [];
-    allCities = [];
-    for (const d of dbData) {
-      if (d.shortName !== d.fullName) {
-        allShorts.push({ name: d.shortName, fullName: d.fullName, count: 0, known: true, dbId: d._id });
-      } else {
-        allCities.push({ name: d.fullName, count: 0, known: true, dbId: d._id });
-      }
-    }
+    // Build lookup: shortName → {fullName, _id}
+    const dbMap = {};
+    dbData.forEach(d => { dbMap[d.shortName] = { fullName: d.fullName, id: d._id }; });
 
-    allRelated = relData;
+    // Enrich shorts with fullName from DB
+    allShorts = shorts.map(s => ({
+      ...s,
+      fullName: dbMap[s.name]?.fullName || s.name,
+      dbId: dbMap[s.name]?.id || null
+    }));
+    allCities = cities.map(c => {
+      // try to find by fullName in DB
+      const dbEntry = dbData.find(d => d.fullName === c.name);
+      return { ...c, dbId: dbEntry?._id || null };
+    });
+
     viewShorts = [...allShorts];
     viewCities = [...allCities];
     renderAll();
-    renderRelated();
     updateStats();
   } catch(e) {
     document.getElementById('shortBody').innerHTML = `<div class="empty">שגיאה: ${e.message}</div>`;
     document.getElementById('cityBody').innerHTML  = `<div class="empty">שגיאה: ${e.message}</div>`;
-    document.getElementById('relBody').innerHTML   = `<div class="empty">שגיאה: ${e.message}</div>`;
     showToast(e.message, true);
   }
 }
@@ -266,7 +190,7 @@ async function loadAllDbShortcuts() {
   const results = [];
   let page = 1;
   while (true) {
-    const data = await apiFetch(`/api/areas/shortcuts?page=${page}&limit=200&sortBy=shortName&sortOrder=asc`);
+    const data = await apiFetch(`/api/areas/shortcuts?page=${page}&limit=100&sortBy=shortName&sortOrder=asc`);
     results.push(...(data.data||[]));
     if (page >= (data.totalPages||1)) break;
     page++;
@@ -274,36 +198,18 @@ async function loadAllDbShortcuts() {
   return results;
 }
 
-async function loadAllRelated() {
-  const results = [];
-  let page = 1;
-  while (true) {
-    const data = await apiFetch(`/api/areas/related?page=${page}&limit=50&sortBy=main&sortOrder=asc`);
-    results.push(...(data.data||[]));
-    if (page >= (data.totalPages||1)) break;
-    page++;
-  }
-  return results;
-}
-
-const HE_COLLATOR = new Intl.Collator('he');
-function heSort(arr, key) { return [...arr].sort((a,b) => HE_COLLATOR.compare(a[key],b[key])); }
-
-// ─── Render shortcuts + cities ────────────────────────────────────────────────
+// ─── Render ───────────────────────────────────────────────────────────────────
 function renderAll() {
   const q = searchTerm.toLowerCase();
-  let fs = q ? viewShorts.filter(x=>x.name.toLowerCase().includes(q)||x.fullName.toLowerCase().includes(q)) : viewShorts;
-  let fc = q ? viewCities.filter(x=>x.name.toLowerCase().includes(q)) : viewCities;
-  fs = heSort(fs, 'name');
-  fc = heSort(fc, 'name');
+  const fs = q ? viewShorts.filter(x=>x.name.toLowerCase().includes(q)||x.fullName.toLowerCase().includes(q)) : viewShorts;
+  const fc = q ? viewCities.filter(x=>x.name.toLowerCase().includes(q)) : viewCities;
 
   renderShorts('shortBody', fs);
   renderCities('cityBody', fc);
 
   document.getElementById('shortCount').textContent = fs.length+'/'+allShorts.length;
   document.getElementById('cityCount').textContent  = fc.length+'/'+allCities.length;
-  const relTotal = allRelated.reduce((s,r)=>s+1+(r.related||[]).length,0);
-  document.getElementById('totalBadge').textContent = (allShorts.length+allCities.length+allRelated.length)+' פריטים';
+  document.getElementById('totalBadge').textContent = (allShorts.length+allCities.length)+' פריטים מוכנים';
   updateStats();
 }
 
@@ -313,8 +219,7 @@ function renderShorts(containerId, items) {
   el.innerHTML = '';
   items.forEach(item => {
     const div = document.createElement('div');
-    const isPending = pendingDeleteShorts.has(item.name);
-    div.className = 'item' + (item.known?' known':'') + (isPending?' pending-del':'');
+    div.className = 'item' + (item.known?' known':'');
     div.id = 'si-'+encodeId(item.name);
     div.dataset.name = item.name;
     div.innerHTML = shortRowHtml(item);
@@ -328,8 +233,7 @@ function renderCities(containerId, items) {
   el.innerHTML = '';
   items.forEach(item => {
     const div = document.createElement('div');
-    const isPending = pendingDeleteCities.has(item.name);
-    div.className = 'item' + (item.known?' known':'') + (isPending?' pending-del':'');
+    div.className = 'item' + (item.known?' known':'');
     div.id = 'ci-'+encodeId(item.name);
     div.dataset.name = item.name;
     div.innerHTML = cityRowHtml(item);
@@ -338,161 +242,32 @@ function renderCities(containerId, items) {
 }
 
 function shortRowHtml(item) {
-  const isPending = pendingDeleteShorts.has(item.name);
   return `
-    <button class="btn-del${isPending?' undo':''}" onclick="removeItem('short','${esc(item.name)}')">${isPending?'↩':'✕'}</button>
-    <span class="item-count">${item.count||''}×</span>
-    <span class="item-short" contenteditable="${isPending?'false':'true'}" spellcheck="false"
+    <button class="btn-del" onclick="removeItem('short','${esc(item.name)}')">✕</button>
+    <span class="item-count">${item.count}×</span>
+    <span class="item-short" contenteditable="true" spellcheck="false"
       onblur="saveShortBlur(this,'${esc(item.name)}')"
       onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${esc(item.name)}</span>
     <span class="item-sep">→</span>
-    <span class="item-full" contenteditable="${isPending?'false':'true'}" spellcheck="false"
+    <span class="item-full" contenteditable="true" spellcheck="false"
       onblur="saveFullBlur(this,'${esc(item.name)}')"
-      onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${esc(item.fullName||item.name)}</span>
+      onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${esc(item.fullName)}</span>
     ${item.known ? '<span class="badge-known">קיים ב-DB</span>' : ''}
     <span class="saving-indicator">✓</span>`;
 }
 
 function cityRowHtml(item) {
-  const isPending = pendingDeleteCities.has(item.name);
   return `
-    <button class="btn-del${isPending?' undo':''}" onclick="removeItem('city','${esc(item.name)}')">${isPending?'↩':'✕'}</button>
-    <span class="item-count">${item.count||''}×</span>
-    <span class="item-name" contenteditable="${isPending?'false':'true'}" spellcheck="false"
+    <button class="btn-del" onclick="removeItem('city','${esc(item.name)}')">✕</button>
+    <span class="item-count">${item.count}×</span>
+    <span class="item-name" contenteditable="true" spellcheck="false"
       onblur="saveCityBlur(this,'${esc(item.name)}')"
       onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}">${esc(item.name)}</span>
     ${item.known ? '<span class="badge-known">קיים ב-DB</span>' : ''}
     <span class="saving-indicator">✓</span>`;
 }
 
-// ─── Render Related Areas (city cards) ────────────────────────────────────────
-function renderRelated(filterQ) {
-  const el = document.getElementById('relBody');
-  const q = (filterQ||searchTerm).toLowerCase();
-  const items = heSort(q
-    ? allRelated.filter(r=>r.main.toLowerCase().includes(q)||(r.related||[]).some(n=>n.toLowerCase().includes(q)))
-    : allRelated, 'main');
-
-  document.getElementById('relCount').textContent = items.length+'/'+allRelated.length+' ערים';
-
-  if (!items.length){ el.innerHTML='<div class="empty">ריק</div>'; return; }
-  el.innerHTML='';
-  items.forEach(rel => {
-    const card = document.createElement('div');
-    card.className='city-card';
-    card.id='rc-'+encodeId(rel.main);
-    const nbs = (rel.related||[]);
-    card.innerHTML=`
-      <div class="city-card-header" onclick="toggleCard('${esc(rel.main)}')">
-        <button class="btn-del-city" onclick="event.stopPropagation();removeRelCity('${esc(rel.main)}')">✕</button>
-        <span class="city-name">${esc(rel.main)}</span>
-        <span class="city-nbcount">${nbs.length} שכונות</span>
-        <span class="city-toggle">▼</span>
-      </div>
-      <div class="city-neighborhoods">
-        <div class="nb-chips" id="chips-${encodeId(rel.main)}">
-          ${nbs.map(n=>`<span class="nb-chip">${esc(n)}<button class="nb-chip-del" onclick="removeNeighborhood('${esc(rel.main)}','${esc(n)}')">×</button></span>`).join('')}
-        </div>
-        <div class="nb-add-row">
-          <input class="nb-add-input" id="nbinput-${encodeId(rel.main)}" placeholder="הוסף שכונה..." dir="rtl"
-            onkeydown="if(event.key==='Enter') addNeighborhood('${esc(rel.main)}')"/>
-          <button class="nb-add-btn" onclick="addNeighborhood('${esc(rel.main)}')">+ הוסף</button>
-        </div>
-      </div>`;
-    el.appendChild(card);
-  });
-}
-
-function toggleCard(main) {
-  const card = document.getElementById('rc-'+encodeId(main));
-  if (card) card.classList.toggle('open');
-}
-function expandAll()   { document.querySelectorAll('.city-card').forEach(c=>c.classList.add('open')); }
-function collapseAll() { document.querySelectorAll('.city-card').forEach(c=>c.classList.remove('open')); }
-
-// ─── Related: add neighborhood ────────────────────────────────────────────────
-async function addNeighborhood(main) {
-  const inputId = 'nbinput-'+encodeId(main);
-  const input = document.getElementById(inputId);
-  const nb = input.value.trim();
-  if (!nb) return;
-  const rel = allRelated.find(r=>r.main===main);
-  if (!rel) return;
-  if ((rel.related||[]).includes(nb)) { showToast('שכונה כבר קיימת', true); return; }
-
-  const newRelated = [...(rel.related||[]), nb];
-  try {
-    await apiFetch('/api/areas/related', {
-      method:'POST', body:JSON.stringify({ main, related: newRelated })
-    });
-    rel.related = newRelated;
-    input.value = '';
-    // Re-render chips
-    const chips = document.getElementById('chips-'+encodeId(main));
-    if (chips) chips.innerHTML = newRelated.map(n=>`<span class="nb-chip">${esc(n)}<button class="nb-chip-del" onclick="removeNeighborhood('${esc(main)}','${esc(n)}')">×</button></span>`).join('');
-    // Update count badge
-    const card = document.getElementById('rc-'+encodeId(main));
-    if (card) card.querySelector('.city-nbcount').textContent = newRelated.length+' שכונות';
-    showToast('שכונה נוספה ✓');
-  } catch(e) { showToast('שגיאה: '+e.message, true); }
-}
-
-// ─── Related: remove neighborhood ────────────────────────────────────────────
-async function removeNeighborhood(main, nb) {
-  const rel = allRelated.find(r=>r.main===main);
-  if (!rel) return;
-  const newRelated = (rel.related||[]).filter(n=>n!==nb);
-  try {
-    await apiFetch('/api/areas/related', {
-      method:'POST', body:JSON.stringify({ main, related: newRelated })
-    });
-    rel.related = newRelated;
-    const chips = document.getElementById('chips-'+encodeId(main));
-    if (chips) chips.innerHTML = newRelated.map(n=>`<span class="nb-chip">${esc(n)}<button class="nb-chip-del" onclick="removeNeighborhood('${esc(main)}','${esc(n)}')">×</button></span>`).join('');
-    const card = document.getElementById('rc-'+encodeId(main));
-    if (card) card.querySelector('.city-nbcount').textContent = newRelated.length+' שכונות';
-    showToast('שכונה הוסרה ✓');
-  } catch(e) { showToast('שגיאה: '+e.message, true); }
-}
-
-// ─── Related: add new city ────────────────────────────────────────────────────
-async function addRelCity() {
-  const input = document.getElementById('newRelCity');
-  const main = input.value.trim();
-  if (!main) return;
-  if (allRelated.find(r=>r.main===main)) { showToast('עיר כבר קיימת', true); return; }
-  const btn = document.getElementById('btnAddRelCity');
-  btn.disabled = true;
-  try {
-    const created = await apiFetch('/api/areas/related', {
-      method:'POST', body:JSON.stringify({ main, related: [] })
-    });
-    allRelated.unshift({ _id: created._id, main, related: [] });
-    input.value = '';
-    renderRelated();
-    // Auto-open the new card
-    setTimeout(()=>{ const c=document.getElementById('rc-'+encodeId(main)); if(c){c.classList.add('open'); document.getElementById('relBody').scrollTop=0;} }, 50);
-    showToast('עיר ראשית נוספה ✓');
-  } catch(e) { showToast('שגיאה: '+e.message, true); }
-  finally { btn.disabled=false; }
-}
-
-// ─── Related: delete city ─────────────────────────────────────────────────────
-async function removeRelCity(main) {
-  const rel = allRelated.find(r=>r.main===main);
-  if (!rel) return;
-  try {
-    // Find the _id via API
-    const data = await apiFetch(`/api/areas/related?limit=200`);
-    const entry = (data.data||[]).find(r=>r.main===main);
-    if (entry) await apiFetch('/api/areas/related/'+entry._id, { method:'DELETE' });
-    allRelated = allRelated.filter(r=>r.main!==main);
-    renderRelated();
-    showToast('עיר נמחקה ✓');
-  } catch(e) { showToast('שגיאה: '+e.message, true); }
-}
-
-// ─── Auto-save shortcuts on blur ──────────────────────────────────────────────
+// ─── Auto-save on blur ────────────────────────────────────────────────────────
 async function saveShortBlur(el, origName) {
   const newShort = el.textContent.trim();
   if (!newShort || newShort === origName) return;
@@ -508,38 +283,27 @@ async function saveFullBlur(el, origName) {
   const shortEl = div.querySelector('.item-short');
   const newShort = shortEl ? shortEl.textContent.trim() : origName;
   const newFull = el.textContent.trim();
-  const item = viewShorts.find(x=>x.name===origName) || allShorts.find(x=>x.name===origName);
-  if (!newFull || newFull === (item||{}).fullName) return;
+  if (!newFull || newFull === (viewShorts.find(x=>x.name===origName)||{}).fullName) return;
   await _saveShort(div, origName, newShort, newFull);
 }
 
 async function _saveShort(div, origName, newShort, newFull) {
   const item = viewShorts.find(x=>x.name===origName) || allShorts.find(x=>x.name===origName);
   if (!item) return;
+  const ind = div.querySelector('.saving-indicator');
   div.classList.add('saving');
-  try {
-    if (item.known && item.dbId) {
+  if (item.known && item.dbId) {
+    try {
       await apiFetch('/api/areas/shortcuts/'+item.dbId, {
         method:'PUT', body:JSON.stringify({shortName:newShort, fullName:newFull||newShort})
       });
-    } else if (!item.known) {
-      const created = await apiFetch('/api/areas/shortcuts', {
-        method:'POST', body:JSON.stringify({shortName:newShort, fullName:newFull||newShort})
-      });
-      item.dbId = created._id; item.known = true;
-      div.classList.add('known');
-      if (!div.querySelector('.badge-known')) {
-        const badge = document.createElement('span');
-        badge.className = 'badge-known'; badge.textContent = 'קיים ב-DB';
-        div.querySelector('.saving-indicator').before(badge);
-      }
-    }
-    item.name = newShort; item.fullName = newFull||newShort;
-    const ai = allShorts.find(x=>x.name===origName);
-    if (ai) { ai.name=newShort; ai.fullName=newFull||newShort; ai.known=item.known; ai.dbId=item.dbId; }
-    showToast('נשמר ✓');
-  } catch(e) { showToast('שגיאה: '+e.message, true); }
-  finally { div.classList.remove('saving'); }
+    } catch(e) { div.classList.remove('saving'); return showToast('שגיאה: '+e.message, true); }
+  }
+  item.name=newShort; item.fullName=newFull||newShort;
+  const ai=allShorts.find(x=>x.name===origName);
+  if(ai){ai.name=newShort;ai.fullName=newFull||newShort;}
+  div.classList.remove('saving');
+  showToast('נשמר ✓');
 }
 
 async function saveCityBlur(el, origName) {
@@ -549,197 +313,79 @@ async function saveCityBlur(el, origName) {
   const item = viewCities.find(x=>x.name===origName) || allCities.find(x=>x.name===origName);
   if (!item) return;
   div.classList.add('saving');
-  try {
-    if (item.known && item.dbId) {
+  if (item.known && item.dbId) {
+    try {
       await apiFetch('/api/areas/shortcuts/'+item.dbId, {
-        method:'PUT', body:JSON.stringify({shortName:newName, fullName:newName})
+        method:'PUT', body:JSON.stringify({fullName:newName})
       });
-    } else if (!item.known) {
-      const created = await apiFetch('/api/areas/shortcuts', {
-        method:'POST', body:JSON.stringify({shortName:newName, fullName:newName})
-      });
-      item.dbId = created._id; item.known = true;
-      div.classList.add('known');
-      if (!div.querySelector('.badge-known')) {
-        const badge = document.createElement('span');
-        badge.className = 'badge-known'; badge.textContent = 'קיים ב-DB';
-        div.querySelector('.saving-indicator').before(badge);
-      }
-    }
-    item.name = newName;
-    const ai = allCities.find(x=>x.name===origName);
-    if (ai) { ai.name=newName; ai.known=item.known; ai.dbId=item.dbId; }
-    el.setAttribute('onblur', `saveCityBlur(this,'${esc(newName)}')`);
-    showToast('נשמר ✓');
-  } catch(e) { showToast('שגיאה: '+e.message, true); }
-  finally { div.classList.remove('saving'); }
+    } catch(e) { div.classList.remove('saving'); return showToast('שגיאה: '+e.message, true); }
+  }
+  item.name=newName;
+  const ai=allCities.find(x=>x.name===origName);
+  if(ai) ai.name=newName;
+  div.classList.remove('saving');
+  el.setAttribute('onblur',`saveCityBlur(this,'${esc(newName)}')`);
+  showToast('נשמר ✓');
 }
 
 // ─── Remove / Restore ─────────────────────────────────────────────────────────
 function removeItem(type, name) {
-  const pendingSet = type==='short' ? pendingDeleteShorts : pendingDeleteCities;
-  const allArr = type==='short' ? allShorts : allCities;
-  const item = allArr.find(x=>x.name===name);
-
-  if (!item) return;
-
-  if (!item.known) {
-    // Not in DB — remove from view immediately (nothing to delete)
-    if (type==='short') { allShorts=allShorts.filter(x=>x.name!==name); viewShorts=viewShorts.filter(x=>x.name!==name); }
-    else                { allCities=allCities.filter(x=>x.name!==name); viewCities=viewCities.filter(x=>x.name!==name); }
-    renderAll();
-    return;
-  }
-
-  // Toggle pending deletion
-  if (pendingSet.has(name)) {
-    pendingSet.delete(name);
-  } else {
-    pendingSet.add(name);
-  }
-
-  // Re-render just this row
-  const elId = type==='short' ? 'si-'+encodeId(name) : 'ci-'+encodeId(name);
-  const div = document.getElementById(elId);
-  if (div) {
-    if (pendingSet.has(name)) div.classList.add('pending-del');
-    else div.classList.remove('pending-del');
-    div.innerHTML = type==='short' ? shortRowHtml(item) : cityRowHtml(item);
-  }
-  updateStats();
+  if (type==='short') viewShorts = viewShorts.filter(x=>x.name!==name);
+  else                viewCities = viewCities.filter(x=>x.name!==name);
+  renderAll();
 }
-
 function restoreAll(type) {
-  if (type==='short') { pendingDeleteShorts.clear(); viewShorts=[...allShorts]; }
-  else                { pendingDeleteCities.clear(); viewCities=[...allCities]; }
+  if (type==='short') viewShorts=[...allShorts];
+  else                viewCities=[...allCities];
   renderAll();
 }
 function removeNew(type) {
-  if (type==='short') viewShorts=viewShorts.filter(x=>x.known); else viewCities=viewCities.filter(x=>x.known);
+  if (type==='short') viewShorts=viewShorts.filter(x=>x.known);
+  else                viewCities=viewCities.filter(x=>x.known);
   renderAll();
 }
 
-// ─── Batch save ───────────────────────────────────────────────────────────────
+// ─── Save to DB ───────────────────────────────────────────────────────────────
 function updateStats() {
   const ns = viewShorts.filter(x=>!x.known).length;
   const nc = viewCities.filter(x=>!x.known).length;
-  const ds = pendingDeleteShorts.size;
-  const dc = pendingDeleteCities.size;
-  const total = ns+nc+ds+dc;
-  let parts = [];
-  if (ns+nc>0) parts.push(`יתווסף: ${ns+nc}`);
-  if (ds+dc>0) parts.push(`יימחק: ${ds+dc}`);
   document.getElementById('statsText').textContent =
-    total > 0 ? parts.join(' | ') : 'הכל מסונכרן עם DB ✓';
-  document.getElementById('saveBtn').disabled = total===0;
+    `יתווסף ל-DB: ${ns} קיצורים חדשים, ${nc} ערים חדשות (סה"כ ${ns+nc})`;
+  document.getElementById('saveBtn').disabled = (ns+nc)===0;
 }
 
 async function saveToDb() {
   const ns = viewShorts.filter(x=>!x.known);
   const nc = viewCities.filter(x=>!x.known);
-  const toDelShorts = allShorts.filter(x=>pendingDeleteShorts.has(x.name)&&x.known&&x.dbId);
-  const toDelCities = allCities.filter(x=>pendingDeleteCities.has(x.name)&&x.known&&x.dbId);
-  if (!ns.length&&!nc.length&&!toDelShorts.length&&!toDelCities.length) return;
-
+  if (!ns.length&&!nc.length) return;
+  if (!confirm(`להוסיף ${ns.length} קיצורים ו-${nc.length} ערים למאגר?`)) return;
   const btn=document.getElementById('saveBtn');
   btn.disabled=true; btn.textContent='⏳ שומר...';
-  let saved=0, deleted=0, failed=0, errMsg='';
-
-  // Delete pending
-  for (const s of toDelShorts) {
-    try {
-      await apiFetch('/api/areas/shortcuts/'+s.dbId, {method:'DELETE'});
-      allShorts=allShorts.filter(x=>x.name!==s.name);
-      viewShorts=viewShorts.filter(x=>x.name!==s.name);
-      pendingDeleteShorts.delete(s.name);
-      deleted++;
-    } catch(e) { failed++; errMsg=e.message; }
-  }
-  for (const c of toDelCities) {
-    try {
-      await apiFetch('/api/areas/shortcuts/'+c.dbId, {method:'DELETE'});
-      allCities=allCities.filter(x=>x.name!==c.name);
-      viewCities=viewCities.filter(x=>x.name!==c.name);
-      pendingDeleteCities.delete(c.name);
-      deleted++;
-    } catch(e) { failed++; errMsg=e.message; }
-  }
-
-  // Add new
+  let saved=0, failed=0;
   for (const s of ns) {
-    try {
-      const created = await apiFetch('/api/areas/shortcuts',{method:'POST',body:JSON.stringify({shortName:s.name,fullName:s.fullName||s.name})});
-      s.known=true; s.dbId=created._id; saved++;
-      const ai=allShorts.find(x=>x.name===s.name); if(ai){ai.known=true;ai.dbId=created._id;}
-    } catch(e) {
-      if (e.message&&(e.message.includes('11000')||e.message.includes('duplicate'))) {
-        s.known=true; const ai=allShorts.find(x=>x.name===s.name); if(ai) ai.known=true; saved++;
-      } else { failed++; errMsg=e.message; }
-    }
+    try { await apiFetch('/api/areas/shortcuts',{method:'POST',body:JSON.stringify({shortName:s.name,fullName:s.fullName||s.name})}); s.known=true; saved++; } catch { failed++; }
   }
   for (const c of nc) {
-    try {
-      const created = await apiFetch('/api/areas/shortcuts',{method:'POST',body:JSON.stringify({shortName:c.name,fullName:c.name})});
-      c.known=true; c.dbId=created._id; saved++;
-      const ai=allCities.find(x=>x.name===c.name); if(ai){ai.known=true;ai.dbId=created._id;}
-    } catch(e) {
-      if (e.message&&(e.message.includes('11000')||e.message.includes('duplicate'))) {
-        c.known=true; const ai=allCities.find(x=>x.name===c.name); if(ai) ai.known=true; saved++;
-      } else { failed++; errMsg=e.message; }
-    }
+    try { await apiFetch('/api/areas/shortcuts',{method:'POST',body:JSON.stringify({shortName:c.name,fullName:c.name})}); c.known=true; saved++; } catch { failed++; }
   }
-
+  allShorts.forEach(x=>{const f=ns.find(s=>s.name===x.name);if(f)x.known=true;});
+  allCities.forEach(x=>{const f=nc.find(s=>s.name===x.name);if(f)x.known=true;});
   renderAll();
   btn.textContent='💾 אשר ושמור למאגר';
-  const msg = [];
-  if (deleted>0) msg.push(`נמחקו ${deleted}`);
-  if (saved>0)   msg.push(`נוספו ${saved}`);
-  showToast(failed ? (msg.join(', ')+` (${failed} נכשלו: ${errMsg})`) : (msg.join(', ')+' ✓'), failed>0);
+  showToast(`נשמרו ${saved} פריטים${failed?' ('+failed+' נכשלו)':''}  ✓`, failed>0);
 }
 
-// ─── Add new shortcuts / cities ───────────────────────────────────────────────
-async function addShortcut() {
-  const keyEl=document.getElementById('newShortKey'), fullEl=document.getElementById('newShortFull');
-  const shortName=keyEl.value.trim(), fullName=fullEl.value.trim();
-  if (!shortName||!fullName){ showToast('מלא קיצור ושם מלא',true); return; }
-  if (allShorts.find(x=>x.name===shortName)){ showToast('קיצור כבר קיים',true); return; }
-  const btn=document.getElementById('btnAddShort'); btn.disabled=true;
-  try {
-    const created = await apiFetch('/api/areas/shortcuts',{method:'POST',body:JSON.stringify({shortName,fullName})});
-    allShorts.unshift({name:shortName,fullName,count:0,known:true,dbId:created._id});
-    viewShorts.unshift(allShorts[0]);
-    keyEl.value=''; fullEl.value='';
-    renderAll(); showToast('קיצור נוסף ✓');
-    document.getElementById('shortBody').scrollTop=0;
-  } catch(e){ showToast('שגיאה: '+e.message,true); }
-  finally{ btn.disabled=false; keyEl.focus(); }
-}
-
-async function addCity() {
-  const nameEl=document.getElementById('newCityName');
-  const name=nameEl.value.trim();
-  if (!name){ showToast('מלא שם עיר',true); return; }
-  if (allCities.find(x=>x.name===name)){ showToast('עיר כבר קיימת',true); return; }
-  const btn=document.getElementById('btnAddCity'); btn.disabled=true;
-  try {
-    const created = await apiFetch('/api/areas/shortcuts',{method:'POST',body:JSON.stringify({shortName:name,fullName:name})});
-    allCities.unshift({name,count:0,known:true,dbId:created._id});
-    viewCities.unshift(allCities[0]);
-    nameEl.value='';
-    renderAll(); showToast('עיר נוספה ✓');
-    document.getElementById('cityBody').scrollTop=0;
-  } catch(e){ showToast('שגיאה: '+e.message,true); }
-  finally{ btn.disabled=false; nameEl.focus(); }
+// ─── Scroll sync ──────────────────────────────────────────────────────────────
+function syncScroll(el,from) {
+  if(syncing)return; syncing=true;
+  document.getElementById(from==='short'?'cityBody':'shortBody').scrollTop=el.scrollTop;
+  setTimeout(()=>syncing=false,40);
 }
 
 // ─── Search ───────────────────────────────────────────────────────────────────
 function onSearch() {
   clearTimeout(searchTimer);
-  searchTimer=setTimeout(()=>{
-    searchTerm=document.getElementById('searchInput').value.trim();
-    renderAll();
-    renderRelated();
-  },250);
+  searchTimer=setTimeout(()=>{searchTerm=document.getElementById('searchInput').value.trim();renderAll();},250);
 }
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
