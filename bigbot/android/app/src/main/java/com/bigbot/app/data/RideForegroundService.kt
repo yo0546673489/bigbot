@@ -152,8 +152,8 @@ class RideForegroundService : Service() {
                 if (minPriceVal > 0) {
                     var ridePrice = ride.price.replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0
                     if (ridePrice == 0 && ride.rawText.isNotEmpty()) {
-                        val m = Regex("(?:^|\\s)(\\d{2,4})\\s*[₪ש\"ח](?:\\s|$)", RegexOption.MULTILINE).find(ride.rawText)
-                        ridePrice = m?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                        val parsedPrice = RideTextParser.parse(ride.rawText, ride.origin, ride.destination).price
+                        ridePrice = parsedPrice.toIntOrNull() ?: 0
                     }
                     if (ridePrice in 1 until minPriceVal) {
                         Log.d("RideFGS", "Skipping ride below minPrice ($ridePrice < $minPriceVal)")

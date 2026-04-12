@@ -145,13 +145,15 @@ class HomeViewModel @Inject constructor(
         }
         viewModelScope.launch {
             repo.wsService.rides.collect { ride ->
-                // Min price filter — skip ride if below threshold
+                // Min price filter — skip ride if below threshold.
+                // If no price detected → fail-open (don't block).
                 val minPriceVal = repo.minPrice.first()
                 if (minPriceVal > 0) {
                     var ridePrice = ride.price.replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0
+                    // Fallback: use RideTextParser's price extraction
                     if (ridePrice == 0 && ride.rawText.isNotEmpty()) {
-                        val m = Regex("(?:^|\\s)(\\d{2,4})\\s*[₪ש\"ח](?:\\s|$)", RegexOption.MULTILINE).find(ride.rawText)
-                        ridePrice = m?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                        val parsedPrice = RideTextParser.parse(ride.rawText, ride.origin, ride.destination).price
+                        ridePrice = parsedPrice.toIntOrNull() ?: 0
                     }
                     if (ridePrice in 1 until minPriceVal) return@collect
                 }
@@ -175,6 +177,37 @@ class HomeViewModel @Inject constructor(
                         }
                         // Driver with 4 seats can't take large-vehicle rides
                         if (driverSeats == 4 && isLargeVehicleRide) return@collect
+                    }
+                }
+
+                // Km range filter — check distance from base city to ride origin
+                val kmVal = selectedKm.value
+                if (kmVal > 0) {
+                    val shortcutsJson = repo.areasShortcutsJson.first()
+                    if (shortcutsJson.isNotBlank()) {
+                        val type = object : com.google.gson.reflect.TypeToken<List<Map<String, Any>>>() {}.type
+                        val shortcuts: List<Map<String, Any>> = try { gson.fromJson(shortcutsJson, type) ?: emptyList() } catch (_: Exception) { emptyList() }
+
+                        // Base city: first active (non-paused) keyword, or GPS city
+                        val activeKws = repo.keywords.first().filter { kw -> !repo.pausedKeywords.first().contains(kw) }
+                        val baseKw = activeKws.firstOrNull() ?: ""
+
+                        // Find coords for base city
+                        val baseEntry = shortcuts.firstOrNull { (it["shortName"] as? String) == baseKw || (it["fullName"] as? String) == baseKw }
+                        val baseLat = (baseEntry?.get("lat") as? Number)?.toDouble() ?: driverLat
+                        val baseLng = (baseEntry?.get("lng") as? Number)?.toDouble() ?: driverLng
+
+                        // Find coords for ride origin
+                        val originName = ride.origin
+                        val originEntry = shortcuts.firstOrNull { (it["shortName"] as? String) == originName || (it["fullName"] as? String) == originName }
+                        val originLat = (originEntry?.get("lat") as? Number)?.toDouble()
+                        val originLng = (originEntry?.get("lng") as? Number)?.toDouble()
+
+                        if (baseLat != 0.0 && baseLng != 0.0 && originLat != null && originLng != null) {
+                            val dist = haversineKm(baseLat, baseLng, originLat, originLng)
+                            if (dist > kmVal) return@collect
+                        }
+                        // If coords missing → fail-open (don't block)
                     }
                 }
 
