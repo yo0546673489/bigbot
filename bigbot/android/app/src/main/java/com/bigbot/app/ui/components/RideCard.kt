@@ -109,15 +109,10 @@ fun RideCard(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    ride.origin,
+                                    fullCityName(ride.origin).ifBlank { ride.origin },
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = GreenDark
-                                )
-                                Text(
-                                    fullCityName(ride.origin),
-                                    fontSize = 9.sp,
-                                    color = Color(0xFF90A4AE)
                                 )
                             }
 
@@ -160,15 +155,10 @@ fun RideCard(
                                 horizontalAlignment = Alignment.CenterHorizontally
                             ) {
                                 Text(
-                                    ride.destination,
+                                    fullCityName(ride.destination).ifBlank { ride.destination },
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = GreenDark
-                                )
-                                Text(
-                                    fullCityName(ride.destination),
-                                    fontSize = 9.sp,
-                                    color = Color(0xFF90A4AE)
                                 )
                             }
                         }
