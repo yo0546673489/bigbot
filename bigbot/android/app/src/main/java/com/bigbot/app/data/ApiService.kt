@@ -104,8 +104,18 @@ class ApiService @Inject constructor(private val gson: Gson) {
         } catch (_: Exception) { "" }
     }
 
-    fun saveSettings(phone: String, acceptDeliveries: Boolean, onResult: (Boolean) -> Unit) {
-        post("/api/driver/settings", mapOf("phone" to phone, "acceptDeliveries" to acceptDeliveries)) { ok, _ -> onResult(ok) }
+    fun saveSettings(
+        phone: String,
+        acceptDeliveries: Boolean? = null,
+        acceptInternalRides: Boolean? = null,
+        acceptRoundTrip: Boolean? = null,
+        onResult: (Boolean) -> Unit
+    ) {
+        val body = mutableMapOf<String, Any>("phone" to phone)
+        acceptDeliveries?.let { body["acceptDeliveries"] = it }
+        acceptInternalRides?.let { body["acceptInternalRides"] = it }
+        acceptRoundTrip?.let { body["acceptRoundTrip"] = it }
+        post("/api/driver/settings", body) { ok, _ -> onResult(ok) }
     }
 
     fun addKeyword(phone: String, keyword: String, onResult: (Boolean) -> Unit) {

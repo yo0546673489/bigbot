@@ -43,6 +43,8 @@ class Repository @Inject constructor(
         val KEY_DOB = stringPreferencesKey("dob")
         val KEY_VEHICLE = stringPreferencesKey("vehicle")
         val KEY_ACCEPT_DELIVERIES = booleanPreferencesKey("accept_deliveries")
+        val KEY_ACCEPT_INTERNAL_RIDES = booleanPreferencesKey("accept_internal_rides")
+        val KEY_ACCEPT_ROUND_TRIP = booleanPreferencesKey("accept_round_trip")
         val KEY_VOICE_CONTROL_ENABLED = booleanPreferencesKey("voice_control_enabled")
         val KEY_KM_OPTIONS = stringPreferencesKey("km_options")
         val KEY_KM_SELECTED = intPreferencesKey("km_selected")
@@ -101,6 +103,8 @@ class Repository @Inject constructor(
     val dob: Flow<String> = context.dataStore.data.map { it[KEY_DOB] ?: "" }
     val vehicle: Flow<String> = context.dataStore.data.map { it[KEY_VEHICLE] ?: "" }
     val acceptDeliveries: Flow<Boolean> = context.dataStore.data.map { it[KEY_ACCEPT_DELIVERIES] ?: true }
+    val acceptInternalRides: Flow<Boolean> = context.dataStore.data.map { it[KEY_ACCEPT_INTERNAL_RIDES] ?: false }
+    val acceptRoundTrip: Flow<Boolean> = context.dataStore.data.map { it[KEY_ACCEPT_ROUND_TRIP] ?: true }
     val voiceControlEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_VOICE_CONTROL_ENABLED] ?: false }
     val kmOptions: Flow<List<Int>> = context.dataStore.data.map {
         val raw = it[KEY_KM_OPTIONS] ?: ""; if (raw.isEmpty()) listOf(5, 10, 20) else raw.split(",").mapNotNull { s -> s.trim().toIntOrNull() }
@@ -138,6 +142,8 @@ class Repository @Inject constructor(
     suspend fun saveDob(v: String) = context.dataStore.edit { it[KEY_DOB] = v }
     suspend fun saveVehicle(v: String) = context.dataStore.edit { it[KEY_VEHICLE] = v }
     suspend fun saveAcceptDeliveries(v: Boolean) = context.dataStore.edit { it[KEY_ACCEPT_DELIVERIES] = v }
+    suspend fun saveAcceptInternalRides(v: Boolean) = context.dataStore.edit { it[KEY_ACCEPT_INTERNAL_RIDES] = v }
+    suspend fun saveAcceptRoundTrip(v: Boolean) = context.dataStore.edit { it[KEY_ACCEPT_ROUND_TRIP] = v }
     suspend fun saveVoiceControlEnabled(v: Boolean) = context.dataStore.edit { it[KEY_VOICE_CONTROL_ENABLED] = v }
     suspend fun saveKmOptions(options: List<Int>) = context.dataStore.edit { it[KEY_KM_OPTIONS] = options.joinToString(",") }
     suspend fun saveSelectedKm(v: Int) = context.dataStore.edit { it[KEY_KM_SELECTED] = v }

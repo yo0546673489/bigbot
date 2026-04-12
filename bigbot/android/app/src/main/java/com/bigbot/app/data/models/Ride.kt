@@ -31,7 +31,9 @@ data class Ride(
     val dispatcherPhone: String = "",
     val minutesAgo: Int = 0,
     /** ETA in minutes from driver's current location to ride origin. -1 = not calculated yet, 0 = calculating. */
-    val etaMinutes: Int = -1
+    val etaMinutes: Int = -1,
+    @SerializedName("isInternalRide") val isInternalRide: Boolean = false,
+    @SerializedName("isRoundTrip") val isRoundTrip: Boolean = false
 )
 
 enum class RideUiState { IDLE, SENDING, WAITING_DISPATCHER, SUCCESS, AUTO_SUCCESS, FAILED, AUTO_PENDING }

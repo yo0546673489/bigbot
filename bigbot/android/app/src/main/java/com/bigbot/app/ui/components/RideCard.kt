@@ -96,6 +96,21 @@ fun RideCard(
                             Text(ride.groupName, fontSize = 10.sp, color = Color(0xFFB0BEC5))
                         }
 
+                        // Internal ride / Round-trip badges
+                        if (ride.isInternalRide || ride.isRoundTrip) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                if (ride.isInternalRide) {
+                                    Badge("🏙️ פנימי", Color(0xFF1565C0), Color(0xFFE3F2FD))
+                                }
+                                if (ride.isRoundTrip) {
+                                    Badge("🔄 הלוך ושוב", Color(0xFF6A1B9A), Color(0xFFF3E5F5))
+                                }
+                            }
+                        }
+
                         Spacer(Modifier.height(4.dp))
 
                         // Route section: origin / visual / destination

@@ -39,6 +39,8 @@ fun SettingsScreen(
     val silentMode by viewModel.silentMode.collectAsState()
     val serviceMode by viewModel.serviceMode.collectAsState()
     val acceptDeliveries by viewModel.acceptDeliveries.collectAsState()
+    val acceptInternalRides by viewModel.acceptInternalRides.collectAsState()
+    val acceptRoundTrip by viewModel.acceptRoundTrip.collectAsState()
     val minPrice by viewModel.minPrice.collectAsState()
     val kmFilterVisible by viewModel.kmFilterVisible.collectAsState()
     var showMinPriceDialog by remember { mutableStateOf(false) }
@@ -218,6 +220,32 @@ fun SettingsScreen(
                         Switch(
                             checked = acceptDeliveries,
                             onCheckedChange = { viewModel.setAcceptDeliveries(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = Primary,
+                                checkedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0xFFCFD8DC),
+                                uncheckedThumbColor = Color.White
+                            )
+                        )
+                    }
+                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
+                    SettingsRow("נסיעות פנימיות") {
+                        Switch(
+                            checked = acceptInternalRides,
+                            onCheckedChange = { viewModel.setAcceptInternalRides(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = Primary,
+                                checkedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0xFFCFD8DC),
+                                uncheckedThumbColor = Color.White
+                            )
+                        )
+                    }
+                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
+                    SettingsRow("הלוך ושוב") {
+                        Switch(
+                            checked = acceptRoundTrip,
+                            onCheckedChange = { viewModel.setAcceptRoundTrip(it) },
                             colors = SwitchDefaults.colors(
                                 checkedTrackColor = Primary,
                                 checkedThumbColor = Color.White,

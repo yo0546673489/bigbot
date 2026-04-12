@@ -31,6 +31,8 @@ class SettingsViewModel @Inject constructor(
     val silentMode = repo.silentMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val serviceMode = repo.serviceMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val acceptDeliveries = repo.acceptDeliveries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val acceptInternalRides = repo.acceptInternalRides.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val acceptRoundTrip = repo.acceptRoundTrip.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val minPrice = repo.minPrice.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
     val kmFilterVisible = repo.kmFilterVisible.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -141,7 +143,23 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             repo.saveAcceptDeliveries(v)
             val phone = repo.driverPhone.first()
-            api.saveSettings(phone, v) {}
+            api.saveSettings(phone, acceptDeliveries = v) {}
+        }
+    }
+
+    fun setAcceptInternalRides(v: Boolean) {
+        viewModelScope.launch {
+            repo.saveAcceptInternalRides(v)
+            val phone = repo.driverPhone.first()
+            api.saveSettings(phone, acceptInternalRides = v) {}
+        }
+    }
+
+    fun setAcceptRoundTrip(v: Boolean) {
+        viewModelScope.launch {
+            repo.saveAcceptRoundTrip(v)
+            val phone = repo.driverPhone.first()
+            api.saveSettings(phone, acceptRoundTrip = v) {}
         }
     }
 

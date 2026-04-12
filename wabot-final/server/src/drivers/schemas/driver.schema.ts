@@ -71,6 +71,12 @@ export class Driver {
   acceptDeliveries: boolean;
 
   @Prop({ default: false })
+  acceptInternalRides: boolean;
+
+  @Prop({ default: true })
+  acceptRoundTrip: boolean;
+
+  @Prop({ default: false })
   ignorePayment: boolean;
 
   @Prop({ default: PaymentPackage.REGULAR })

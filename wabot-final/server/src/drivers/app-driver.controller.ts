@@ -117,13 +117,24 @@ export class AppDriverController {
    * Designed to be extendable without breaking existing endpoints.
    */
   @Post('settings')
-  async saveSettings(@Body() body: { phone?: string; acceptDeliveries?: boolean }) {
+  async saveSettings(@Body() body: {
+    phone?: string;
+    acceptDeliveries?: boolean;
+    acceptInternalRides?: boolean;
+    acceptRoundTrip?: boolean;
+  }) {
     const phone = (body?.phone || '').trim();
     if (!phone) return { success: false, message: 'phone required' };
 
     const update: Record<string, any> = {};
     if (typeof body?.acceptDeliveries === 'boolean') {
       update.acceptDeliveries = body.acceptDeliveries;
+    }
+    if (typeof body?.acceptInternalRides === 'boolean') {
+      update.acceptInternalRides = body.acceptInternalRides;
+    }
+    if (typeof body?.acceptRoundTrip === 'boolean') {
+      update.acceptRoundTrip = body.acceptRoundTrip;
     }
 
     if (Object.keys(update).length === 0) {

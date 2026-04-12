@@ -394,6 +394,37 @@ export function isDeliveryRide(message: string): boolean {
     return false;
 }
 
+// ======================================================================
+// Internal ride detection ("פנימי" / "פ" = ride within the same city)
+// ======================================================================
+
+/**
+ * Detects if a ride message is an internal ride (within one city).
+ * Patterns: "פנימי ים", "ים פנימי", "פ ים", "ים פ", "פ בב", "בב פ"
+ *
+ * CRITICAL: "פ" (single letter with spaces) = internal marker.
+ *           "פת" (two letters, no space) = פתח תקווה (a city shortcut).
+ *           Must NOT confuse the two.
+ */
+export function isInternalRide(message: string): boolean {
+    const text = (message || '').replace(/[*_~`]/g, '');
+    // Match "פנימי" as whole word, or "פ" as standalone single letter
+    // (bounded by whitespace/start/end on both sides, NOT followed by another Hebrew letter)
+    return /(?:^|[\s,.!?])פנימי(?:[\s,.!?]|$)/.test(text) ||
+           /(?:^|[\s,.!?])פ(?=[\s,.!?\d]|$)(?!ת|ה|נ|ר|ס|א)/.test(text);
+}
+
+// ======================================================================
+// Round-trip detection ("הלוך ושוב" / "הלוש" / "הוש")
+// ======================================================================
+
+export function isRoundTrip(message: string): boolean {
+    const text = (message || '').replace(/[*_~`]/g, '');
+    return /הלוך\s*ו?\s*שוב/.test(text) ||
+           /(?:^|[\s,.!?])הלוש(?:[\s,.!?]|$)/.test(text) ||
+           /(?:^|[\s,.!?])הוש(?:[\s,.!?]|$)/.test(text);
+}
+
 export const isDriverEligible = (
     driver: Driver,
     message: string | null,

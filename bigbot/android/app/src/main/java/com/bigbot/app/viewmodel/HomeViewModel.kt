@@ -160,6 +160,12 @@ class HomeViewModel @Inject constructor(
                 // Delivery filter — skip if ride is a delivery and driver opted out
                 val acceptDeliveries = repo.acceptDeliveries.first()
                 if (!acceptDeliveries && RideTextParser.isDeliveryRide(ride.rawText)) return@collect
+                // Internal ride filter — skip if ride is internal and driver opted out
+                val acceptInternal = repo.acceptInternalRides.first()
+                if (!acceptInternal && ride.isInternalRide) return@collect
+                // Round-trip filter — skip if ride is round-trip and driver opted out
+                val acceptRT = repo.acceptRoundTrip.first()
+                if (!acceptRT && ride.isRoundTrip) return@collect
 
                 // Vehicle type filter — match driver's vehicle against ride requirements
                 val driverVehicle = repo.vehicleType.first()

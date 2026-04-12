@@ -19,6 +19,8 @@ import {
   parseRideMessage,
   matchAppVehicleFilter,
   isDeliveryRide,
+  isInternalRide,
+  isRoundTrip,
 } from '../common/utils';
 import { DriverMessageTrackerService } from '../drivers/driver-message-tracker.service';
 import { Groq } from 'groq-sdk';
@@ -922,6 +924,10 @@ Output should be the cleaned lines only, in plain text.
     if (!originAndDestination) return '';
     const words = originAndDestination.split('_');
     if (words.length >= 2) return words.join('_');
+    // Internal ride: "פנימי ים" / "פ בב" — only 1 city found, duplicate it as origin_destination
+    if (words.length === 1 && isInternalRide(message)) {
+      return `${words[0]}_${words[0]}`;
+    }
     return '';
   }
 
@@ -1189,6 +1195,18 @@ ${fixBoldMultiLine(formattedMessage)}`;
             this._benchLog(phone, obj, false, 'delivery_rejected', _benchStart, originAndDestination); continue;
           }
 
+          // Internal ride filter: "פנימי ים" / "פ בב" — ride within same city.
+          // Default: drivers do NOT accept internal rides (acceptInternalRides not set = false).
+          if ((driver as any).acceptInternalRides !== true && isInternalRide(obj.body || '')) {
+            this._benchLog(phone, obj, false, 'internal_ride_rejected', _benchStart, originAndDestination); continue;
+          }
+
+          // Round-trip filter: "הלוך ושוב" / "הלוש" / "הוש".
+          // Default: drivers accept round trips (acceptRoundTrip not set = true).
+          if ((driver as any).acceptRoundTrip === false && isRoundTrip(obj.body || '')) {
+            this._benchLog(phone, obj, false, 'round_trip_rejected', _benchStart, originAndDestination); continue;
+          }
+
           const searchKeyword = await this.validateSearchKeyword(phone, originAndDestination);
           if (!searchKeyword) { this._benchLog(phone, obj, false, 'no_matching_keyword', _benchStart, originAndDestination); continue; }
 
@@ -1291,6 +1309,8 @@ ${fixBoldMultiLine(formattedMessage)}`;
                   chatPhone: block.chatPhone || '',
                   chatText: block.chatText || '',
                   senderPhone: obj.senderPhone || '',
+                  isInternalRide: isInternalRide(obj.body || ''),
+                  isRoundTrip: isRoundTrip(obj.body || ''),
                 });
 
                 this.rideContext.set(blockMessageId, {
