@@ -18,6 +18,7 @@ import { DispatcherModule } from './dispatcher/dispatcher.module';
 import { ElasticsearchModule } from './shared/elasticsearch';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AreasModule } from './areas/areas.module';
+import { DevicesModule } from './devices/devices.module';
  
  @Module({
    imports: [
@@ -42,6 +43,7 @@ import { AreasModule } from './areas/areas.module';
      RedisProviderModule,
      DashboardModule,
      AreasModule,
+     DevicesModule,
    ],
  })
  export class AppModule { } 
