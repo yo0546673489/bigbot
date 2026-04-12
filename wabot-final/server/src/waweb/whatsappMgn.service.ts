@@ -502,9 +502,22 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
         for (const lt of linkTokens) {
           this.pendingChatTokens.set(lt, { driverPhone, rideId, ride, expiresAt });
         }
-        // Token 4: origin_destination combined (e.g. "בני ברק_ירושלים") — unique enough
+        // Token 4: origin + destination as dispatcher might echo back ride details.
+        // Store multiple formats: "בני ברק ירושלים", "בב ים" (short codes)
         if (ctx?.origin && ctx?.destination) {
-          this.pendingChatTokens.set(`${ctx.origin}_${ctx.destination}`, { driverPhone, rideId, ride, expiresAt });
+          // Full names with space (e.g. "בני ברק ירושלים")
+          const fullRoute = `${ctx.origin} ${ctx.destination}`;
+          if (fullRoute.length >= 5) this.pendingChatTokens.set(fullRoute, { driverPhone, rideId, ride, expiresAt });
+          // Short codes: reverse lookup from areas
+          try {
+            const areasData = await this.getAreasData();
+            const originShort = Object.entries(areasData.shortcuts).find(([, v]) => v === ctx.origin.toLowerCase())?.[0] || '';
+            const destShort = Object.entries(areasData.shortcuts).find(([, v]) => v === ctx.destination.toLowerCase())?.[0] || '';
+            if (originShort && destShort) {
+              const shortRoute = `${originShort} ${destShort}`;
+              if (shortRoute.length >= 5) this.pendingChatTokens.set(shortRoute, { driverPhone, rideId, ride, expiresAt });
+            }
+          } catch {}
         }
         this.logger.log(`take_ride_link: stored ${this.pendingChatTokens.size} tokens for ride ${rideId}`);
         // Note: no ride_update sent — card stays as-is, only button changed to "נשלח ✓" on client
