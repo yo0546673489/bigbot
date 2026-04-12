@@ -1480,6 +1480,8 @@ ${fixBoldMultiLine(formattedMessage)}`;
         this.logger.log(
           `>> [immediate-main] Sent ride to Android app: ${phone} -> ${originAndDestination} (${parsed.type}, ${parsed.blocks.length} block${parsed.blocks.length > 1 ? 's' : ''}) total=${totalMs}ms upstream=${upstreamMs}ms internal=${internalMs}ms`
         );
+        // ── Benchmark: log direct-path send ──
+        this._benchLog(phone, obj, true, null, Date.now() - internalMs, originAndDestination);
       } catch (wsErr: any) {
         this.logger.warn(`Failed immediate WS send (main) for ${phone}: ${wsErr?.message}`);
       }
