@@ -155,7 +155,32 @@ object RideTextParser {
         }
 
         if (routeIdx >= 0) {
-            // חיפוש רחוב בשורה הבאה (או באותה שורה אחרי המחיר)
+            // Try to extract street from the route line itself first (single-line messages
+            // like "בב ים 180 זמנהוף 27"). Strip known areas and price to isolate the street.
+            val routeLine = streetCandidateLines[routeIdx]
+            val routeRemainder = routeLine.split(Regex("\\s+"))
+                .filter { word ->
+                    word !in knownAreas &&
+                    word != origin && word != destination &&
+                    (word.toIntOrNull() == null || word == price) == false &&
+                    word.toIntOrNull()?.let { it in 20..9999 } != true
+                }
+                .filter { it.any { c -> c.isLetter() } }
+            if (routeRemainder.isNotEmpty()) {
+                val inlineStreet = routeRemainder.joinToString(" ")
+                if (inlineStreet.length in 2..30 && nonStreetKeywords.none { inlineStreet.lowercase().contains(it.lowercase()) }) {
+                    street = inlineStreet
+                    // Extract street number from the original line (after the street name)
+                    val afterAreas = routeLine.substringAfter(routeRemainder.first(), "")
+                    val numMatch = Regex("\\b(\\d{1,4})\\b").find(afterAreas)
+                    if (numMatch != null) {
+                        val n = numMatch.value.toIntOrNull() ?: 0
+                        if (n in 1..9999 && numMatch.value != price) streetNumber = numMatch.value
+                    }
+                }
+            }
+
+            // Also check subsequent lines (multi-line messages)
             for (i in (routeIdx + 1)..streetCandidateLines.size.coerceAtMost(routeIdx + 3)) {
                 if (i >= streetCandidateLines.size) break
                 val line = streetCandidateLines[i]
