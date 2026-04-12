@@ -16,10 +16,13 @@ object RideTextParser {
     // מילים שמייצגות רעש — אם השורה מכילה אחת מהן, מתעלמים ממנה לגמרי
     private val noiseKeywords = listOf(
         "רייד", "הפצה", "בקבוצות", "בקבוצה", "בקישור", "wa.me", "http", "https",
-        "ללא פון", "סדרן", "לשאלות", "זמן", "זמנים", "תפוצה", "מנוי",
+        "ללא פון", "סדרן", "לשאלות", "תפוצה", "מנוי",
         "פרו דיגיטל", "דיגיטל", "vip", "VIP", "צור קשר", "להזמנות",
         "צאט", "צ'אט", "ערוץ", "טלגרם", "טלפון", "קישור", "וואצאפ", "ווצאפ"
     )
+
+    // מילות רעש שפוסלות שורה רק אם הן המילה הראשונה (לא באמצע שורה עם רחוב)
+    private val noiseStartKeywords = listOf("זמן", "זמנים", "זמני")
 
     // Decorative emojis used in dispatcher branding ("🏆 ♦️ דרכי נועם ♦️🏆").
     // Lines containing any of these are NEVER street names.
@@ -126,6 +129,9 @@ object RideTextParser {
             // לא מכיל מילות רעש
             val lowerLine = line.lowercase()
             if (noiseKeywords.any { lowerLine.contains(it.lowercase()) }) return@filter false
+            // מילות רעש שפוסלות רק אם הן המילה הראשונה בשורה (לא באמצע — "מיצדה זמן" = רחוב!)
+            val firstWord = lowerLine.trim().split(Regex("\\s+")).firstOrNull() ?: ""
+            if (noiseStartKeywords.any { firstWord == it }) return@filter false
             // לא רק שם באנגלית (כמו "Y. A" או "John Doe") — שורה ללא תווים עבריים שמכילה רק אותיות
             val hasHebrew = line.any { it in '\u0590'..'\u05FF' }
             val hasDigit = line.any { it.isDigit() }
