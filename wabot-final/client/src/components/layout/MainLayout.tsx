@@ -53,8 +53,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
+              // Areas page is served as static HTML by nginx — use <a> for full reload
+              const LinkTag = item.href === '/areas' ? 'a' : Link;
               return (
-                <Link
+                <LinkTag
                   key={item.name}
                   href={item.href}
                   className={cn(
@@ -66,7 +68,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                 >
                   <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.2 : 1.8} />
                   {item.name}
-                </Link>
+                </LinkTag>
               );
             })}
           </nav>
