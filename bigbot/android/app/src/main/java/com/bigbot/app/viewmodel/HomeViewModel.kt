@@ -329,8 +329,20 @@ class HomeViewModel @Inject constructor(
         } else {
             // Turn on — save current paused state, then track location
             _locationTrackingActive.value = true
+            _locationCity.value = "מיקום: מחפש..."
             locationTrackingJob = viewModelScope.launch {
                 pausedBeforeLocation = repo.pausedKeywords.first()
+
+                // Immediate one-shot location for instant feedback
+                val quickLoc = etaCalculator.getDeviceLocation()
+                if (quickLoc != null) {
+                    android.util.Log.d("LocationCity", "Quick GPS: ${quickLoc.first},${quickLoc.second}")
+                    driverLat = quickLoc.first
+                    driverLng = quickLoc.second
+                    setAvailabilityWithCity(quickLoc.first, quickLoc.second)
+                }
+
+                // Then ongoing updates
                 locationTracker.cityUpdates().collect { loc ->
                     _locationCity.value = loc.city
                     driverLat = loc.lat
@@ -345,10 +357,13 @@ class HomeViewModel @Inject constructor(
     /** Find nearest city from the areas DB by Haversine and activate that keyword. */
     fun setAvailabilityWithCity(lat: Double, lng: Double) {
         viewModelScope.launch {
+            android.util.Log.d("LocationCity", "setAvailabilityWithCity lat=$lat lng=$lng")
             // Find nearest city from cached areas data
             val shortcutsJson = repo.areasShortcutsJson.first()
+            android.util.Log.d("LocationCity", "shortcutsJson length=${shortcutsJson.length}")
             if (shortcutsJson.isBlank()) {
                 _locationCity.value = "מיקום: אין מאגר ערים"
+                android.util.Log.d("LocationCity", "No areas cache!")
                 return@launch
             }
             val type = object : com.google.gson.reflect.TypeToken<List<Map<String, Any>>>() {}.type
@@ -371,6 +386,7 @@ class HomeViewModel @Inject constructor(
                 }
             }
 
+            android.util.Log.d("LocationCity", "Nearest: $bestShort ($bestFull) dist=${bestDist}km, checked ${shortcuts.size} entries")
             if (bestShort.isBlank()) {
                 _locationCity.value = "מיקום: לא נמצאה עיר"
                 return@launch
