@@ -32,6 +32,7 @@ class SettingsViewModel @Inject constructor(
     val serviceMode = repo.serviceMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val acceptDeliveries = repo.acceptDeliveries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
     val minPrice = repo.minPrice.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+    val kmFilterVisible = repo.kmFilterVisible.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     private val _statusMessage = MutableStateFlow<String?>(null)
     val statusMessage: StateFlow<String?> = _statusMessage
@@ -117,6 +118,16 @@ class SettingsViewModel @Inject constructor(
 
     fun setServiceMode(v: Boolean) {
         viewModelScope.launch { repo.saveServiceMode(v) }
+    }
+
+    fun setKmFilterVisible(v: Boolean) {
+        viewModelScope.launch {
+            repo.saveKmFilterVisible(v)
+            if (!v) {
+                repo.saveSelectedKm(0)
+                try { repo.wsService.setKmFilter(null) } catch (_: Exception) {}
+            }
+        }
     }
 
     fun setMinPrice(v: Int) {

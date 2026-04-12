@@ -37,6 +37,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val serviceMode by viewModel.serviceMode.collectAsState()
     val acceptDeliveries by viewModel.acceptDeliveries.collectAsState()
     val minPrice by viewModel.minPrice.collectAsState()
+    val kmFilterVisible by viewModel.kmFilterVisible.collectAsState()
     var showMinPriceDialog by remember { mutableStateOf(false) }
     var minPriceText by remember { mutableStateOf("") }
     val statusMessage by viewModel.statusMessage.collectAsState()
@@ -179,6 +180,19 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             // Section: Filters
             item {
                 SettingsSection("🔧 סינון") {
+                    SettingsRow("סינון לפי ק״מ") {
+                        Switch(
+                            checked = kmFilterVisible,
+                            onCheckedChange = { viewModel.setKmFilterVisible(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = Primary,
+                                checkedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0xFFCFD8DC),
+                                uncheckedThumbColor = Color.White
+                            )
+                        )
+                    }
+                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
                     SettingsRow("סוג רכב") {
                         Box(
                             modifier = Modifier.clip(RoundedCornerShape(12.dp))
