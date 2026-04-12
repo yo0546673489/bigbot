@@ -212,12 +212,14 @@ object RideTextParser {
             }
         }
 
-        // חילוץ תגיות מיוחדות
+        // חילוץ תגיות מיוחדות — whole-word matching to prevent
+        // "ון" (van) matching inside "ראשון" (Rishon)
         val specialTags = mutableListOf<String>()
         for (line in cleanLines) {
             val lowerLine = line.lowercase()
             for (kw in specialKeywords) {
-                if (lowerLine.contains(kw.lowercase())) {
+                val kwPattern = Regex("(?:^|\\s)${Regex.escape(kw.lowercase())}(?=$|\\s)")
+                if (kwPattern.containsMatchIn(lowerLine)) {
                     // הוסף את השורה (קצרה) כתגית, אם עוד לא נוספה
                     val tag = line.take(40)
                     if (specialTags.none { it == tag } && tag.length in 2..40) {
