@@ -498,7 +498,7 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
         // Token 3: extract the identifying NUMBER from linkText (e.g. "561406886").
         // Only pure digit sequences >= 5 chars — these are ride IDs that the
         // dispatcher will echo back.
-        const linkNumbers = (msgText || '').split(/\s+/).filter(s => /^\d{5,}$/.test(s));
+        const linkNumbers = (msgText || '').split(/\s+/).filter(s => /^\d{3,}$/.test(s));
         for (const ln of linkNumbers) {
           this.pendingChatTokens.set(ln, { driverPhone, rideId, ride, expiresAt });
         }
