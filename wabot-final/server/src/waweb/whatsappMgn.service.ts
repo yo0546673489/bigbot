@@ -1156,6 +1156,8 @@ ${fixBoldMultiLine(formattedMessage)}`;
           if (!isInTrial(driver)) continue;
           if (isNeedToPay(driver)) continue;
           if (driver.filterGroups.includes(obj.groupId.replace('@g.us', ''))) continue;
+          // Groups blacklist — driver opted out of this group entirely
+          if ((driver as any).blacklistedGroups?.includes(obj.groupId)) continue;
 
           const language = getLanguageByPhoneNumber(phone);
 
@@ -1332,6 +1334,7 @@ ${fixBoldMultiLine(formattedMessage)}`;
       if (!isInTrial(driver)) return false;
       if (isNeedToPay(driver)) return false;
       if (driver.filterGroups.includes(obj.groupId.replace('@g.us', ''))) return false;
+      if ((driver as any).blacklistedGroups?.includes(obj.groupId)) return false;
 
       const specialRouterName = this.specialRouterName.find(name => obj.body.includes(name));
       if (specialRouterName) {

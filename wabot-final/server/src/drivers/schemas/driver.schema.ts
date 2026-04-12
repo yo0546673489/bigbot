@@ -58,6 +58,9 @@ export class Driver {
   @Prop({})
   filterGroups: string[];
 
+  @Prop({ type: [String], default: [] })
+  blacklistedGroups: string[];
+
   @Prop({})
   billingEndAt: number;
 

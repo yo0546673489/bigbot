@@ -1,4 +1,4 @@
-import { Body, Controller, Logger, Post } from '@nestjs/common';
+import { Body, Controller, Get, Logger, Patch, Post, Query } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import Redis from 'ioredis';
@@ -6,6 +6,7 @@ import { Inject } from '@nestjs/common';
 import { Driver } from './schemas/driver.schema';
 import { APP_VEHICLE_FILTER_LABELS } from '../common/utils';
 import { EtaService } from './eta.service';
+import { WabotService } from '../services/wabot.service';
 
 /**
  * Endpoints called by the BigBot Android app to mutate driver state.
@@ -20,6 +21,7 @@ export class AppDriverController {
     @InjectModel(Driver.name) private readonly driverModel: Model<Driver>,
     @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
     private readonly etaService: EtaService,
+    private readonly wabotService: WabotService,
   ) {}
 
   /**
@@ -175,6 +177,53 @@ export class AppDriverController {
     } catch (e: any) {
       this.logger.error(`saveFilters failed for ${phone}: ${e?.message}`);
       return { success: false, message: e?.message || 'error' };
+    }
+  }
+
+  // ── Groups Blacklist ──────────────────────────────────────────────
+
+  /** Get all WhatsApp groups the driver is a member of (live from whatsmeow). */
+  @Get('groups')
+  async getGroups(@Query('phone') phone: string) {
+    if (!phone) return { error: 'phone_required' };
+    try {
+      const groups = await this.wabotService.getGroups(phone);
+      if (!groups) return { error: 'waiting_for_whatsapp_connection', statusCode: 503 };
+      return { groups };
+    } catch (e: any) {
+      this.logger.error(`getGroups failed for ${phone}: ${e?.message}`);
+      return { error: 'waiting_for_whatsapp_connection', statusCode: 503 };
+    }
+  }
+
+  /** Get the driver's blacklisted group IDs. */
+  @Get('groups/blacklist')
+  async getBlacklist(@Query('phone') phone: string) {
+    if (!phone) return { blacklistedGroupIds: [] };
+    const driver = await this.driverModel.findOne({ phone }, { blacklistedGroups: 1 }).lean();
+    return { blacklistedGroupIds: driver?.blacklistedGroups || [] };
+  }
+
+  /** Replace the driver's blacklisted group list (full replace, not patch). */
+  @Patch('groups/blacklist')
+  async updateBlacklist(@Body() body: { phone?: string; blacklistedGroupIds?: string[] }) {
+    const phone = (body?.phone || '').trim();
+    if (!phone) return { success: false, message: 'phone required' };
+
+    const ids = Array.isArray(body?.blacklistedGroupIds) ? body.blacklistedGroupIds : [];
+    try {
+      await this.driverModel.updateOne(
+        { phone },
+        { $set: { blacklistedGroups: ids } },
+      ).exec();
+      // Refresh Redis cache
+      const updated = await this.driverModel.findOne({ phone }).lean();
+      if (updated) await this.redisClient.set(`driver:${phone}`, JSON.stringify(updated));
+      this.logger.log(`Updated blacklist for ${phone}: ${ids.length} groups`);
+      return { ok: true };
+    } catch (e: any) {
+      this.logger.error(`updateBlacklist failed: ${e?.message}`);
+      return { success: false, message: e?.message };
     }
   }
 }
