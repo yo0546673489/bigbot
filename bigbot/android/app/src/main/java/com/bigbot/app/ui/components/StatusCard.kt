@@ -52,11 +52,18 @@ fun StatusCard(
                 )
                 Spacer(Modifier.width(7.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        if (isAvailable) "פנוי עכשיו" else "לא פנוי",
-                        fontSize = 16.sp, fontWeight = FontWeight.Bold,
-                        color = if (isAvailable) GreenDark else TextPrimary
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            if (isAvailable) "פנוי עכשיו" else "לא פנוי",
+                            fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                            color = if (isAvailable) GreenDark else TextPrimary
+                        )
+                        if (autoMode) StatusBadge("⚡ מצב חכם: פעיל", Purple, PurpleBg)
+                        if (autoSend) StatusBadge("✓ אוטומציה", Primary, GreenBg)
+                    }
                     if (locationCity.isNotEmpty()) {
                         Text("📍 מיקום: $locationCity", fontSize = 11.sp, color = Color(0xFF558B2F))
                     }
@@ -72,15 +79,7 @@ fun StatusCard(
                 )
             }
 
-            if (autoMode || autoSend) {
-                Spacer(Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (autoMode) StatusBadge("⚡ מצב חכם: פעיל", Purple, PurpleBg)
-                    if (autoSend) StatusBadge("✓ אוטומציה: פעילה", Primary, GreenBg)
-                }
-            }
-
-            // WhatsApp connection status removed per user request
+            // Badges moved inline next to "פנוי עכשיו"
         }
     }
 
