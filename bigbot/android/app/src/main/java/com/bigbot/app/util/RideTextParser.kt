@@ -127,10 +127,11 @@ object RideTextParser {
             vehicleKeywords.none { (kw, _) -> lower.contains(kw.lowercase()) }
         }
 
-        // חילוץ מחיר — מספר 20-9999 בשורה הראשונה שמכילה origin/destination, או הראשון שנמצא
+        // חילוץ מחיר — מספר 20-9999. Also handles glued text like "ים180" where
+        // \b may not work with Unicode Hebrew. Use lookaround for non-digit boundary.
         var price = ""
         for (line in cleanLines) {
-            val matches = Regex("\\b(\\d{2,4})\\b").findAll(line).toList()
+            val matches = Regex("(?:^|(?<=\\D))(\\d{2,4})(?=$|\\D)").findAll(line).toList()
             for (m in matches) {
                 val n = m.value.toIntOrNull() ?: continue
                 if (n in 20..9999) {
