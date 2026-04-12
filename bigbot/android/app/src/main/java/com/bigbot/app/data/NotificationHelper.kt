@@ -200,15 +200,20 @@ object NotificationHelper {
             else -> "regular_text"
         }
 
-        // Raw text — hide for link rides (wa.me URL is noisy and irrelevant)
-        if (effectiveType == "regular_text") {
-            val rawPreview = ride.rawText.take(160).replace("\n", " • ")
-            if (rawPreview.isNotBlank()) {
-                rv.setTextViewText(R.id.notif_raw, rawPreview)
-                rv.setViewVisibility(R.id.notif_raw, View.VISIBLE)
-            } else {
-                rv.setViewVisibility(R.id.notif_raw, View.GONE)
+        // Street address — show parsed street (like the in-app card), not raw text
+        val streetDisplay = buildString {
+            if (parsed?.street?.isNotBlank() == true) {
+                append("📍 ")
+                append(parsed.street)
+                if (parsed.streetNumber.isNotBlank()) {
+                    append(" ")
+                    append(parsed.streetNumber)
+                }
             }
+        }
+        if (streetDisplay.isNotBlank()) {
+            rv.setTextViewText(R.id.notif_raw, streetDisplay)
+            rv.setViewVisibility(R.id.notif_raw, View.VISIBLE)
         } else {
             rv.setViewVisibility(R.id.notif_raw, View.GONE)
         }
