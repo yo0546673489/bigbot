@@ -476,6 +476,22 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
         this.chatRouting.set(linkPhone, driverPhone);
         this.awaitingFirstReply.set(linkPhone, driverPhone);
         this.linkBotPhones.set(linkPhone, driverPhone);
+        // Also set up pendingReplyRides for the ACTUAL dispatcher (the person
+        // who posted in the group). When they reply privately → success.
+        const ctx = this.rideContext.get(rideId);
+        if (ctx && ctx.senderPhone) {
+          this.chatRouting.set(ctx.senderPhone, driverPhone);
+          this.pendingReplyRides.set(`${driverPhone}:${ctx.senderPhone}`, {
+            rideId,
+            driverPhone,
+            dispatcherPhone: ctx.senderPhone,
+            origin: ctx.origin || '',
+            destination: ctx.destination || '',
+            groupId: ctx.groupId,
+            expiresAt: Date.now() + 30 * 60 * 1000,
+          });
+          this.logger.log(`take_ride_link: waiting for dispatcher ${ctx.senderPhone} to confirm ride ${rideId}`);
+        }
         // Note: no ride_update sent — card stays as-is, only button changed to "נשלח ✓" on client
         this.logger.log(`take_ride_link: sent "${msgText}" to ${linkPhone} via ${sendVia}`);
 
