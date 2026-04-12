@@ -52,4 +52,14 @@ export class UpdateRelatedAreaDto {
   @IsArray()
   @IsString({ each: true })
   related?: string[];
-} 
+}
+
+export class CreateNonStreetKeywordDto {
+  @IsString()
+  @MinLength(1)
+  word: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}

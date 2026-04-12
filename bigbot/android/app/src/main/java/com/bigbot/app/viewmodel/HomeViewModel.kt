@@ -87,8 +87,15 @@ class HomeViewModel @Inject constructor(
                     val obj = com.google.gson.JsonParser.parseString(json).asJsonObject
                     val shortcutsArr = obj.getAsJsonArray("shortcuts")
                     val supportArr = obj.getAsJsonArray("supportAreas")
+                    val nskArr = obj.getAsJsonArray("nonStreetKeywords")
                     repo.saveAreasShortcuts(shortcutsArr?.toString() ?: "[]")
                     repo.saveAreasSupport(supportArr?.toString() ?: "[]")
+                    if (nskArr != null) {
+                        repo.saveNonStreetKeywords(nskArr.toString())
+                        val nskList = mutableListOf<String>()
+                        nskArr.forEach { nskList.add(it.asString) }
+                        RideTextParser.updateNonStreetKeywords(nskList)
+                    }
                     repo.saveAreasLastSync(System.currentTimeMillis())
                 } catch (_: Exception) {}
             }
@@ -689,6 +696,12 @@ class HomeViewModel @Inject constructor(
                 } else emptyList()
                 RideTextParser.updateKnownAreas(shortcuts, support)
             }
+            val nskJson = repo.nonStreetKeywordsJson.first()
+            if (nskJson.isNotBlank()) {
+                val type = object : com.google.gson.reflect.TypeToken<List<String>>() {}.type
+                val list: List<String> = gson.fromJson(nskJson, type) ?: emptyList()
+                RideTextParser.updateNonStreetKeywords(list)
+            }
         } catch (_: Exception) {}
     }
 
@@ -700,6 +713,7 @@ class HomeViewModel @Inject constructor(
                     val obj = com.google.gson.JsonParser.parseString(body).asJsonObject
                     val shortcutsArr = obj.getAsJsonArray("shortcuts")
                     val supportArr = obj.getAsJsonArray("supportAreas")
+                    val nskArr = obj.getAsJsonArray("nonStreetKeywords")
 
                     val shortcutsJson = shortcutsArr?.toString() ?: "[]"
                     val supportJson = supportArr?.toString() ?: "[]"
@@ -718,6 +732,13 @@ class HomeViewModel @Inject constructor(
                     supportArr?.forEach { support.add(it.asString) }
 
                     RideTextParser.updateKnownAreas(shortcuts, support)
+
+                    if (nskArr != null) {
+                        repo.saveNonStreetKeywords(nskArr.toString())
+                        val nskList = mutableListOf<String>()
+                        nskArr.forEach { nskList.add(it.asString) }
+                        RideTextParser.updateNonStreetKeywords(nskList)
+                    }
                 } catch (_: Exception) {}
             }
         }

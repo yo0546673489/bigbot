@@ -3,7 +3,7 @@ import { AreasService } from './areas.service';
 import { ApiTags } from '@nestjs/swagger';
 import { UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { CreateAreaShortcutDto, CreateRelatedAreaDto, CreateSupportAreaDto, UpdateAreaShortcutDto, UpdateRelatedAreaDto, UpdateSupportAreaDto } from './areas.dto';
+import { CreateAreaShortcutDto, CreateNonStreetKeywordDto, CreateRelatedAreaDto, CreateSupportAreaDto, UpdateAreaShortcutDto, UpdateRelatedAreaDto, UpdateSupportAreaDto } from './areas.dto';
 
 @ApiTags('areas')
 @Controller('areas')
@@ -90,6 +90,28 @@ export class AreasController {
   @Delete('related/:id')
   deleteRelated(@Param('id') id: string) {
     return this.areasService.deleteRelatedArea(id);
+  }
+
+  // Non-Street Keywords
+  @Get('non-street-keywords')
+  listNonStreetKeywords(
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '50',
+    @Query('search') search?: string,
+    @Query('sortBy') sortBy: string = 'word',
+    @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'asc',
+  ) {
+    return this.areasService.listNonStreetKeywords({ page: parseInt(page), limit: parseInt(limit), search, sortBy, sortOrder });
+  }
+
+  @Post('non-street-keywords')
+  createNonStreetKeyword(@Body() dto: CreateNonStreetKeywordDto) {
+    return this.areasService.createNonStreetKeyword(dto);
+  }
+
+  @Delete('non-street-keywords/:id')
+  deleteNonStreetKeyword(@Param('id') id: string) {
+    return this.areasService.deleteNonStreetKeyword(id);
   }
 
   // Seed DB once from files

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { AreaShortcut, AreaShortcutDocument, RelatedArea, RelatedAreaDocument, SupportArea, SupportAreaDocument } from './areas.schema';
-import { CreateAreaShortcutDto, CreateRelatedAreaDto, CreateSupportAreaDto, UpdateAreaShortcutDto, UpdateRelatedAreaDto, UpdateSupportAreaDto } from './areas.dto';
+import { AreaShortcut, AreaShortcutDocument, NonStreetKeyword, NonStreetKeywordDocument, RelatedArea, RelatedAreaDocument, SupportArea, SupportAreaDocument } from './areas.schema';
+import { CreateAreaShortcutDto, CreateNonStreetKeywordDto, CreateRelatedAreaDto, CreateSupportAreaDto, UpdateAreaShortcutDto, UpdateRelatedAreaDto, UpdateSupportAreaDto } from './areas.dto';
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Inject } from '@nestjs/common';
@@ -17,6 +17,7 @@ export class AreasService {
     @InjectModel(SupportArea.name) private readonly supportAreaModel: Model<SupportAreaDocument>,
     @InjectModel(AreaShortcut.name) private readonly areaShortcutModel: Model<AreaShortcutDocument>,
     @InjectModel(RelatedArea.name) private readonly relatedAreaModel: Model<RelatedAreaDocument>,
+    @InjectModel(NonStreetKeyword.name) private readonly nonStreetKeywordModel: Model<NonStreetKeywordDocument>,
     @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
   ) {}
 
@@ -192,6 +193,66 @@ export class AreasService {
     return { deleted: true };
   }
 
+  // Non-Street Keywords CRUD
+  async listNonStreetKeywords(query: { page?: number; limit?: number; search?: string; sortBy?: string; sortOrder?: 'asc' | 'desc'; }) {
+    const { page = 1, limit = 50, search, sortBy = 'word', sortOrder = 'asc' } = query;
+    const filter: any = {};
+    if (search) {
+      filter.word = { $regex: search, $options: 'i' };
+    }
+    const skip = (page - 1) * limit;
+    const sort: any = { [sortBy]: sortOrder === 'asc' ? 1 : -1 };
+
+    const [data, total] = await Promise.all([
+      this.nonStreetKeywordModel.find(filter).sort(sort).skip(skip).limit(limit).lean(),
+      this.nonStreetKeywordModel.countDocuments(filter)
+    ]);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: skip + data.length < total,
+      hasPreviousPage: page > 1,
+    };
+  }
+
+  async createNonStreetKeyword(dto: CreateNonStreetKeywordDto) {
+    const doc = await this.nonStreetKeywordModel.create({ word: dto.word.trim(), notes: dto.notes?.trim() });
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
+    return doc;
+  }
+
+  async deleteNonStreetKeyword(id: string) {
+    await this.nonStreetKeywordModel.findByIdAndDelete(id);
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
+    return { deleted: true };
+  }
+
+  async getAllNonStreetKeywords(): Promise<string[]> {
+    const all = await this.nonStreetKeywordModel.find({}, { word: 1, _id: 0 }).lean();
+    return all.map((k: any) => k.word);
+  }
+
+  async seedNonStreetKeywordsIfEmpty() {
+    const count = await this.nonStreetKeywordModel.estimatedDocumentCount();
+    if (count > 0) return;
+    const words = [
+      'פיצי מעל', 'מעל', 'ללא פון', 'נסיעה כשרה', 'אני משלם',
+      'פיי', 'ביט בסיום', 'פתק', 'א1', 'אדם 1', '2 ג',
+      'מזוודה', '1 ק', 'נחת', 'נחת עכשיו', 'בדרכונים', 'בחוץ',
+      'נהג זורם', 'תופס פאגש', 'לפיש', 'תחנות בתוספת',
+      'שקית קטנה', 'כסא תינוק', 'סלקל', 'רכב נוח',
+      'מנהלים', 'קבלה חובה', 'קבלה בתוספת', 'פנימי', 'הלוש', 'הלוך ושוב',
+    ];
+    await this.nonStreetKeywordModel.bulkWrite(words.map(word => ({
+      updateOne: { filter: { word }, update: { $set: { word } }, upsert: true },
+    })));
+    this.logger.log(`Seeded ${words.length} non-street keywords`);
+  }
+
   // Loaders for WhatsAppService (DB side, still useful elsewhere)
   async getSupportAreasMap(): Promise<Map<string, string>> {
     const all = await this.supportAreaModel.find().lean();
@@ -228,14 +289,16 @@ export class AreasService {
   /** Broadcast updated areas to all connected Android apps via WebSocket. */
   async broadcastAreasToApps(): Promise<void> {
     try {
-      const [shortcuts, supportAreas] = await Promise.all([
+      const [shortcuts, supportAreas, nonStreetKeywords] = await Promise.all([
         this.areaShortcutModel.find({}, { shortName: 1, fullName: 1, lat: 1, lng: 1, _id: 0 }).lean(),
         this.supportAreaModel.find({}, { name: 1, _id: 0 }).lean(),
+        this.nonStreetKeywordModel.find({}, { word: 1, _id: 0 }).lean(),
       ]);
       const payload = {
         shortcuts: shortcuts.map((s: any) => ({ shortName: s.shortName || '', fullName: s.fullName || '', lat: s.lat ?? null, lng: s.lng ?? null })),
         supportAreas: supportAreas.map((a: any) => a.name || ''),
         neighborhoods: [],
+        nonStreetKeywords: nonStreetKeywords.map((k: any) => k.word || ''),
       };
       DriverWsServer.getInstance().broadcast('areas_updated', payload);
       this.logger.log(`Broadcast areas_updated to ${DriverWsServer.getInstance().connectedPhones.length} apps`);
@@ -312,6 +375,7 @@ export class AreasService {
       await this.seedRelatedAreasFromFile();
     }
 
+    await this.seedNonStreetKeywordsIfEmpty();
     await this.rebuildRedisFromDb();
   }
 

@@ -55,6 +55,7 @@ class Repository @Inject constructor(
         val KEY_AREAS_SHORTCUTS = stringPreferencesKey("areas_shortcuts_json")
         val KEY_AREAS_SUPPORT = stringPreferencesKey("areas_support_json")
         val KEY_AREAS_LAST_SYNC = longPreferencesKey("areas_last_sync")
+        val KEY_NON_STREET_KEYWORDS = stringPreferencesKey("non_street_keywords_json")
         val KEY_BLACKLISTED_GROUPS = stringPreferencesKey("blacklisted_groups")
     }
 
@@ -154,6 +155,8 @@ class Repository @Inject constructor(
     suspend fun saveAreasShortcuts(json: String) = context.dataStore.edit { it[KEY_AREAS_SHORTCUTS] = json }
     suspend fun saveAreasSupport(json: String) = context.dataStore.edit { it[KEY_AREAS_SUPPORT] = json }
     suspend fun saveAreasLastSync(ts: Long) = context.dataStore.edit { it[KEY_AREAS_LAST_SYNC] = ts }
+    val nonStreetKeywordsJson: Flow<String> = context.dataStore.data.map { it[KEY_NON_STREET_KEYWORDS] ?: "" }
+    suspend fun saveNonStreetKeywords(json: String) = context.dataStore.edit { it[KEY_NON_STREET_KEYWORDS] = json }
 
     val blacklistedGroups: Flow<Set<String>> = context.dataStore.data.map {
         val raw = it[KEY_BLACKLISTED_GROUPS] ?: ""

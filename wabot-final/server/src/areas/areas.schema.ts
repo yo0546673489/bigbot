@@ -39,4 +39,15 @@ export class RelatedArea {
   related: string[];
 }
 export type RelatedAreaDocument = RelatedArea & Document;
-export const RelatedAreaSchema = SchemaFactory.createForClass(RelatedArea); 
+export const RelatedAreaSchema = SchemaFactory.createForClass(RelatedArea);
+
+@Schema({ timestamps: true })
+export class NonStreetKeyword {
+  @Prop({ type: String, required: true, unique: true, trim: true })
+  word: string;
+
+  @Prop({ type: String, required: false, trim: true })
+  notes?: string;
+}
+export type NonStreetKeywordDocument = NonStreetKeyword & Document;
+export const NonStreetKeywordSchema = SchemaFactory.createForClass(NonStreetKeyword);

@@ -60,7 +60,8 @@ object RideTextParser {
 
     // מילים שלא מפילות את הנסיעה אבל לא יכולות להיות "שם רחוב".
     // אם שורת מועמדת לרחוב מכילה אחת מהן → דלג לשורה הבאה.
-    private val nonStreetKeywords = listOf(
+    // Fallback סטטי — משמש עד שהרשימה הדינמית נטענת מהשרת.
+    private val staticNonStreetKeywords = listOf(
         "פנימי", "הלוש", "הוש", "הלוך ושוב",
         "פיצי מעל", "מעל", "ללא פון", "נסיעה כשרה", "אני משלם",
         "פיי", "ביט בסיום", "פתק", "א1", "אדם 1", "2 ג",
@@ -69,6 +70,17 @@ object RideTextParser {
         "שקית קטנה", "כסא תינוק", "סלקל", "רכב נוח",
         "מנהלים", "קבלה חובה", "קבלה בתוספת"
     )
+
+    @Volatile
+    private var dynamicNonStreetKeywords: List<String> = emptyList()
+
+    /** Called by HomeViewModel / WebSocketService after fetching from server. */
+    fun updateNonStreetKeywords(newList: List<String>) {
+        dynamicNonStreetKeywords = newList.filter { it.isNotBlank() }
+    }
+
+    private val nonStreetKeywords: List<String>
+        get() = dynamicNonStreetKeywords.ifEmpty { staticNonStreetKeywords }
 
     // קיצורי אזורים ידועים — לא ייחשבו כשמות רחובות.
     // המאגר היחיד הוא admin.bigbotdrivers.com. אין fallback סטטי.

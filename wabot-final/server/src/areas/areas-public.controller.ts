@@ -12,12 +12,15 @@ export class AreasPublicController {
 
   @Get('all')
   async getAll() {
-    const [shortcuts, supportAreas] = await Promise.all([
+    const [shortcuts, supportAreas, nonStreetKeywords] = await Promise.all([
       this.connection.collection('areashortcuts').find({}, {
         projection: { shortName: 1, fullName: 1, lat: 1, lng: 1, _id: 0 },
       }).toArray(),
       this.connection.collection('supportareas').find({}, {
         projection: { name: 1, _id: 0 },
+      }).toArray(),
+      this.connection.collection('nonstreetkeywords').find({}, {
+        projection: { word: 1, _id: 0 },
       }).toArray(),
     ]);
 
@@ -30,6 +33,7 @@ export class AreasPublicController {
       })),
       supportAreas: supportAreas.map((a: any) => a.name || ''),
       neighborhoods: [],
+      nonStreetKeywords: nonStreetKeywords.map((k: any) => k.word || ''),
     };
   }
 }
