@@ -299,6 +299,31 @@ fun RideCard(
                             Spacer(Modifier.height(8.dp))
                         }
 
+                        // ETA badge — real distance + time from driver's location
+                        if (ride.etaMinutes > 0) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(PurpleBg)
+                                        .padding(horizontal = 12.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        "🚗 ${ride.etaMinutes} דק' ממיקומך",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = Purple
+                                    )
+                                }
+                            }
+                            Spacer(Modifier.height(4.dp))
+                        }
+
                         // Buttons — pick layout by message type per spec:
                         //   two_links     → [🚗 בקש נסיעה] [💬 צ'אט עם סדרן]
                         //   single_link   → [⚡ קח את הנסיעה]
