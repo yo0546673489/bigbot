@@ -145,10 +145,13 @@ object RideTextParser {
         var street = ""
         var streetNumber = ""
 
-        // איתור שורת המסלול (שמכילה origin או destination)
+        // איתור שורת המסלול (שמכילה origin או destination, או קיצור ידוע)
         val routeIdx = streetCandidateLines.indexOfFirst { line ->
             (origin.isNotEmpty() && line.contains(origin)) ||
-            (destination.isNotEmpty() && line.contains(destination))
+            (destination.isNotEmpty() && line.contains(destination)) ||
+            // Fallback: the server may send full names ("בני ברק") but the text
+            // contains short codes ("בב"). Match if any known area code appears.
+            line.split(Regex("\\s+")).any { word -> word in knownAreas }
         }
 
         if (routeIdx >= 0) {
