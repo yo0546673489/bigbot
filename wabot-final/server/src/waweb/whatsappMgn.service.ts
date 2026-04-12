@@ -495,25 +495,16 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
         if (phoneDigits.length >= 5) {
           this.pendingChatTokens.set(phoneDigits, { driverPhone, rideId, ride, expiresAt });
         }
-        // Token 3: extract ALL meaningful words from the linkText (the message
-        // sent to the bot, e.g. "ת 561406886 kx8uq3"). These contain the ride's
-        // identifying number which the dispatcher will echo back.
-        const linkTokens = (msgText || '').split(/\s+/).filter(s => s.length >= 4 && s !== 'ת');
+        // Token 3: extract identifying tokens from linkText (e.g. "ת 561406886 kx8uq3").
+        // Only tokens >= 5 chars to avoid false matches (short Hebrew words like "ים"
+        // appear in many unrelated messages).
+        const linkTokens = (msgText || '').split(/\s+/).filter(s => s.length >= 5 && s !== 'ת');
         for (const lt of linkTokens) {
           this.pendingChatTokens.set(lt, { driverPhone, rideId, ride, expiresAt });
         }
-        // Token 4: origin/destination — BOTH resolved names AND short codes
-        if (ctx?.origin) {
-          // Resolved full names
-          this.pendingChatTokens.set(ctx.origin, { driverPhone, rideId, ride, expiresAt });
-          if (ctx.destination) this.pendingChatTokens.set(ctx.destination, { driverPhone, rideId, ride, expiresAt });
-          // Also get the short codes from the areas data (reverse lookup)
-          const areasData = await this.getAreasData();
-          for (const [shortCode, fullName] of Object.entries(areasData.shortcuts)) {
-            if (fullName === ctx.origin.toLowerCase() || fullName === ctx.destination?.toLowerCase()) {
-              this.pendingChatTokens.set(shortCode, { driverPhone, rideId, ride, expiresAt });
-            }
-          }
+        // Token 4: origin_destination combined (e.g. "בני ברק_ירושלים") — unique enough
+        if (ctx?.origin && ctx?.destination) {
+          this.pendingChatTokens.set(`${ctx.origin}_${ctx.destination}`, { driverPhone, rideId, ride, expiresAt });
         }
         this.logger.log(`take_ride_link: stored ${this.pendingChatTokens.size} tokens for ride ${rideId}`);
         // Note: no ride_update sent — card stays as-is, only button changed to "נשלח ✓" on client
@@ -1746,7 +1737,17 @@ ${fixBoldMultiLine(formattedMessage)}`;
           continue;
         }
         if (info.driverPhone !== botPhone) continue;
-        if (body.includes(tok)) {
+        // For short tokens (< 5 chars), require whole-word match to prevent
+        // "ים" matching inside "הנופלים". For longer tokens (IDs, numbers),
+        // substring match is safe.
+        let tokMatches = false;
+        if (tok.length >= 5) {
+          tokMatches = body.includes(tok);
+        } else {
+          const escaped = tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          tokMatches = new RegExp(`(?:^|\\s)${escaped}(?=$|\\s)`, 'g').test(body);
+        }
+        if (tokMatches) {
           // Match — promote this sender to the whitelist and signal the app
           // to auto-open this chat.
           this.chatRouting.set(senderPhone, botPhone);
