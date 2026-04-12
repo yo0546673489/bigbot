@@ -24,7 +24,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { name: 'תשלומים', href: '/payments', icon: CreditCard },
     { name: 'הזמנות', href: '/invites', icon: UserPlus },
     { name: 'קבוצות וואטסאפ', href: '/whatsapp-groups', icon: MessageSquare },
-    { name: 'אזורים', href: '/areas', icon: MapPin },
+    { name: 'אזורים', href: '/areas.html', icon: MapPin },
   ];
 
   return (
@@ -53,8 +53,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
-              // Areas page is served as static HTML by nginx — use <a> for full reload
-              const LinkTag = item.href === '/areas' ? 'a' : Link;
+              // Areas page is a static HTML file in public/ — use <a> for full reload
+              const LinkTag = item.href === '/areas.html' ? 'a' : Link;
               return (
                 <LinkTag
                   key={item.name}
