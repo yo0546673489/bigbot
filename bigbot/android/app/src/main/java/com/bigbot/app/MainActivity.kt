@@ -137,7 +137,8 @@ fun BigBotApp(chatStore: ChatStore) {
         ) {
             composable("home") {
                 HomeScreen(
-                    onNavigateToChat = {
+                    onNavigateToChat = { phone ->
+                        if (phone.isNotBlank()) chatViewModel.openConversation(phone)
                         navController.navigate("chat") {
                             popUpTo(navController.graph.startDestinationId) { saveState = true }
                             launchSingleTop = true
