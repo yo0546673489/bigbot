@@ -1015,10 +1015,13 @@ ${fixBoldMultiLine(formattedMessage)}`;
     try {
       const wsServer = DriverWsServer.getInstance();
       const mainSearchKw = await this.validateSearchKeyword(phone, originAndDestination);
-      // Route dedup for the app: same route within 5 min = skip
-      const appRouteKey = `wa:ride:app-dedup:${phone}:${originAndDestination}`;
-      const appRouteResult = await this.redisClient.set(appRouteKey, '1', 'EX', 300, 'NX');
-      if (wsServer.isConnected(phone) && mainSearchKw && appRouteResult !== null) {
+      // Content dedup: same message text from any group within 5 min = skip.
+      // Uses first 80 chars of body as fingerprint — catches same ride forwarded
+      // by different people, but allows different rides on the same route.
+      const bodyFingerprint = (obj.body || '').replace(/[*_~`\s]/g, '').slice(0, 80);
+      const appDedupKey = `wa:ride:app-dedup:${phone}:${bodyFingerprint}`;
+      const appDedupResult = await this.redisClient.set(appDedupKey, '1', 'EX', 300, 'NX');
+      if (wsServer.isConnected(phone) && mainSearchKw && appDedupResult !== null) {
         const [originRaw, destinationRaw] = originAndDestination.split('_');
         const origin = await this.resolveAreaName(originRaw || '');
         const destination = await this.resolveAreaName(destinationRaw || '');
@@ -1250,14 +1253,16 @@ ${fixBoldMultiLine(formattedMessage)}`;
             if (routeDedupeResult === null) { this._benchLog(phone, obj, false, 'cross_group_duplicate', _benchStart, originAndDestination); continue; }
           }
 
-          // Route-only dedup: same route from ANY sender within 5 min window.
-          // Catches forwarded rides where different people post the same ride.
+          // Content dedup: same message body from any group within 5 min = skip.
+          // Uses first 80 chars as fingerprint — blocks same ride forwarded by
+          // different people, but allows different rides on the same route.
           {
-            const routeOnlyKey = `wa:ride:route-dedup:${phone}:${originAndDestination}`;
-            const routeOnlyResult = await this.redisClient.set(routeOnlyKey, '1', 'EX', 300, 'NX');
-            if (routeOnlyResult === null) {
-              this.logger.debug(`ROUTE-DEDUP skip ${phone} route=${originAndDestination} group=${obj.groupId}`);
-              this._benchLog(phone, obj, false, 'route_only_duplicate', _benchStart, originAndDestination); continue;
+            const fp = (obj.body || '').replace(/[*_~`\s]/g, '').slice(0, 80);
+            const contentDedupKey = `wa:ride:content-dedup:${phone}:${fp}`;
+            const contentDedupResult = await this.redisClient.set(contentDedupKey, '1', 'EX', 300, 'NX');
+            if (contentDedupResult === null) {
+              this.logger.debug(`CONTENT-DEDUP skip ${phone} group=${obj.groupId}`);
+              this._benchLog(phone, obj, false, 'content_duplicate', _benchStart, originAndDestination); continue;
             }
           }
 
