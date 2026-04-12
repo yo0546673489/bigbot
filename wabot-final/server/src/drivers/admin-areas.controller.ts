@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Inject, Logger, Post, Query } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
 import { DriverWsServer } from './driver-ws.server';
+import Redis from 'ioredis';
 
 /**
  * Admin endpoints used by the bigbotdrivers.com admin dashboard. Currently
@@ -20,7 +21,10 @@ import { DriverWsServer } from './driver-ws.server';
 export class AdminAreasController {
   private readonly logger = new Logger('AdminAreasController');
 
-  constructor(@InjectConnection() private readonly connection: Connection) {}
+  constructor(
+    @InjectConnection() private readonly connection: Connection,
+    @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
+  ) {}
 
   @Get('pending-areas')
   async getPending(@Query('kind') kind: string) {
@@ -124,9 +128,11 @@ export class AdminAreasController {
 
     this.logger.log(`Approved ${added} new areas (${shortcuts.length} shortcuts + ${fullNames.length} fullNames requested)`);
 
-    // Broadcast updated areas to all connected apps
+    // Bump server cache version + broadcast to all connected apps
     if (added > 0) {
       try {
+        await this.redisClient.set('wa:areas:cache_v', Date.now().toString());
+
         const allShortcuts = await this.connection.collection('areashortcuts').find({}, {
           projection: { shortName: 1, fullName: 1, lat: 1, lng: 1, _id: 0 },
         }).toArray();

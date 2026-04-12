@@ -49,7 +49,7 @@ export class AreasService {
   async createSupportArea(dto: CreateSupportAreaDto) {
     const doc = await this.supportAreaModel.create({ name: dto.name.trim() });
     try { await this.redisClient.sadd('wa:areas:support', doc.name.toLowerCase()); } catch {}
-    this.broadcastAreasToApps().catch(() => {});
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
     return doc;
   }
 
@@ -64,7 +64,7 @@ export class AreasService {
         await this.redisClient.sadd('wa:areas:support', updated.name.toLowerCase());
       } catch {}
     }
-    this.broadcastAreasToApps().catch(() => {});
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
     return updated;
   }
 
@@ -72,7 +72,7 @@ export class AreasService {
     const existing = await this.supportAreaModel.findById(id);
     await this.supportAreaModel.findByIdAndDelete(id);
     try { if (existing) await this.redisClient.srem('wa:areas:support', existing.name.toLowerCase()); } catch {}
-    this.broadcastAreasToApps().catch(() => {});
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
     return { deleted: true };
   }
 
@@ -109,7 +109,7 @@ export class AreasService {
     const payload = { shortName: dto.shortName.trim(), fullName: dto.fullName.trim() };
     const doc = await this.areaShortcutModel.create(payload);
     try { await this.redisClient.hset('wa:areas:shortcuts', payload.shortName.toLowerCase(), payload.fullName.toLowerCase()); } catch {}
-    this.broadcastAreasToApps().catch(() => {});
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
     return doc;
   }
 
@@ -126,7 +126,7 @@ export class AreasService {
         if (shortKey) await this.redisClient.hset('wa:areas:shortcuts', shortKey, fullVal);
       } catch {}
     }
-    this.broadcastAreasToApps().catch(() => {});
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
     return updated;
   }
 
@@ -134,7 +134,7 @@ export class AreasService {
     const existing = await this.areaShortcutModel.findById(id);
     await this.areaShortcutModel.findByIdAndDelete(id);
     try { if (existing) await this.redisClient.hdel('wa:areas:shortcuts', existing.shortName.toLowerCase()); } catch {}
-    this.broadcastAreasToApps().catch(() => {});
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
     return { deleted: true };
   }
 
@@ -174,21 +174,21 @@ export class AreasService {
       { new: true, upsert: true }
     );
     await this.rebuildRelatedRedis();
-    this.broadcastAreasToApps().catch(() => {});
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
     return doc;
   }
 
   async updateRelatedArea(id: string, dto: UpdateRelatedAreaDto) {
     const updated = await this.relatedAreaModel.findByIdAndUpdate(id, dto, { new: true });
     await this.rebuildRelatedRedis();
-    this.broadcastAreasToApps().catch(() => {});
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
     return updated;
   }
 
   async deleteRelatedArea(id: string) {
     await this.relatedAreaModel.findByIdAndDelete(id);
     await this.rebuildRelatedRedis();
-    this.broadcastAreasToApps().catch(() => {});
+    this.bumpCacheVersion().catch(() => {}); this.broadcastAreasToApps().catch(() => {});
     return { deleted: true };
   }
 
@@ -218,6 +218,11 @@ export class AreasService {
       map.set(r.main.toLowerCase(), (r.related || []).map(x => x.toLowerCase()));
     }
     return map;
+  }
+
+  /** Bump the Redis cache version so whatsappMgn.service.ts reloads its in-memory areas cache. */
+  private async bumpCacheVersion(): Promise<void> {
+    try { await this.redisClient.set('wa:areas:cache_v', Date.now().toString()); } catch {}
   }
 
   /** Broadcast updated areas to all connected Android apps via WebSocket. */
