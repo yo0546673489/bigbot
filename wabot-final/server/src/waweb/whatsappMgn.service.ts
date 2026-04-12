@@ -1720,7 +1720,10 @@ ${fixBoldMultiLine(formattedMessage)}`;
     // bot triggers the dispatcher, the dispatcher's reply will contain the
     // same ride-id-like tokens we stashed — that's how we discover the
     // dispatcher's actual phone for the first time.
-    if ((!routedDriverPhone || routedDriverPhone !== botPhone) && !isFromMe) {
+    // Check pending chat tokens — even for already-whitelisted senders, because
+    // the dispatcher may have been whitelisted from a previous ride but this is
+    // a NEW ride confirmation that needs to fire success.
+    if (!isFromMe) {
       const now = Date.now();
       for (const [tok, info] of this.pendingChatTokens.entries()) {
         if (info.expiresAt < now) {
