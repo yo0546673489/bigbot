@@ -2,6 +2,7 @@ package com.bigbot.app.data
 
 import android.util.Log
 import com.bigbot.app.data.models.*
+import com.bigbot.app.util.RideTextParser
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import kotlinx.coroutines.*
@@ -55,6 +56,9 @@ class WebSocketService @Inject constructor(private val gson: Gson) {
 
     private val _etaRequests = MutableSharedFlow<EtaRequest>(replay = 0, extraBufferCapacity = 10)
     val etaRequests: SharedFlow<EtaRequest> = _etaRequests.asSharedFlow()
+
+    private val _areasUpdated = MutableSharedFlow<String>(replay = 0, extraBufferCapacity = 5)
+    val areasUpdated: SharedFlow<String> = _areasUpdated.asSharedFlow()
 
     // Dedup recently-seen ride messageIds. Server replays buffered rides on
     // reconnect (to recover from disconnect windows), so we MUST drop duplicates
@@ -168,6 +172,22 @@ class WebSocketService @Inject constructor(private val gson: Gson) {
                 "chat_message" -> scope.launch { _chatMessages.emit(gson.fromJson(data, ChatMessage::class.java)) }
                 "eta_request" -> scope.launch { _etaRequests.emit(gson.fromJson(data, EtaRequest::class.java)) }
                 "notification" -> scope.launch { _notifications.emit(gson.fromJson(data, AppNotification::class.java)) }
+                "areas_updated" -> {
+                    try {
+                        val obj2 = data.asJsonObject
+                        val shortcuts = mutableListOf<String>()
+                        val support = mutableListOf<String>()
+                        obj2.getAsJsonArray("shortcuts")?.forEach { el ->
+                            val o = el.asJsonObject
+                            o.get("shortName")?.asString?.let { shortcuts.add(it) }
+                            o.get("fullName")?.asString?.let { shortcuts.add(it) }
+                        }
+                        obj2.getAsJsonArray("supportAreas")?.forEach { support.add(it.asString) }
+                        RideTextParser.updateKnownAreas(shortcuts, support)
+                        Log.d("WS", "areas_updated: ${shortcuts.size} shortcuts, ${support.size} support areas")
+                        scope.launch { _areasUpdated.emit(obj2.toString()) }
+                    } catch (e: Exception) { Log.e("WS", "areas_updated parse error: ${e.message}") }
+                }
             }
         } catch (e: Exception) {
             Log.e("WS", "Parse error: ${e.message}")

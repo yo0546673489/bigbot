@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Logger, Post, Query } from '@nestjs/common';
 import { InjectConnection } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
+import { DriverWsServer } from './driver-ws.server';
 
 /**
  * Admin endpoints used by the bigbotdrivers.com admin dashboard. Currently
@@ -122,6 +123,24 @@ export class AdminAreasController {
     }
 
     this.logger.log(`Approved ${added} new areas (${shortcuts.length} shortcuts + ${fullNames.length} fullNames requested)`);
+
+    // Broadcast updated areas to all connected apps
+    if (added > 0) {
+      try {
+        const allShortcuts = await this.connection.collection('areashortcuts').find({}, {
+          projection: { shortName: 1, fullName: 1, lat: 1, lng: 1, _id: 0 },
+        }).toArray();
+        const allSupport = await this.connection.collection('supportareas').find({}, {
+          projection: { name: 1, _id: 0 },
+        }).toArray();
+        DriverWsServer.getInstance().broadcast('areas_updated', {
+          shortcuts: allShortcuts.map((s: any) => ({ shortName: s.shortName || '', fullName: s.fullName || '', lat: s.lat ?? null, lng: s.lng ?? null })),
+          supportAreas: allSupport.map((a: any) => a.name || ''),
+          neighborhoods: [],
+        });
+      } catch {}
+    }
+
     return { ok: true, added, total: shortcuts.length + fullNames.length };
   }
 }

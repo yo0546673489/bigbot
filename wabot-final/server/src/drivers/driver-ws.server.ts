@@ -352,4 +352,11 @@ export class DriverWsServer {
   get connectedPhones(): string[] {
     return [...this.connections.keys()].filter(p => this.isConnected(p));
   }
+
+  /** Broadcast a message to ALL connected drivers. Used for areas_updated etc. */
+  broadcast(type: string, data: object): void {
+    for (const phone of this.connectedPhones) {
+      this.send(phone, type, data);
+    }
+  }
 }

@@ -70,26 +70,17 @@ object RideTextParser {
     )
 
     // קיצורי אזורים ידועים — לא ייחשבו כשמות רחובות.
-    // Fallback סטטי — משמש רק אם המאגר הדינמי מהשרת עדיין לא נטען.
-    private val defaultKnownAreas = setOf(
-        "בב", "תא", "ים", "פת", "שמש", "ספר", "נת", "ראשלצ", "חיפה", "אשדוד",
-        "אשקלון", "באר שבע", "באר", "שבע", "בני ברק", "תל אביב", "ירושלים",
-        "פתח תקווה", "בית שמש", "מודיעין", "נתניה", "ראשון לציון", "רחובות",
-        "חולון", "בת ים", "רמת גן", "גבעתיים", "הרצליה", "כפר סבא", "רעננה"
-    )
-
-    // Dynamic areas loaded from the server. Updated by HomeViewModel on app start.
+    // המאגר היחיד הוא admin.bigbotdrivers.com. אין fallback סטטי.
     @Volatile
-    private var dynamicKnownAreas: Set<String>? = null
+    private var dynamicKnownAreas: Set<String> = emptySet()
 
-    /** Called by HomeViewModel after fetching areas from the server. */
+    /** Called by HomeViewModel / WebSocketService after fetching areas from the server. */
     fun updateKnownAreas(shortcuts: List<String>, fullNames: List<String>) {
         dynamicKnownAreas = (shortcuts + fullNames).filter { it.isNotBlank() }.toSet()
     }
 
-    /** Returns the current set of known areas (dynamic if available, otherwise static fallback). */
     private val knownAreas: Set<String>
-        get() = dynamicKnownAreas ?: defaultKnownAreas
+        get() = dynamicKnownAreas
 
     /** Returns the first vehicle keyword found in the text (case-insensitive),
      * along with its associated seat count. */

@@ -74,6 +74,19 @@ class HomeViewModel @Inject constructor(
             loadAreasFromCache()
             refreshAreasFromServer()
         }
+        // Listen for real-time areas updates from server (admin changes)
+        viewModelScope.launch {
+            repo.wsService.areasUpdated.collect { json ->
+                try {
+                    val obj = com.google.gson.JsonParser.parseString(json).asJsonObject
+                    val shortcutsArr = obj.getAsJsonArray("shortcuts")
+                    val supportArr = obj.getAsJsonArray("supportAreas")
+                    repo.saveAreasShortcuts(shortcutsArr?.toString() ?: "[]")
+                    repo.saveAreasSupport(supportArr?.toString() ?: "[]")
+                    repo.saveAreasLastSync(System.currentTimeMillis())
+                } catch (_: Exception) {}
+            }
+        }
 
         // Load persisted rides + sent-buttons before subscribing to live updates
         viewModelScope.launch {

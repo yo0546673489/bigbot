@@ -7,6 +7,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { Inject } from '@nestjs/common';
 import Redis from 'ioredis';
+import { DriverWsServer } from '../drivers/driver-ws.server';
 
 @Injectable()
 export class AreasService {
@@ -48,6 +49,7 @@ export class AreasService {
   async createSupportArea(dto: CreateSupportAreaDto) {
     const doc = await this.supportAreaModel.create({ name: dto.name.trim() });
     try { await this.redisClient.sadd('wa:areas:support', doc.name.toLowerCase()); } catch {}
+    this.broadcastAreasToApps().catch(() => {});
     return doc;
   }
 
@@ -62,6 +64,7 @@ export class AreasService {
         await this.redisClient.sadd('wa:areas:support', updated.name.toLowerCase());
       } catch {}
     }
+    this.broadcastAreasToApps().catch(() => {});
     return updated;
   }
 
@@ -69,6 +72,7 @@ export class AreasService {
     const existing = await this.supportAreaModel.findById(id);
     await this.supportAreaModel.findByIdAndDelete(id);
     try { if (existing) await this.redisClient.srem('wa:areas:support', existing.name.toLowerCase()); } catch {}
+    this.broadcastAreasToApps().catch(() => {});
     return { deleted: true };
   }
 
@@ -105,6 +109,7 @@ export class AreasService {
     const payload = { shortName: dto.shortName.trim(), fullName: dto.fullName.trim() };
     const doc = await this.areaShortcutModel.create(payload);
     try { await this.redisClient.hset('wa:areas:shortcuts', payload.shortName.toLowerCase(), payload.fullName.toLowerCase()); } catch {}
+    this.broadcastAreasToApps().catch(() => {});
     return doc;
   }
 
@@ -121,6 +126,7 @@ export class AreasService {
         if (shortKey) await this.redisClient.hset('wa:areas:shortcuts', shortKey, fullVal);
       } catch {}
     }
+    this.broadcastAreasToApps().catch(() => {});
     return updated;
   }
 
@@ -128,6 +134,7 @@ export class AreasService {
     const existing = await this.areaShortcutModel.findById(id);
     await this.areaShortcutModel.findByIdAndDelete(id);
     try { if (existing) await this.redisClient.hdel('wa:areas:shortcuts', existing.shortName.toLowerCase()); } catch {}
+    this.broadcastAreasToApps().catch(() => {});
     return { deleted: true };
   }
 
@@ -167,18 +174,21 @@ export class AreasService {
       { new: true, upsert: true }
     );
     await this.rebuildRelatedRedis();
+    this.broadcastAreasToApps().catch(() => {});
     return doc;
   }
 
   async updateRelatedArea(id: string, dto: UpdateRelatedAreaDto) {
     const updated = await this.relatedAreaModel.findByIdAndUpdate(id, dto, { new: true });
     await this.rebuildRelatedRedis();
+    this.broadcastAreasToApps().catch(() => {});
     return updated;
   }
 
   async deleteRelatedArea(id: string) {
     await this.relatedAreaModel.findByIdAndDelete(id);
     await this.rebuildRelatedRedis();
+    this.broadcastAreasToApps().catch(() => {});
     return { deleted: true };
   }
 
@@ -208,6 +218,25 @@ export class AreasService {
       map.set(r.main.toLowerCase(), (r.related || []).map(x => x.toLowerCase()));
     }
     return map;
+  }
+
+  /** Broadcast updated areas to all connected Android apps via WebSocket. */
+  async broadcastAreasToApps(): Promise<void> {
+    try {
+      const [shortcuts, supportAreas] = await Promise.all([
+        this.areaShortcutModel.find({}, { shortName: 1, fullName: 1, lat: 1, lng: 1, _id: 0 }).lean(),
+        this.supportAreaModel.find({}, { name: 1, _id: 0 }).lean(),
+      ]);
+      const payload = {
+        shortcuts: shortcuts.map((s: any) => ({ shortName: s.shortName || '', fullName: s.fullName || '', lat: s.lat ?? null, lng: s.lng ?? null })),
+        supportAreas: supportAreas.map((a: any) => a.name || ''),
+        neighborhoods: [],
+      };
+      DriverWsServer.getInstance().broadcast('areas_updated', payload);
+      this.logger.log(`Broadcast areas_updated to ${DriverWsServer.getInstance().connectedPhones.length} apps`);
+    } catch (e: any) {
+      this.logger.warn(`broadcastAreasToApps failed: ${e?.message}`);
+    }
   }
 
   // Redis builders
