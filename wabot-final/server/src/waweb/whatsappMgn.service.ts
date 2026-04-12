@@ -1248,12 +1248,15 @@ ${fixBoldMultiLine(formattedMessage)}`;
             if (routeDedupeResult === null) { this._benchLog(phone, obj, false, 'cross_group_duplicate', _benchStart, originAndDestination); continue; }
           }
 
-          // Route-only dedup: same route from ANY sender within 30s window.
+          // Route-only dedup: same route from ANY sender within 120s window.
           // Catches forwarded rides where different people post the same ride.
           {
             const routeOnlyKey = `wa:ride:route-dedup:${phone}:${originAndDestination}`;
-            const routeOnlyResult = await this.redisClient.set(routeOnlyKey, '1', 'EX', 30, 'NX');
-            if (routeOnlyResult === null) { this._benchLog(phone, obj, false, 'route_only_duplicate', _benchStart, originAndDestination); continue; }
+            const routeOnlyResult = await this.redisClient.set(routeOnlyKey, '1', 'EX', 120, 'NX');
+            if (routeOnlyResult === null) {
+              this.logger.debug(`ROUTE-DEDUP skip ${phone} route=${originAndDestination} group=${obj.groupId}`);
+              this._benchLog(phone, obj, false, 'route_only_duplicate', _benchStart, originAndDestination); continue;
+            }
           }
 
           // ✅ Send to Android app IMMEDIATELY (before any queue/Groq delay).
