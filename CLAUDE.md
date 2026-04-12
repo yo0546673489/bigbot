@@ -233,6 +233,26 @@ LOG_LEVEL=debug
 - שרת רץ מ-`dist/src/main.js` — כל שינוי TypeScript דורש `npm run build`
 - keywords נשמרים בקולקציית `driversearchkeywords`
 - `validateSearchKeyword` עם keyword חד-ערכי (ללא `_`) בודק רק origin של הנסיעה
+- `GET /api/areas/all` — endpoint ציבורי (בלי JWT) שמחזיר `{ shortcuts, supportAreas, neighborhoods }` מ-MongoDB. משמש את האנדרואיד לטעינת רשימת ערים/קיצורים דינמית.
+
+---
+
+## עיקרון בידוד משתמשים (Multi-tenancy)
+
+כל משתמש באפליקציה הוא ישות נפרדת לחלוטין. אין שום חיבור בין משתמשים.
+
+- כל משתמש רואה רק את הקבוצות שהוא חבר בהן בוואטסאפ האישי שלו.
+- כל נסיעה שמגיעה אליו נסרקה מהקבוצות שלו בלבד.
+- כל הודעת ת׳ שהוא שולח יוצאת מהטלפון שלו, לא של מישהו אחר.
+- כל שאילתה לשרת חייבת לכלול את ה-driverPhone כזיהוי.
+- Redis/MongoDB keys חייבים להיות partitioned לפי driverPhone.
+- כל דבר שמחבר בין משתמשים — זה באג קריטי.
+
+### אופטימיזציית סריקה (Shared Group Registry)
+
+- הודעת קבוצה נסרקת **פעם אחת** (dedup ב-Redis), לא משנה כמה נהגים חברים.
+- `group_subscribers[group_id]` מחזיר רשימת נהגים → כל אחד נבדק בנפרד (keywords, km, רכב).
+- המאגר המשותף הוא רק מטא-דאטה של קבוצות (group_id, שם). תוכן ההודעות, היסטוריית הנסיעות, ת׳ — מבודדים לפי driverPhone.
 
 ---
 
