@@ -1010,13 +1010,15 @@ ${this.localizationService.getMessage('keyWordSignAppName', language)}`;
 ${fixBoldMultiLine(formattedMessage)}`;
     }
 
-    // ✅ Send ride to Android app BEFORE dedup (app uses messageId for its own dedup)
-    // ✅ FIX: Apply keyword filter to main phone too — without this,
-    // the bot owner receives ALL rides from ALL groups regardless of keywords.
+    // ✅ Send ride to Android app — with route dedup to prevent duplicates
+    // from multiple groups posting the same ride.
     try {
       const wsServer = DriverWsServer.getInstance();
       const mainSearchKw = await this.validateSearchKeyword(phone, originAndDestination);
-      if (wsServer.isConnected(phone) && mainSearchKw) {
+      // Route dedup for the app: same route within 5 min = skip
+      const appRouteKey = `wa:ride:app-dedup:${phone}:${originAndDestination}`;
+      const appRouteResult = await this.redisClient.set(appRouteKey, '1', 'EX', 300, 'NX');
+      if (wsServer.isConnected(phone) && mainSearchKw && appRouteResult !== null) {
         const [originRaw, destinationRaw] = originAndDestination.split('_');
         const origin = await this.resolveAreaName(originRaw || '');
         const destination = await this.resolveAreaName(destinationRaw || '');
