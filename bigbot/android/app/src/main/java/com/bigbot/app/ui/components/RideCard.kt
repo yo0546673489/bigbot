@@ -132,8 +132,20 @@ fun RideCard(
                             }
 
                             // Visual line in middle
+                            Column(
+                                modifier = Modifier.width(75.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                            if (ride.isInternalRide) {
+                                Text(
+                                    "פנימי",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1565C0)
+                                )
+                            }
                             Box(
-                                modifier = Modifier.width(75.dp).height(16.dp),
+                                modifier = Modifier.fillMaxWidth().height(16.dp),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Row(
@@ -162,6 +174,7 @@ fun RideCard(
                                         .background(CardBg)
                                         .padding(horizontal = 3.dp)
                                 )
+                            }
                             }
 
                             // Destination (left side in RTL)
