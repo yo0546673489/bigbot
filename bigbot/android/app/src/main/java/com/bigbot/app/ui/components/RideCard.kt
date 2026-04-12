@@ -237,7 +237,13 @@ fun RideCard(
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 30.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (parsed.street.isNotEmpty()) {
+                                // Show street only if it's a real street, not a city name
+                                val isRealStreet = parsed.street.isNotEmpty() &&
+                                    parsed.street != ride.origin &&
+                                    parsed.street != ride.destination &&
+                                    parsed.street != fullCityName(ride.origin) &&
+                                    parsed.street != fullCityName(ride.destination)
+                                if (isRealStreet) {
                                     val addrText = buildString {
                                         append("\uD83D\uDCCD ")
                                         append(parsed.street)
