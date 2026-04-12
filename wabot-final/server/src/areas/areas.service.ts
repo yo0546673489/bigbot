@@ -246,6 +246,7 @@ export class AreasService {
       'נהג זורם', 'תופס פאגש', 'לפיש', 'תחנות בתוספת',
       'שקית קטנה', 'כסא תינוק', 'סלקל', 'רכב נוח',
       'מנהלים', 'קבלה חובה', 'קבלה בתוספת', 'פנימי', 'הלוש', 'הלוך ושוב',
+      'ש', 'שח', 'שקל', 'שקלים',
     ];
     await this.nonStreetKeywordModel.bulkWrite(words.map(word => ({
       updateOne: { filter: { word }, update: { $set: { word } }, upsert: true },
