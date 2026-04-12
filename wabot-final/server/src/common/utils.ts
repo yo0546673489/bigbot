@@ -520,10 +520,10 @@ export const getOriginAndDestination = async (
 
     for (const areaLC of sortedAreas) {
         // Whole-word matching: area must be bounded by whitespace, punctuation,
-        // digit↔letter transition, or start/end of string.
-        // Prevents "ים" inside "אופקים" but allows "ים180" (letter→digit = boundary).
+        // WhatsApp formatting chars (*_~), digit↔letter transition, or start/end.
+        // Prevents "ים" inside "אופקים" but allows "ים180" and "*בב*".
         const escaped = areaLC.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const re = new RegExp(`(?:^|[\\s,.:;!?\\-]|(?<=\\d))${escaped}(?=$|[\\s,.:;!?\\-]|(?=\\d))`, 'g');
+        const re = new RegExp(`(?:^|[\\s,.:;!?\\-*_~☚📞]|(?<=\\d))${escaped}(?=$|[\\s,.:;!?\\-*_~☚📞]|(?=\\d))`, 'g');
         let m: RegExpExecArray | null;
         while ((m = re.exec(lowerText)) !== null) {
             // The match may include a leading separator — skip it to get the actual area start

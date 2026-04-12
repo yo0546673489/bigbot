@@ -1632,7 +1632,15 @@ ${fixBoldMultiLine(formattedMessage)}`;
   async handleIncomingMessage(phone: string, payload: any) {
     const now = Date.now();
     const messageTimestamp = +payload.timestamp * 1000;
-    if (messageTimestamp < now - 60000) return; // 60s window (Go bot already filters >20s, NestJS adds processing time)
+    const ageMs = now - messageTimestamp;
+    if (messageTimestamp < now - 60000) {
+      this.logger.log(`[MSG-SKIP] too old: age=${ageMs}ms body="${(payload.body||'').slice(0,40)}"`);
+      return;
+    }
+
+    // Debug: log what we're processing
+    const bodyPreview = (payload.body || '').slice(0, 60).replace(/\n/g, ' ');
+    this.logger.log(`[MSG-PROC] phone=${phone} group=${payload.groupId?.slice(0,15)} age=${ageMs}ms body="${bodyPreview}" participants=${payload.participants?.length || 0}`);
 
     // Process the forwarding user's own driver (the user whose WhatsApp
     // session caught the message and forwarded it to us).
