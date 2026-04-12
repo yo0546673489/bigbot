@@ -1718,11 +1718,16 @@ ${fixBoldMultiLine(formattedMessage)}`;
 
     if (!routedDriverPhone || routedDriverPhone !== botPhone) return;
 
-    // First reply from a take_ride_link dispatcher → auto-open the chat.
+    // First reply from a take_ride_link contact → auto-open the chat.
+    // But NOT if the sender is a link bot — bot replies are intermediary only.
     if (!isFromMe && this.awaitingFirstReply.get(senderPhone) === botPhone) {
-      autoOpen = true;
+      if (!this.linkBotPhones.has(senderPhone)) {
+        autoOpen = true;
+        this.logger.log(`First reply from dispatcher ${senderPhone} → auto-open chat for driver ${botPhone}`);
+      } else {
+        this.logger.log(`First reply from LINK BOT ${senderPhone} → skipping auto-open`);
+      }
       this.awaitingFirstReply.delete(senderPhone);
-      this.logger.log(`First reply from dispatcher ${senderPhone} → auto-open chat for driver ${botPhone}`);
     }
 
     const wsServer = DriverWsServer.getInstance();
