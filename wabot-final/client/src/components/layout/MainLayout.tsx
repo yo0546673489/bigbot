@@ -31,25 +31,25 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div className="min-h-screen bg-[#F6FBF7]">
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 right-0 z-50 w-64 transform transition-transform duration-200 ease-in-out",
+        "fixed inset-y-0 right-0 z-50 w-48 transform transition-transform duration-200 ease-in-out",
         isSidebarOpen ? "translate-x-0" : "translate-x-full"
       )}>
         <div className="flex flex-col h-full bg-gradient-to-b from-[#1B5E20] to-[#2E7D32] shadow-2xl">
           {/* Logo */}
-          <div className="px-6 pt-7 pb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                <span className="text-white text-lg font-bold">B</span>
+          <div className="px-4 pt-5 pb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                <span className="text-white text-sm font-bold">B</span>
               </div>
               <div>
-                <h1 className="text-white text-lg font-bold tracking-tight">BigBot</h1>
-                <p className="text-white/60 text-xs">ניהול מערכת</p>
+                <h1 className="text-white text-sm font-bold tracking-tight">BigBot</h1>
+                <p className="text-white/60 text-[10px]">ניהול מערכת</p>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
+          <nav className="flex-1 px-2 space-y-0.5 overflow-y-auto">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -60,13 +60,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                   key={item.name}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-150",
+                    "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-150",
                     isActive
                       ? "bg-white/20 text-white shadow-sm"
                       : "text-white/70 hover:bg-white/10 hover:text-white"
                   )}
                 >
-                  <Icon className="h-[18px] w-[18px]" strokeWidth={isActive ? 2.2 : 1.8} />
+                  <Icon className="h-4 w-4" strokeWidth={isActive ? 2.2 : 1.8} />
                   {item.name}
                 </LinkTag>
               );
@@ -79,7 +79,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
               onClick={handleLogout}
               className="flex items-center gap-3 w-full px-4 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:bg-white/10 hover:text-white transition-all duration-150"
             >
-              <LogOut className="h-[18px] w-[18px]" strokeWidth={1.8} />
+              <LogOut className="h-4 w-4" strokeWidth={1.8} />
               התנתק
             </button>
           </div>
@@ -101,7 +101,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       {/* Main Content */}
       <div className={cn(
         "min-h-screen transition-all duration-200 ease-in-out",
-        isSidebarOpen ? "pr-64" : "pr-0"
+        isSidebarOpen ? "pr-48" : "pr-0"
       )}>
         <main className="p-6 max-w-[1400px]">
           {children}
