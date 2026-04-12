@@ -80,19 +80,7 @@ fun StatusCard(
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier.size(7.dp).clip(CircleShape)
-                        .background(if (waConnected) Color(0xFF4CAF50) else Color(0xFFEF5350))
-                )
-                Spacer(Modifier.width(5.dp))
-                Text(
-                    if (waConnected) "WhatsApp מחובר" else "WhatsApp מנותק",
-                    fontSize = 10.sp,
-                    color = if (waConnected) Color(0xFF388E3C) else AppRed
-                )
-            }
+            // WhatsApp connection status removed per user request
         }
     }
 
