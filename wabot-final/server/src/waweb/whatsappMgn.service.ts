@@ -495,14 +495,24 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
         if (phoneDigits.length >= 5) {
           this.pendingChatTokens.set(phoneDigits, { driverPhone, rideId, ride, expiresAt });
         }
-        // Token 3: origin_destination as token (e.g. "בב_ים")
+        // Token 3: extract ALL meaningful words from the linkText (the message
+        // sent to the bot, e.g. "ת 561406886 kx8uq3"). These contain the ride's
+        // identifying number which the dispatcher will echo back.
+        const linkTokens = (msgText || '').split(/\s+/).filter(s => s.length >= 4 && s !== 'ת');
+        for (const lt of linkTokens) {
+          this.pendingChatTokens.set(lt, { driverPhone, rideId, ride, expiresAt });
+        }
+        // Token 4: origin/destination — BOTH resolved names AND short codes
         if (ctx?.origin) {
-          const routeToken = ctx.destination ? `${ctx.origin}_${ctx.destination}` : ctx.origin;
-          this.pendingChatTokens.set(routeToken, { driverPhone, rideId, ride, expiresAt });
-          // Also individual city names as tokens
+          // Resolved full names
           this.pendingChatTokens.set(ctx.origin, { driverPhone, rideId, ride, expiresAt });
-          if (ctx.destination) {
-            this.pendingChatTokens.set(ctx.destination, { driverPhone, rideId, ride, expiresAt });
+          if (ctx.destination) this.pendingChatTokens.set(ctx.destination, { driverPhone, rideId, ride, expiresAt });
+          // Also get the short codes from the areas data (reverse lookup)
+          const areasData = await this.getAreasData();
+          for (const [shortCode, fullName] of Object.entries(areasData.shortcuts)) {
+            if (fullName === ctx.origin.toLowerCase() || fullName === ctx.destination?.toLowerCase()) {
+              this.pendingChatTokens.set(shortCode, { driverPhone, rideId, ride, expiresAt });
+            }
           }
         }
         this.logger.log(`take_ride_link: stored ${this.pendingChatTokens.size} tokens for ride ${rideId}`);
@@ -1725,6 +1735,11 @@ ${fixBoldMultiLine(formattedMessage)}`;
     // a NEW ride confirmation that needs to fire success.
     if (!isFromMe) {
       const now = Date.now();
+      const tokenCount = this.pendingChatTokens.size;
+      if (tokenCount > 0) {
+        const myTokens = [...this.pendingChatTokens.entries()].filter(([, i]) => i.driverPhone === botPhone).map(([t]) => t);
+        this.logger.log(`[TOKEN-CHECK] sender=${senderPhone} bot=${botPhone} body="${(body||'').slice(0,60)}" tokens=${myTokens.length}: ${myTokens.join(', ')}`);
+      }
       for (const [tok, info] of this.pendingChatTokens.entries()) {
         if (info.expiresAt < now) {
           this.pendingChatTokens.delete(tok);
