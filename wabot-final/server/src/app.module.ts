@@ -19,6 +19,7 @@ import { ElasticsearchModule } from './shared/elasticsearch';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { AreasModule } from './areas/areas.module';
 import { DevicesModule } from './devices/devices.module';
+import { BenchmarkModule } from './benchmark/benchmark.module';
  
  @Module({
    imports: [
@@ -44,6 +45,7 @@ import { DevicesModule } from './devices/devices.module';
      DashboardModule,
      AreasModule,
      DevicesModule,
+     BenchmarkModule,
    ],
  })
  export class AppModule { } 

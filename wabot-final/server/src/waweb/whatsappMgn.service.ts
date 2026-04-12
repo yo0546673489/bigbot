@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Inject, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Inject, Optional, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -30,6 +30,7 @@ import { ElasticsearchService } from 'src/shared/elasticsearch/elasticsearch.ser
 import { WhatsAppGroupsService } from 'src/whatsapp-groups/whatsapp-groups.service';
 import { AreasService } from 'src/areas/areas.service';
 import { WabotService } from 'src/services/wabot.service';
+import { BenchmarkService } from '../benchmark/benchmark.service';
 import { Queue, Worker } from 'bullmq';
 import { DriverWsServer } from '../drivers/driver-ws.server';
 
@@ -123,6 +124,7 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
     @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
     private readonly areasService: AreasService,
     private readonly wabotService: WabotService,
+    @Optional() private readonly benchmarkService: BenchmarkService,
   ) {
     this.armConnectedQueue = new Queue('armConnectedQueue', { connection: this.redisClient });
     this.messageProcessingQueue = new Queue('messageProcessingQueue', {
@@ -1148,16 +1150,20 @@ ${fixBoldMultiLine(formattedMessage)}`;
         const phone = dedupedPhones[i];
         const driverCache = driverCaches[i];
         try {
+          // ── Benchmark: track skip reasons for this phone ──
+          let _benchSkip: string | null = null;
+          const _benchStart = Date.now();
+
           if (phone === obj.senderPhone) continue;
           if (!driverCache) continue;
           const driver: Driver = JSON.parse(driverCache);
 
-          if (driver?.isBusy || !driver?.isApproved) continue;
-          if (!isInTrial(driver)) continue;
-          if (isNeedToPay(driver)) continue;
-          if (driver.filterGroups.includes(obj.groupId.replace('@g.us', ''))) continue;
+          if (driver?.isBusy || !driver?.isApproved) { _benchSkip = 'driver_busy_or_not_approved'; this._benchLog(phone, obj, false, _benchSkip, _benchStart, originAndDestination); continue; }
+          if (!isInTrial(driver)) { _benchSkip = 'not_in_trial'; this._benchLog(phone, obj, false, _benchSkip, _benchStart, originAndDestination); continue; }
+          if (isNeedToPay(driver)) { _benchSkip = 'needs_payment'; this._benchLog(phone, obj, false, _benchSkip, _benchStart, originAndDestination); continue; }
+          if (driver.filterGroups.includes(obj.groupId.replace('@g.us', ''))) { _benchSkip = 'group_filtered'; this._benchLog(phone, obj, false, _benchSkip, _benchStart, originAndDestination); continue; }
           // Groups blacklist — driver opted out of this group entirely
-          if ((driver as any).blacklistedGroups?.includes(obj.groupId)) continue;
+          if ((driver as any).blacklistedGroups?.includes(obj.groupId)) { _benchSkip = 'group_blacklisted'; this._benchLog(phone, obj, false, _benchSkip, _benchStart, originAndDestination); continue; }
 
           const language = getLanguageByPhoneNumber(phone);
 
@@ -1172,19 +1178,19 @@ ${fixBoldMultiLine(formattedMessage)}`;
             .filter((k: any) => typeof k === 'string' && k.length > 0);
           const usingNewFilterSystem = appFilters.length > 0;
           if (usingNewFilterSystem) {
-            if (!matchAppVehicleFilter(obj.body || '', appFilters)) continue;
+            if (!matchAppVehicleFilter(obj.body || '', appFilters)) { this._benchLog(phone, obj, false, 'vehicle_mismatch', _benchStart, originAndDestination); continue; }
           } else {
-            if (!isDriverEligible(driver, obj.body, this.localizationService)) continue;
+            if (!isDriverEligible(driver, obj.body, this.localizationService)) { this._benchLog(phone, obj, false, 'vehicle_mismatch', _benchStart, originAndDestination); continue; }
           }
 
           // Delivery filter: if the ride is a delivery and the driver opted out → skip.
           // Default: drivers accept deliveries (acceptDeliveries not set = true).
           if ((driver as any).acceptDeliveries === false && isDeliveryRide(obj.body || '')) {
-            continue;
+            this._benchLog(phone, obj, false, 'delivery_rejected', _benchStart, originAndDestination); continue;
           }
 
           const searchKeyword = await this.validateSearchKeyword(phone, originAndDestination);
-          if (!searchKeyword) continue;
+          if (!searchKeyword) { this._benchLog(phone, obj, false, 'no_matching_keyword', _benchStart, originAndDestination); continue; }
 
           // BigBot app: km-range filter. If the driver set a range in the
           // Android app, skip rides whose origin city is farther than that
@@ -1202,7 +1208,7 @@ ${fixBoldMultiLine(formattedMessage)}`;
               rideOrigin,
               driverKeywords,
             );
-            if (!passes) continue;
+            if (!passes) { this._benchLog(phone, obj, false, 'km_range_exceeded', _benchStart, originAndDestination); continue; }
           }
 
           // BigBot app: minimum price filter. If the driver set a min price,
@@ -1211,7 +1217,7 @@ ${fixBoldMultiLine(formattedMessage)}`;
           // otherwise-valid rides).
           if ((driver as any).minPrice && (driver as any).minPrice > 0) {
             const ridePrice = this.extractRidePrice(obj.body || '');
-            if (ridePrice != null && ridePrice < (driver as any).minPrice) continue;
+            if (ridePrice != null && ridePrice < (driver as any).minPrice) { this._benchLog(phone, obj, false, 'below_min_price', _benchStart, originAndDestination); continue; }
           }
 
           // ✅ Send to Android app IMMEDIATELY (before any queue/Groq delay).
@@ -1304,6 +1310,8 @@ ${fixBoldMultiLine(formattedMessage)}`;
               this.logger.log(
                 `>> [immediate] Sent ride to Android app: ${phone} -> ${originAndDestination} (${parsed.type}, ${parsed.blocks.length} block${parsed.blocks.length > 1 ? 's' : ''}) latency=${latencyMs}ms viaBot=${botPhone || phone}`
               );
+              // ── Benchmark: log successful send ──
+              this._benchLog(phone, obj, true, null, _benchStart, originAndDestination);
             }
           } catch (wsErr) {
             this.logger.warn(`Failed immediate WS send for ${phone}: ${wsErr?.message}`);
@@ -1319,6 +1327,21 @@ ${fixBoldMultiLine(formattedMessage)}`;
     } catch (error) {
       this.logger.error(`Error in handleMessageListenerRegular:`, error);
     }
+  }
+
+  /** Benchmark helper: log group event if a benchmark run is active for this phone. */
+  private _benchLog(phone: string, obj: any, recognized: boolean, skipReason: string | null, startMs: number, originDest?: string) {
+    if (!this.benchmarkService) return;
+    this.benchmarkService.getActiveRun(phone).then(run => {
+      if (!run) return;
+      const parts = (originDest || '').split('_');
+      this.benchmarkService.logGroupEvent(
+        run.runId, obj, recognized, skipReason,
+        Date.now() - startMs,
+        parts[0], parts[1],
+        this.extractRidePrice(obj.body || '')?.toString(),
+      );
+    }).catch(() => {});
   }
 
   private async handleMessageListener(phone: string, obj: any): Promise<boolean> {
@@ -1723,6 +1746,14 @@ ${fixBoldMultiLine(formattedMessage)}`;
         this.logger.log(
           `>> [DRIVEBOT] to=${botPhone} od=${od || 'NO_MATCH'} ts=${ts} age=${ageMs}ms msgId=${messageId || ''} firstLine="${firstLine}"`
         );
+        // ── Benchmark: log DryBot private message ──
+        if (this.benchmarkService) {
+          // botPhone is the driver who received this DryBot message
+          const benchRun = await this.benchmarkService.getActiveRun(botPhone);
+          if (benchRun) {
+            await this.benchmarkService.logDrybotEvent(benchRun.runId, payload);
+          }
+        }
       } catch (e: any) {
         this.logger.warn(`[DRIVEBOT] log failed: ${e?.message}`);
       }

@@ -10,6 +10,7 @@ import { ElasticsearchModule } from 'src/shared/elasticsearch';
 import { WhatsAppGroupsModule } from 'src/whatsapp-groups/whatsapp-groups.module';
 import { AreasModule } from 'src/areas/areas.module';
 import { WhatsappServiceMgn } from './whatsappMgn.service';
+import { BenchmarkModule } from '../benchmark/benchmark.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { WhatsappServiceMgn } from './whatsappMgn.service';
     ElasticsearchModule,
     WhatsAppGroupsModule,
     AreasModule,
+    BenchmarkModule,
   ],
   controllers: [WawebController],
   providers: [WhatsappServiceMgn],
