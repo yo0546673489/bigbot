@@ -35,6 +35,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val vehicleTypes by viewModel.vehicleTypes.collectAsState()
     val silentMode by viewModel.silentMode.collectAsState()
     val serviceMode by viewModel.serviceMode.collectAsState()
+    val acceptDeliveries by viewModel.acceptDeliveries.collectAsState()
     val statusMessage by viewModel.statusMessage.collectAsState()
 
     var showEtaDialog by remember { mutableStateOf(false) }
@@ -188,6 +189,19 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                             }
                             Text(label, fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = GreenDark)
                         }
+                    }
+                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
+                    SettingsRow("קבלת משלוחים") {
+                        Switch(
+                            checked = acceptDeliveries,
+                            onCheckedChange = { viewModel.setAcceptDeliveries(it) },
+                            colors = SwitchDefaults.colors(
+                                checkedTrackColor = Primary,
+                                checkedThumbColor = Color.White,
+                                uncheckedTrackColor = Color(0xFFCFD8DC),
+                                uncheckedThumbColor = Color.White
+                            )
+                        )
                     }
                     HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
                     SettingsRow("סינון קבוצות") {

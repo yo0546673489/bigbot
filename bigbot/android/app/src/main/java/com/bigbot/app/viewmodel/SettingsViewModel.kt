@@ -30,6 +30,7 @@ class SettingsViewModel @Inject constructor(
     val vehicleTypes = repo.vehicleTypes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val silentMode = repo.silentMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val serviceMode = repo.serviceMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+    val acceptDeliveries = repo.acceptDeliveries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
     private val _statusMessage = MutableStateFlow<String?>(null)
     val statusMessage: StateFlow<String?> = _statusMessage
@@ -115,6 +116,14 @@ class SettingsViewModel @Inject constructor(
 
     fun setServiceMode(v: Boolean) {
         viewModelScope.launch { repo.saveServiceMode(v) }
+    }
+
+    fun setAcceptDeliveries(v: Boolean) {
+        viewModelScope.launch {
+            repo.saveAcceptDeliveries(v)
+            val phone = repo.driverPhone.first()
+            api.saveSettings(phone, v) {}
+        }
     }
 
     fun clearStatus() { _statusMessage.value = null }
