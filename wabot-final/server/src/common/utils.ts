@@ -519,17 +519,25 @@ export const getOriginAndDestination = async (
     const sortedAreas = Array.from(searchable.values()).sort((a, b) => b.length - a.length);
 
     for (const areaLC of sortedAreas) {
-        const index = lowerText.indexOf(areaLC);
-        if (index !== -1) {
+        // Whole-word matching: area must be bounded by whitespace, punctuation,
+        // or start/end of string. Prevents "ים" matching inside "אופקים".
+        const escaped = areaLC.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(`(?:^|[\\s,.:;!?\\-])${escaped}(?=$|[\\s,.:;!?\\-])`, 'g');
+        let m: RegExpExecArray | null;
+        while ((m = re.exec(lowerText)) !== null) {
+            // The match may include a leading separator — skip it to get the actual area start
+            const matchStr = m[0];
+            const areaStart = m.index + (matchStr.length - areaLC.length);
             let overlaps = false;
-            for (let i = index; i < index + areaLC.length; i++) {
+            for (let i = areaStart; i < areaStart + areaLC.length; i++) {
                 if (matchedIndices.has(i)) { overlaps = true; break; }
             }
             if (overlaps) continue;
 
-            const originalArea = text.substring(index, index + areaLC.length);
-            foundAreas.push({ area: originalArea, index, length: areaLC.length });
-            for (let i = index; i < index + areaLC.length; i++) matchedIndices.add(i);
+            const originalArea = text.substring(areaStart, areaStart + areaLC.length);
+            foundAreas.push({ area: originalArea, index: areaStart, length: areaLC.length });
+            for (let i = areaStart; i < areaStart + areaLC.length; i++) matchedIndices.add(i);
+            break; // take first non-overlapping match
         }
     }
 
