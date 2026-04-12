@@ -101,11 +101,27 @@ export class BenchmarkService {
   }
 
   hashMessage(text: string): string {
-    // Normalize: remove emoji, collapse whitespace, trim, lowercase
-    const normalized = text
+    // Extract the ride-specific content, stripping DryBot formatting.
+    // DryBot appends lines like:
+    //   > *סדרן:* name | phone
+    //   > *חיפוש:* מירושלים
+    //   🏇🏻 סיירת בעל עגולה 🏇🏻
+    //   ♾️ מחובַּרים 1 ♾️
+    // We strip these to match the raw group message body.
+    const lines = text.split('\n');
+    const coreLines = lines.filter(line => {
+      const trimmed = line.trim();
+      // Skip DryBot "סדרן" and "חיפוש" lines
+      if (trimmed.startsWith('>') || trimmed.startsWith('> ')) return false;
+      // Skip group signature lines (emoji-heavy, short, no Hebrew ride content)
+      if (/^[^\u0590-\u05FF]*$/.test(trimmed) && trimmed.length < 40) return false;
+      return trimmed.length > 0;
+    });
+    const normalized = coreLines.join(' ')
       .replace(/[\u{1F000}-\u{1FFFF}]/gu, '')
       .replace(/[\u{2600}-\u{27BF}]/gu, '')
-      .replace(/[*_~`]/g, '')
+      .replace(/[\u{FE00}-\u{FE0F}]/gu, '')
+      .replace(/[*_~`"']/g, '')
       .replace(/\s+/g, ' ')
       .trim();
     return createHash('sha256').update(normalized).digest('hex').substring(0, 16);
