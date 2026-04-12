@@ -1238,6 +1238,16 @@ ${fixBoldMultiLine(formattedMessage)}`;
             if (ridePrice != null && ridePrice < (driver as any).minPrice) { this._benchLog(phone, obj, false, 'below_min_price', _benchStart, originAndDestination); continue; }
           }
 
+          // Cross-group dedup: same ride posted in multiple groups should only
+          // reach the driver once. Check similarity BEFORE WS send.
+          const msgTrackWs = `${originAndDestination}:${obj.body || ''}`;
+          const isDupWs = await this.checkMessageDuplicate(phone, msgTrackWs);
+          if (isDupWs) { this._benchLog(phone, obj, false, 'cross_group_duplicate', _benchStart, originAndDestination); continue; }
+          // Mark as seen (SET NX, 5 min TTL)
+          const wsDedupeKey = `trackedMessage:${phone}:${Buffer.from(msgTrackWs).toString('base64').substring(0, 100)}`;
+          const wsDedupeResult = await this.redisClient.set(wsDedupeKey, msgTrackWs, 'EX', 60 * 5, 'NX');
+          if (wsDedupeResult === null) { this._benchLog(phone, obj, false, 'cross_group_duplicate', _benchStart, originAndDestination); continue; }
+
           // ✅ Send to Android app IMMEDIATELY (before any queue/Groq delay).
           // ⚡ Do NOT gate on isConnected — buffer in DriverWsServer queues the
           // ride if WS is momentarily down and replays on reconnect, so a brief
