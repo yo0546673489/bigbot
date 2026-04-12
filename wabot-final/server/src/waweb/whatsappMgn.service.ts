@@ -1677,12 +1677,33 @@ ${fixBoldMultiLine(formattedMessage)}`;
     // connected. The Go bot globally dedups so we only get the message once —
     // so we must cover all drivers here. Excludes the forwarder (already
     // handled above) and the message sender.
-    if (payload?.participants?.length > 0) {
+    // If participants list is missing (Go bot cache miss), try to fetch from
+    // Redis group cache. This avoids dropping the broadcast path entirely.
+    let participants: string[] = payload?.participants || [];
+    if (participants.length === 0 && payload?.groupId) {
+      try {
+        const groupKey = payload.groupId.includes('@') ? payload.groupId : `${payload.groupId}@g.us`;
+        const cached = await this.redisClient.get(`group:info:${groupKey}`);
+        if (cached) {
+          const groupInfo = JSON.parse(cached);
+          if (groupInfo?.participants?.length > 0) {
+            participants = groupInfo.participants.map((p: any) =>
+              (p.phoneNumber || p.jid || '').replace('@s.whatsapp.net', '').replace('@lid', '')
+            ).filter((p: string) => p && /^\d+$/.test(p));
+            this.logger.log(`[PARTICIPANTS-FIX] Recovered ${participants.length} participants from Redis cache for group ${payload.groupId.slice(0,15)}`);
+          }
+        }
+      } catch (e: any) {
+        this.logger.warn(`[PARTICIPANTS-FIX] Redis lookup failed: ${e?.message}`);
+      }
+    }
+
+    if (participants.length > 0) {
       const { drivers: allDrivers } = await this.getDriversAndConnectionStatus();
       const driversMap = new Map(allDrivers.map(d => [d.phone, d]));
 
       const driversInGroup: string[] = [];
-      for (const pn of payload.participants) {
+      for (const pn of participants) {
         const driver = driversMap.get(pn);
         if (!driver?.phone) continue;
         if (driver.phone === phone) continue;            // forwarder already done
