@@ -476,22 +476,36 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
         this.chatRouting.set(linkPhone, driverPhone);
         this.awaitingFirstReply.set(linkPhone, driverPhone);
         this.linkBotPhones.set(linkPhone, driverPhone);
-        // Also set up pendingReplyRides for the ACTUAL dispatcher (the person
-        // who posted in the group). When they reply privately → success.
+        // The GROUP sender is also a bot — NOT the dispatcher. The real
+        // dispatcher will message us privately later. We identify them by
+        // matching tokens: the ride's identifying number, origin, destination.
+        // Extract tokens from the ride rawText and rideId.
         const ctx = this.rideContext.get(rideId);
-        if (ctx && ctx.senderPhone) {
-          this.chatRouting.set(ctx.senderPhone, driverPhone);
-          this.pendingReplyRides.set(`${driverPhone}:${ctx.senderPhone}`, {
-            rideId,
-            driverPhone,
-            dispatcherPhone: ctx.senderPhone,
-            origin: ctx.origin || '',
-            destination: ctx.destination || '',
-            groupId: ctx.groupId,
-            expiresAt: Date.now() + 30 * 60 * 1000,
-          });
-          this.logger.log(`take_ride_link: waiting for dispatcher ${ctx.senderPhone} to confirm ride ${rideId}`);
+        const expiresAt = Date.now() + 30 * 60 * 1000;
+        const ride = ctx ? { origin: ctx.origin, destination: ctx.destination } : null;
+
+        // Token 1: the rideId itself (often contains the identifying number)
+        if (rideId && rideId.length >= 4) {
+          // Strip block suffix (e.g. "abc123#0" → "abc123")
+          const baseId = rideId.split('#')[0];
+          this.pendingChatTokens.set(baseId, { driverPhone, rideId, ride, expiresAt });
         }
+        // Token 2: any number >= 5 digits from linkPhone (the bot's number)
+        const phoneDigits = linkPhone.replace(/\D/g, '');
+        if (phoneDigits.length >= 5) {
+          this.pendingChatTokens.set(phoneDigits, { driverPhone, rideId, ride, expiresAt });
+        }
+        // Token 3: origin_destination as token (e.g. "בב_ים")
+        if (ctx?.origin) {
+          const routeToken = ctx.destination ? `${ctx.origin}_${ctx.destination}` : ctx.origin;
+          this.pendingChatTokens.set(routeToken, { driverPhone, rideId, ride, expiresAt });
+          // Also individual city names as tokens
+          this.pendingChatTokens.set(ctx.origin, { driverPhone, rideId, ride, expiresAt });
+          if (ctx.destination) {
+            this.pendingChatTokens.set(ctx.destination, { driverPhone, rideId, ride, expiresAt });
+          }
+        }
+        this.logger.log(`take_ride_link: stored ${this.pendingChatTokens.size} tokens for ride ${rideId}`);
         // Note: no ride_update sent — card stays as-is, only button changed to "נשלח ✓" on client
         this.logger.log(`take_ride_link: sent "${msgText}" to ${linkPhone} via ${sendVia}`);
 
@@ -1721,12 +1735,22 @@ ${fixBoldMultiLine(formattedMessage)}`;
           routedDriverPhone = botPhone;
           autoOpen = true;
           pendingRide = info.ride;
-          // Drop ALL pending tokens for this driver — they refer to the same
-          // chat request, and we've now identified the dispatcher.
+          // Fire ride_update success — the dispatcher confirmed the ride
+          const wsServer2 = DriverWsServer.getInstance();
+          wsServer2.sendRideUpdate(botPhone, {
+            rideId: info.rideId,
+            status: 'success',
+            dispatcherPhone: senderPhone,
+            dispatcherName: fromName || senderPhone,
+            origin: info.ride?.origin || '',
+            destination: info.ride?.destination || '',
+            message: body.slice(0, 200),
+          });
+          this.logger.log(`🎉 Token match → dispatcher ${senderPhone} confirmed ride ${info.rideId} for ${botPhone}`);
+          // Drop ALL pending tokens for this driver
           for (const [t, i] of this.pendingChatTokens.entries()) {
             if (i.driverPhone === botPhone) this.pendingChatTokens.delete(t);
           }
-          this.logger.log(`Matched pending chat token "${tok}" → dispatcher ${senderPhone} for driver ${botPhone}`);
           break;
         }
       }
