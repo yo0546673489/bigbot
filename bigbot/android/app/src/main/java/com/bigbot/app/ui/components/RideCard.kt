@@ -81,28 +81,36 @@ fun RideCard(
                             RideTextParser.parse(ride.rawText, ride.origin, ride.destination)
                         }
 
-                        // Top row: badge + group name
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            if (ride.isUrgent) {
-                                Badge("🔴 דחוף", AppRed, RedBg)
-                            } else {
-                                val label = if (ride.minutesAgo > 0) "${ride.minutesAgo} דק'" else "● עכשיו"
-                                Badge(label, GreenDark, GreenBg)
-                            }
-                            Text(ride.groupName, fontSize = 10.sp, color = Color(0xFFB0BEC5))
-                        }
-
-                        // Internal ride / Round-trip / Kosher phone badges
+                        // Top row: badge + kosher phone + group name
                         val rawLower = ride.rawText.lowercase()
                         val isKosherPhone = rawLower.contains("ללא פון") ||
                             rawLower.contains("נסיעה כשרה") ||
                             rawLower.contains("טלפון כשר") ||
                             rawLower.contains("כשר בלבד")
-                        if (ride.isInternalRide || ride.isRoundTrip || isKosherPhone) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (ride.isUrgent) {
+                                    Badge("🔴 דחוף", AppRed, RedBg)
+                                } else {
+                                    val label = if (ride.minutesAgo > 0) "${ride.minutesAgo} דק'" else "● עכשיו"
+                                    Badge(label, GreenDark, GreenBg)
+                                }
+                                if (isKosherPhone) {
+                                    Badge("📵 ללא פון", Color(0xFFE65100), Color(0xFFFFF3E0))
+                                }
+                            }
+                            Text(ride.groupName, fontSize = 10.sp, color = Color(0xFFB0BEC5))
+                        }
+
+                        // Internal ride / Round-trip badges
+                        if (ride.isInternalRide || ride.isRoundTrip) {
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(top = 2.dp),
                                 horizontalArrangement = Arrangement.spacedBy(4.dp)
@@ -112,9 +120,6 @@ fun RideCard(
                                 }
                                 if (ride.isRoundTrip) {
                                     Badge("🔄 הלוך ושוב", Color(0xFF6A1B9A), Color(0xFFF3E5F5))
-                                }
-                                if (isKosherPhone) {
-                                    Badge("📵 ללא פון", Color(0xFFE65100), Color(0xFFFFF3E0))
                                 }
                             }
                         }
