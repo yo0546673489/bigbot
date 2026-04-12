@@ -119,11 +119,19 @@ class GroupsFilterViewModel @Inject constructor(
                         val groups = mutableListOf<GroupItem>()
                         arr?.forEach { el ->
                             val g = el.asJsonObject
-                            val gId = g.get("groupId")?.asString ?: return@forEach
+                            // Go bot returns "jid" (e.g. "120363...@g.us"), not "groupId"
+                            val gId = g.get("jid")?.asString
+                                ?: g.get("groupId")?.asString
+                                ?: return@forEach
+                            val memberCount = try {
+                                g.getAsJsonArray("participants")?.size() ?: 0
+                            } catch (_: Exception) {
+                                g.get("memberCount")?.asInt ?: 0
+                            }
                             groups.add(GroupItem(
                                 groupId = gId,
                                 name = g.get("name")?.asString ?: "",
-                                memberCount = g.get("memberCount")?.asInt ?: 0,
+                                memberCount = memberCount,
                                 isBlacklisted = blacklisted.contains(gId)
                             ))
                         }
