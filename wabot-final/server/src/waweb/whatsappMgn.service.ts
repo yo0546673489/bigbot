@@ -495,12 +495,12 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
         if (phoneDigits.length >= 5) {
           this.pendingChatTokens.set(phoneDigits, { driverPhone, rideId, ride, expiresAt });
         }
-        // Token 3: extract identifying tokens from linkText (e.g. "ת 561406886 kx8uq3").
-        // Only tokens >= 5 chars to avoid false matches (short Hebrew words like "ים"
-        // appear in many unrelated messages).
-        const linkTokens = (msgText || '').split(/\s+/).filter(s => s.length >= 5 && s !== 'ת');
-        for (const lt of linkTokens) {
-          this.pendingChatTokens.set(lt, { driverPhone, rideId, ride, expiresAt });
+        // Token 3: extract the identifying NUMBER from linkText (e.g. "561406886").
+        // Only pure digit sequences >= 5 chars — these are ride IDs that the
+        // dispatcher will echo back.
+        const linkNumbers = (msgText || '').split(/\s+/).filter(s => /^\d{5,}$/.test(s));
+        for (const ln of linkNumbers) {
+          this.pendingChatTokens.set(ln, { driverPhone, rideId, ride, expiresAt });
         }
         // Token 4: origin + destination as dispatcher might echo back ride details.
         // Store multiple formats: "בני ברק ירושלים", "בב ים" (short codes)
