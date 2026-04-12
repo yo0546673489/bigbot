@@ -179,10 +179,10 @@ object NotificationHelper {
 
         val rv = RemoteViews(context.packageName, R.layout.notif_ride)
         rv.setTextViewText(R.id.notif_group, ride.groupName)
-        rv.setTextViewText(R.id.notif_origin, ride.origin)
-        rv.setTextViewText(R.id.notif_origin_full, fullCityName(ride.origin))
-        rv.setTextViewText(R.id.notif_destination, ride.destination)
-        rv.setTextViewText(R.id.notif_destination_full, fullCityName(ride.destination))
+        rv.setTextViewText(R.id.notif_origin, fullCityName(ride.origin).ifBlank { ride.origin })
+        rv.setViewVisibility(R.id.notif_origin_full, View.GONE)
+        rv.setTextViewText(R.id.notif_destination, fullCityName(ride.destination).ifBlank { ride.destination })
+        rv.setViewVisibility(R.id.notif_destination_full, View.GONE)
         rv.setTextViewText(R.id.notif_info, infoText)
 
         if (parsed?.price?.isNotEmpty() == true) {
