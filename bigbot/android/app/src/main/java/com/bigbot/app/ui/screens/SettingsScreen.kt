@@ -20,7 +20,10 @@ import com.bigbot.app.ui.theme.*
 import com.bigbot.app.viewmodel.SettingsViewModel
 
 @Composable
-fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
+fun SettingsScreen(
+    viewModel: SettingsViewModel = hiltViewModel(),
+    onNavigateToGroupsFilter: () -> Unit = {}
+) {
     val driverPhone by viewModel.driverPhone.collectAsState()
     val waConnected by viewModel.waConnected.collectAsState()
     val autoMode by viewModel.autoMode.collectAsState()
@@ -238,7 +241,8 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     }
                     HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
                     SettingsRow("סינון קבוצות") {
-                        Text("הגדר", fontSize = 11.sp, color = Primary, fontWeight = FontWeight.Medium)
+                        Text("הגדר", fontSize = 11.sp, color = Primary, fontWeight = FontWeight.Medium,
+                            modifier = Modifier.clickable { onNavigateToGroupsFilter() })
                     }
                 }
             }

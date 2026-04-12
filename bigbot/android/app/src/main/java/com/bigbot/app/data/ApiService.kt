@@ -31,6 +31,20 @@ class ApiService @Inject constructor(private val gson: Gson) {
         })
     }
 
+    private fun patch(path: String, body: Map<String, Any>, onResult: (Boolean, String) -> Unit) {
+        val reqBody = gson.toJson(body).toRequestBody(json)
+        val req = Request.Builder().url("$baseUrl$path").patch(reqBody).build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("API", "PATCH $path failed: ${e.message}")
+                onResult(false, e.message ?: "error")
+            }
+            override fun onResponse(call: Call, response: Response) {
+                onResult(response.isSuccessful, response.body?.string() ?: "")
+            }
+        })
+    }
+
     private fun delete(path: String, body: Map<String, Any>, onResult: (Boolean) -> Unit) {
         val reqBody = gson.toJson(body).toRequestBody(json)
         val req = Request.Builder().url("$baseUrl$path").delete(reqBody).build()
@@ -113,6 +127,43 @@ class ApiService @Inject constructor(private val gson: Gson) {
                 } catch (_: Exception) { onResult(false, "") }
             } else onResult(false, "")
         }
+    }
+
+    // ── Groups Blacklist ──────────────────────────────────────────────
+
+    /** Fetch all WhatsApp groups the driver is a member of (live from whatsmeow). */
+    fun getGroups(phone: String, onResult: (Boolean, String) -> Unit) {
+        val req = Request.Builder().url("$baseUrl/api/driver/groups?phone=$phone").get().build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("API", "getGroups failed: ${e.message}")
+                onResult(false, e.message ?: "error")
+            }
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body?.string() ?: ""
+                onResult(response.isSuccessful, body)
+            }
+        })
+    }
+
+    /** Fetch the driver's blacklisted group IDs. */
+    fun getBlacklist(phone: String, onResult: (Boolean, String) -> Unit) {
+        val req = Request.Builder().url("$baseUrl/api/driver/groups/blacklist?phone=$phone").get().build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("API", "getBlacklist failed: ${e.message}")
+                onResult(false, e.message ?: "error")
+            }
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body?.string() ?: ""
+                onResult(response.isSuccessful, body)
+            }
+        })
+    }
+
+    /** Replace the driver's blacklisted group list (full replace). */
+    fun updateBlacklist(phone: String, blacklistedIds: List<String>, onResult: (Boolean) -> Unit) {
+        patch("/api/driver/groups/blacklist", mapOf("phone" to phone, "blacklistedGroupIds" to blacklistedIds)) { ok, _ -> onResult(ok) }
     }
 
     /** Fetch all areas data (shortcuts, support areas, neighborhoods) from the public endpoint. */

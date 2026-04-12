@@ -161,7 +161,17 @@ fun BigBotApp(chatStore: ChatStore) {
                 )
             }
             composable("settings") {
-                SettingsScreen(viewModel = hiltViewModel())
+                SettingsScreen(
+                    viewModel = hiltViewModel(),
+                    onNavigateToGroupsFilter = {
+                        navController.navigate("groups_filter")
+                    }
+                )
+            }
+            composable("groups_filter") {
+                GroupsFilterScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }
