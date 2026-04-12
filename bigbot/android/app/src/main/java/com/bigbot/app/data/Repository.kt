@@ -42,6 +42,14 @@ class Repository @Inject constructor(
         val KEY_REGISTERED = booleanPreferencesKey("registered")
         val KEY_DOB = stringPreferencesKey("dob")
         val KEY_VEHICLE = stringPreferencesKey("vehicle")
+        val KEY_ACCEPT_DELIVERIES = booleanPreferencesKey("accept_deliveries")
+        val KEY_VOICE_CONTROL_ENABLED = booleanPreferencesKey("voice_control_enabled")
+        val KEY_KM_OPTIONS = stringPreferencesKey("km_options")
+        val KEY_KM_SELECTED = intPreferencesKey("km_selected")
+        val KEY_KM_FILTER_VISIBLE = booleanPreferencesKey("km_filter_visible")
+        val KEY_ETA_ENABLED = booleanPreferencesKey("eta_enabled")
+        val KEY_MIN_PRICE = intPreferencesKey("min_price")
+        val KEY_QUICK_REPLIES = stringPreferencesKey("quick_replies")
     }
 
     val chatConversationsJson: Flow<String> = context.dataStore.data.map { it[KEY_CHAT_CONVERSATIONS] ?: "" }
@@ -88,6 +96,16 @@ class Repository @Inject constructor(
     val registered: Flow<Boolean> = context.dataStore.data.map { it[KEY_REGISTERED] ?: false }
     val dob: Flow<String> = context.dataStore.data.map { it[KEY_DOB] ?: "" }
     val vehicle: Flow<String> = context.dataStore.data.map { it[KEY_VEHICLE] ?: "" }
+    val acceptDeliveries: Flow<Boolean> = context.dataStore.data.map { it[KEY_ACCEPT_DELIVERIES] ?: true }
+    val voiceControlEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_VOICE_CONTROL_ENABLED] ?: false }
+    val kmOptions: Flow<List<Int>> = context.dataStore.data.map {
+        val raw = it[KEY_KM_OPTIONS] ?: ""; if (raw.isEmpty()) listOf(5, 10, 20) else raw.split(",").mapNotNull { s -> s.trim().toIntOrNull() }
+    }
+    val selectedKm: Flow<Int> = context.dataStore.data.map { it[KEY_KM_SELECTED] ?: 0 }
+    val kmFilterVisible: Flow<Boolean> = context.dataStore.data.map { it[KEY_KM_FILTER_VISIBLE] ?: false }
+    val etaEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_ETA_ENABLED] ?: true }
+    val minPrice: Flow<Int> = context.dataStore.data.map { it[KEY_MIN_PRICE] ?: 0 }
+    val quickReplies: Flow<String> = context.dataStore.data.map { it[KEY_QUICK_REPLIES] ?: "אני בדרך|||כמה דקות אני שם|||תודה" }
 
     suspend fun saveDriverPhone(v: String) = context.dataStore.edit { it[KEY_DRIVER_PHONE] = v }
     suspend fun saveDriverName(v: String) = context.dataStore.edit { it[KEY_DRIVER_NAME] = v }
@@ -112,4 +130,12 @@ class Repository @Inject constructor(
     suspend fun saveRegistered(v: Boolean) = context.dataStore.edit { it[KEY_REGISTERED] = v }
     suspend fun saveDob(v: String) = context.dataStore.edit { it[KEY_DOB] = v }
     suspend fun saveVehicle(v: String) = context.dataStore.edit { it[KEY_VEHICLE] = v }
+    suspend fun saveAcceptDeliveries(v: Boolean) = context.dataStore.edit { it[KEY_ACCEPT_DELIVERIES] = v }
+    suspend fun saveVoiceControlEnabled(v: Boolean) = context.dataStore.edit { it[KEY_VOICE_CONTROL_ENABLED] = v }
+    suspend fun saveKmOptions(options: List<Int>) = context.dataStore.edit { it[KEY_KM_OPTIONS] = options.joinToString(",") }
+    suspend fun saveSelectedKm(v: Int) = context.dataStore.edit { it[KEY_KM_SELECTED] = v }
+    suspend fun saveKmFilterVisible(v: Boolean) = context.dataStore.edit { it[KEY_KM_FILTER_VISIBLE] = v }
+    suspend fun saveEtaEnabled(v: Boolean) = context.dataStore.edit { it[KEY_ETA_ENABLED] = v }
+    suspend fun saveMinPrice(v: Int) = context.dataStore.edit { it[KEY_MIN_PRICE] = v }
+    suspend fun saveQuickReplies(v: String) = context.dataStore.edit { it[KEY_QUICK_REPLIES] = v }
 }

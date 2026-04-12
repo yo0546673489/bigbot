@@ -40,6 +40,12 @@ class ChatViewModel @Inject constructor(
 
     val driverPhone = repo.driverPhone.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
 
+    /** Quick-reply buttons shown above the chat input. */
+    val quickReplies: StateFlow<List<String>> = repo.quickReplies
+        .map { raw -> if (raw.isBlank()) emptyList() else raw.split("|||").map { it.trim() }.filter { it.isNotEmpty() } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000),
+            listOf("אני בדרך", "עוד 5 דקות", "הגעתי", "תתקשר אליי", "שלח מיקום"))
+
     fun openConversation(phone: String) = store.selectConversation(phone)
     fun closeConversation() = store.closeConversation()
 

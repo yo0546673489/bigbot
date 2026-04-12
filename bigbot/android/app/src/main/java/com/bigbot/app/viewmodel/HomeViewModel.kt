@@ -13,6 +13,7 @@ import com.bigbot.app.data.models.EtaRequest
 import com.bigbot.app.data.models.Ride
 import com.bigbot.app.data.models.RideUiState
 import com.bigbot.app.ui.components.fullCityName
+import com.bigbot.app.util.RideTextParser
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -45,7 +46,7 @@ class HomeViewModel @Inject constructor(
     val voiceControlEnabled = repo.voiceControlEnabled.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     // Km-range filter state — UI reads these three StateFlows and calls the
     // matching action functions below to mutate them.
-    val kmOptions = repo.kmOptions.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf(10, 20, 30))
+    val kmOptions = repo.kmOptions.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf(5, 10, 20))
     val selectedKm = repo.selectedKm.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
     val kmFilterVisible = repo.kmFilterVisible.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
@@ -119,6 +120,39 @@ class HomeViewModel @Inject constructor(
         }
         viewModelScope.launch {
             repo.wsService.rides.collect { ride ->
+                // Min price filter — skip ride if below threshold
+                val minPriceVal = repo.minPrice.first()
+                if (minPriceVal > 0) {
+                    var ridePrice = ride.price.replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0
+                    if (ridePrice == 0 && ride.rawText.isNotEmpty()) {
+                        val m = Regex("(?:^|\\s)(\\d{2,4})\\s*[₪ש\"ח](?:\\s|$)", RegexOption.MULTILINE).find(ride.rawText)
+                        ridePrice = m?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                    }
+                    if (ridePrice in 1 until minPriceVal) return@collect
+                }
+                // Delivery filter — skip if ride is a delivery and driver opted out
+                val acceptDeliveries = repo.acceptDeliveries.first()
+                if (!acceptDeliveries && RideTextParser.isDeliveryRide(ride.rawText)) return@collect
+
+                // Vehicle type filter — match driver's vehicle against ride requirements
+                val driverVehicle = repo.vehicleType.first()
+                if (driverVehicle != "כולם" && driverVehicle.isNotBlank()) {
+                    val parsed = RideTextParser.parse(ride.rawText, ride.origin, ride.destination)
+                    if (parsed.vehicleType.isNotBlank()) {
+                        val rideSeats = parsed.vehicleSeats.toIntOrNull() ?: 0
+                        val isLargeVehicleRide = rideSeats >= 6 || parsed.vehicleType.isNotBlank()
+                        val driverSeats = when {
+                            driverVehicle.contains("4") -> 4
+                            driverVehicle.contains("6") -> 6
+                            driverVehicle.contains("7") -> 7
+                            driverVehicle.contains("מיניבוס") -> 99
+                            else -> 4
+                        }
+                        // Driver with 4 seats can't take large-vehicle rides
+                        if (driverSeats == 4 && isLargeVehicleRide) return@collect
+                    }
+                }
+
                 val minAgo = if (ride.timestamp > 0) ((System.currentTimeMillis() / 1000 - ride.timestamp) / 60).toInt().coerceAtLeast(0) else 0
                 // Auto mode: instantly take the ride and mark as AUTO_PENDING
                 val isAuto = autoMode.value && isAvailable.value

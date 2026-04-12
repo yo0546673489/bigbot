@@ -14,20 +14,25 @@ import javax.inject.Singleton
 @Singleton
 class WebSocketService @Inject constructor(private val gson: Gson) {
 
-    var serverUrl: String = "ws://194.36.89.169:7878/drivers"
+    // Production: WSS via Hostinger DNS + Let's Encrypt SSL.
+    var serverUrl: String = "wss://api.bigbotdrivers.com/drivers"
 
     private val client = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         .readTimeout(0, TimeUnit.MILLISECONDS)
+        .writeTimeout(0, TimeUnit.MILLISECONDS)
+        // Disable the hidden default 10s callTimeout — it kills WebSocket
+        // connections after ~10 seconds even when the socket is healthy.
+        .callTimeout(0, TimeUnit.MILLISECONDS)
         // 20s ping keeps NAT/firewall/cellular connection alive and detects
         // dead sockets fast — without this, idle WebSockets become "zombie"
         // connections and rides silently disappear.
         .pingInterval(20, TimeUnit.SECONDS)
         .build()
 
-    private var webSocket: WebSocket? = null
-    private var driverPhone: String = ""
-    private var driverName: String = ""
+    @Volatile private var webSocket: WebSocket? = null
+    @Volatile private var driverPhone: String = ""
+    @Volatile private var driverName: String = ""
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     private val _connected = MutableStateFlow(false)
@@ -57,46 +62,78 @@ class WebSocketService @Inject constructor(private val gson: Gson) {
     private val seenRideIds = object : LinkedHashSet<String>() {
         override fun add(element: String): Boolean {
             val added = super.add(element)
-            if (size > 500) iterator().also { it.next(); it.remove() }
+            while (size > 500) iterator().also { it.next(); it.remove() }
             return added
         }
     }
 
     fun isConnected() = _connected.value
 
+    // Flag to suppress scheduleReconnect() when cancel() is called from
+    // inside connect(). Without this, cancel() fires onClosed → reconnect
+    // → new connect() → cancel old → onClosed → reconnect → infinite loop.
+    @Volatile private var suppressReconnect = false
+
+    // Track the CURRENT WebSocket instance so onClosed/onFailure callbacks
+    // from a stale (cancelled) WS don't trigger reconnects for an already-
+    // replaced connection.
+    @Volatile private var activeWs: WebSocket? = null
+
     fun connect(phone: String, name: String) {
+        // Idempotency: skip if already connected with same phone.
+        if (driverPhone == phone && activeWs != null && _connected.value) {
+            Log.d("WS", "connect() skipped — already connected as $phone")
+            return
+        }
         driverPhone = phone
         driverName = name
+        val encodedName = try {
+            java.net.URLEncoder.encode(name, "UTF-8")
+        } catch (_: Exception) { phone }
         val request = Request.Builder()
             .url(serverUrl)
             .header("X-Driver-Phone", phone)
-            .header("X-Driver-Name", name)
+            .header("X-Driver-Name", encodedName)
             .build()
+        // Cancel previous WS WITHOUT triggering a reconnect cycle.
+        suppressReconnect = true
         webSocket?.cancel()
-        webSocket = client.newWebSocket(request, object : WebSocketListener() {
-            override fun onOpen(webSocket: WebSocket, response: Response) {
+        suppressReconnect = false
+
+        val newWs = client.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(ws: WebSocket, response: Response) {
+                // Only update state if this is still the active WS
+                if (activeWs !== ws) return
                 _connected.value = true
                 Log.d("WS", "Connected as $phone")
-                // בקש סטטוס WhatsApp מהשרת
                 send("get_status", mapOf("phone" to phone))
+                // Flush any actions that were queued while disconnected
+                flushPendingQueue()
             }
-            override fun onMessage(webSocket: WebSocket, text: String) {
+            override fun onMessage(ws: WebSocket, text: String) {
+                if (activeWs !== ws) return
                 handleMessage(text)
             }
-            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
+                // Ignore callbacks from stale (replaced) WS instances
+                if (activeWs !== ws) return
                 _connected.value = false
                 Log.e("WS", "Failure: ${t.message}")
-                scheduleReconnect()
+                if (!suppressReconnect) scheduleReconnect()
             }
-            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+            override fun onClosed(ws: WebSocket, code: Int, reason: String) {
+                if (activeWs !== ws) return
                 _connected.value = false
+                if (!suppressReconnect) scheduleReconnect()
             }
         })
+        webSocket = newWs
+        activeWs = newWs
     }
 
     private fun scheduleReconnect() {
         scope.launch {
-            delay(500) // fast reconnect — was 3000ms which lost too many rides
+            delay(2000) // 2s backoff — 500ms was too aggressive and caused storms
             if (!_connected.value && driverPhone.isNotEmpty()) {
                 connect(driverPhone, driverName)
             }
@@ -105,9 +142,12 @@ class WebSocketService @Inject constructor(private val gson: Gson) {
 
     fun disconnect() {
         driverPhone = ""
+        suppressReconnect = true
         webSocket?.close(1000, "disconnect")
         webSocket = null
+        activeWs = null
         _connected.value = false
+        suppressReconnect = false
     }
 
     private fun handleMessage(text: String) {
@@ -142,6 +182,16 @@ class WebSocketService @Inject constructor(private val gson: Gson) {
     }
 
     fun setAutoMode(enabled: Boolean) = send("set_auto_mode", mapOf("enabled" to enabled))
+    /** Set the km-range filter on the server. Pass 0 or null to clear it. */
+    fun setKmFilter(km: Int?) {
+        val value: Any = km ?: 0
+        send("set_km_filter", mapOf("km" to value))
+    }
+    /** Set the minimum ride price filter on the server. Pass 0/null to clear. */
+    fun setMinPrice(minPrice: Int?) {
+        val value: Any = minPrice ?: 0
+        send("set_min_price", mapOf("minPrice" to value))
+    }
     fun addKeyword(keyword: String) = send("add_keyword", mapOf("keyword" to keyword))
     fun removeKeyword(keyword: String) = send("remove_keyword", mapOf("keyword" to keyword))
     fun pauseKeyword(keyword: String) = send("pause_keyword", mapOf("keyword" to keyword))
@@ -181,9 +231,34 @@ class WebSocketService @Inject constructor(private val gson: Gson) {
 
     fun setDefaultEta(minutes: Int) = send("set_default_eta", mapOf("minutes" to minutes))
 
+    // ── Pending queue: retry critical messages when WS reconnects ──
+    private data class PendingMsg(val type: String, val data: Map<String, Any>, val ts: Long = System.currentTimeMillis())
+    private val pendingQueue = java.util.concurrent.ConcurrentLinkedQueue<PendingMsg>()
+    private val CRITICAL_TYPES = setOf("ride_action", "send_message")
+
     private fun send(type: String, data: Map<String, Any>) {
         val msg = gson.toJson(mapOf("type" to type, "data" to data))
         val ok = webSocket?.send(msg) ?: false
-        if (!ok) Log.w("WS", "Send failed: $type")
+        if (!ok) {
+            Log.w("WS", "Send failed: $type — queuing for retry")
+            if (type in CRITICAL_TYPES) {
+                pendingQueue.add(PendingMsg(type, data))
+            }
+        }
+    }
+
+    /** Flush any queued critical messages after reconnect. Called from onOpen. */
+    private fun flushPendingQueue() {
+        val now = System.currentTimeMillis()
+        var msg = pendingQueue.poll()
+        while (msg != null) {
+            // Drop messages older than 2 minutes — they're stale
+            if (now - msg.ts < 2 * 60 * 1000) {
+                val json = gson.toJson(mapOf("type" to msg.type, "data" to msg.data))
+                val ok = webSocket?.send(json) ?: false
+                Log.i("WS", "Retry queued ${msg.type}: ${if (ok) "OK" else "FAILED"}")
+            }
+            msg = pendingQueue.poll()
+        }
     }
 }

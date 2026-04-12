@@ -58,6 +58,17 @@ object RideTextParser {
         "שש מקומות"    to 6,
     )
 
+    // מילים שלא מפילות את הנסיעה אבל לא יכולות להיות "שם רחוב".
+    // אם שורת מועמדת לרחוב מכילה אחת מהן → דלג לשורה הבאה.
+    private val nonStreetKeywords = listOf(
+        "פיצי מעל", "מעל", "ללא פון", "נסיעה כשרה", "אני משלם",
+        "פיי", "ביט בסיום", "פתק", "א1", "אדם 1", "2 ג",
+        "מזוודה", "1 ק", "נחת עכשיו", "בדרכונים", "בחוץ",
+        "נהג זורם", "תופס פאגש", "לפיש", "תחנות בתוספת",
+        "שקית קטנה", "כסא תינוק", "סלקל", "רכב נוח",
+        "מנהלים", "קבלה חובה", "קבלה בתוספת"
+    )
+
     // קיצורי אזורים ידועים — לא ייחשבו כשמות רחובות
     private val knownAreas = setOf(
         "בב", "תא", "ים", "פת", "שמש", "ספר", "נת", "ראשלצ", "חיפה", "אשדוד",
@@ -142,6 +153,9 @@ object RideTextParser {
                 val line = streetCandidateLines[i]
                 // לדלג על שורות עם אמוג'י קישוט של תחנה / מותג סדרן
                 if (decorativeEmojis.any { line.contains(it) }) continue
+                // לדלג על שורות עם מילים שאינן רחוב (סלקל, מזוודה וכו')
+                val lowerCandidate = line.lowercase()
+                if (nonStreetKeywords.any { lowerCandidate.contains(it.lowercase()) }) continue
                 // השורה צריכה להיות עברית בעיקר, לא כוללת אזור ידוע
                 val words = line.split(Regex("\\s+")).filter { it.isNotBlank() }
                 if (words.isEmpty() || words.size > 4) continue
@@ -189,5 +203,20 @@ object RideTextParser {
             vehicleType = vehicleHit?.first.orEmpty(),
             vehicleSeats = vehicleHit?.second?.takeIf { it > 0 }?.toString().orEmpty()
         )
+    }
+
+    // ── Delivery detection ──────────────────────────────────────────────
+    // Mirrors server-side isDeliveryRide() in utils.ts.
+
+    private val deliveryKeywords = listOf("משלוח", "משלוחים", "נחת")
+    private val deliveryTimePattern = Regex("עד\\s+(שעה|שעתיים|\\d+\\s*שעות)")
+    private val deliveryExclusion = listOf("תופס פאגש")
+
+    fun isDeliveryRide(message: String): Boolean {
+        val lower = message.lowercase()
+        if (deliveryExclusion.any { lower.contains(it.lowercase()) }) return false
+        if (deliveryKeywords.any { lower.contains(it) }) return true
+        if (deliveryTimePattern.containsMatchIn(lower)) return true
+        return false
     }
 }
