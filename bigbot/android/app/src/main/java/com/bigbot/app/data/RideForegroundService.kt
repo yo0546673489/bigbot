@@ -8,6 +8,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
 import com.bigbot.app.data.models.RideUiState
+import com.bigbot.app.util.RideTextParser
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
@@ -140,6 +141,26 @@ class RideForegroundService : Service() {
         scope.launch {
             wsService.rides.collect { ride ->
                 Log.d("RideFGS", "ride received: id=${ride.messageId} type=${ride.messageType} origin=${ride.origin} dest=${ride.destination}")
+
+                // Apply same filters as HomeViewModel so notification matches app behavior
+                val acceptDeliveries = repo.acceptDeliveries.first()
+                if (!acceptDeliveries && RideTextParser.isDeliveryRide(ride.rawText)) {
+                    Log.d("RideFGS", "Skipping delivery ride (acceptDeliveries=false)")
+                    return@collect
+                }
+                val minPriceVal = repo.minPrice.first()
+                if (minPriceVal > 0) {
+                    var ridePrice = ride.price.replace("[^0-9]".toRegex(), "").toIntOrNull() ?: 0
+                    if (ridePrice == 0 && ride.rawText.isNotEmpty()) {
+                        val m = Regex("(?:^|\\s)(\\d{2,4})\\s*[₪ש\"ח](?:\\s|$)", RegexOption.MULTILINE).find(ride.rawText)
+                        ridePrice = m?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                    }
+                    if (ridePrice in 1 until minPriceVal) {
+                        Log.d("RideFGS", "Skipping ride below minPrice ($ridePrice < $minPriceVal)")
+                        return@collect
+                    }
+                }
+
                 try {
                     // Cache the full ride so button presses can rebuild the
                     // notification without losing origin/destination/rawText.
