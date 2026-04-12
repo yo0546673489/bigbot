@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AreasController } from './areas.controller';
+import { AreasPublicController } from './areas-public.controller';
 import { AreasService } from './areas.service';
 import { AreaShortcut, AreaShortcutSchema, RelatedArea, RelatedAreaSchema, SupportArea, SupportAreaSchema } from './areas.schema';
 
@@ -12,7 +13,7 @@ import { AreaShortcut, AreaShortcutSchema, RelatedArea, RelatedAreaSchema, Suppo
       { name: RelatedArea.name, schema: RelatedAreaSchema },
     ]),
   ],
-  controllers: [AreasController],
+  controllers: [AreasController, AreasPublicController],
   providers: [AreasService],
   exports: [AreasService],
 })

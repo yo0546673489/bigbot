@@ -69,6 +69,12 @@ class HomeViewModel @Inject constructor(
     private var ridesLoaded = false
 
     init {
+        // Load areas from cache immediately, then refresh from server
+        viewModelScope.launch {
+            loadAreasFromCache()
+            refreshAreasFromServer()
+        }
+
         // Load persisted rides + sent-buttons before subscribing to live updates
         viewModelScope.launch {
             try {
@@ -507,5 +513,57 @@ class HomeViewModel @Inject constructor(
 
     fun dismissEta() {
         _etaRequest.value = null
+    }
+
+    // ── Areas data (dynamic knownAreas from server) ─────────────────────
+
+    private suspend fun loadAreasFromCache() {
+        try {
+            val shortcutsJson = repo.areasShortcutsJson.first()
+            val supportJson = repo.areasSupportJson.first()
+            if (shortcutsJson.isNotBlank() || supportJson.isNotBlank()) {
+                val shortcuts = if (shortcutsJson.isNotBlank()) {
+                    val type = object : com.google.gson.reflect.TypeToken<List<Map<String, String>>>() {}.type
+                    val list: List<Map<String, String>> = gson.fromJson(shortcutsJson, type) ?: emptyList()
+                    list.flatMap { listOfNotNull(it["shortName"], it["fullName"]) }
+                } else emptyList()
+                val support = if (supportJson.isNotBlank()) {
+                    val type = object : com.google.gson.reflect.TypeToken<List<String>>() {}.type
+                    gson.fromJson<List<String>>(supportJson, type) ?: emptyList()
+                } else emptyList()
+                RideTextParser.updateKnownAreas(shortcuts, support)
+            }
+        } catch (_: Exception) {}
+    }
+
+    private fun refreshAreasFromServer() {
+        api.fetchAreas { ok, body ->
+            if (!ok || body.isBlank()) return@fetchAreas
+            viewModelScope.launch {
+                try {
+                    val obj = com.google.gson.JsonParser.parseString(body).asJsonObject
+                    val shortcutsArr = obj.getAsJsonArray("shortcuts")
+                    val supportArr = obj.getAsJsonArray("supportAreas")
+
+                    val shortcutsJson = shortcutsArr?.toString() ?: "[]"
+                    val supportJson = supportArr?.toString() ?: "[]"
+
+                    repo.saveAreasShortcuts(shortcutsJson)
+                    repo.saveAreasSupport(supportJson)
+                    repo.saveAreasLastSync(System.currentTimeMillis())
+
+                    val shortcuts = mutableListOf<String>()
+                    shortcutsArr?.forEach { el ->
+                        val o = el.asJsonObject
+                        o.get("shortName")?.asString?.let { shortcuts.add(it) }
+                        o.get("fullName")?.asString?.let { shortcuts.add(it) }
+                    }
+                    val support = mutableListOf<String>()
+                    supportArr?.forEach { support.add(it.asString) }
+
+                    RideTextParser.updateKnownAreas(shortcuts, support)
+                } catch (_: Exception) {}
+            }
+        }
     }
 }

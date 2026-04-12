@@ -101,4 +101,19 @@ class ApiService @Inject constructor(private val gson: Gson) {
     fun removeKeyword(phone: String, keyword: String, onResult: (Boolean) -> Unit) {
         delete("/api/driver/keyword", mapOf("phone" to phone, "keyword" to keyword), onResult)
     }
+
+    /** Fetch all areas data (shortcuts, support areas, neighborhoods) from the public endpoint. */
+    fun fetchAreas(onResult: (Boolean, String) -> Unit) {
+        val req = Request.Builder().url("$baseUrl/api/areas/all").get().build()
+        client.newCall(req).enqueue(object : Callback {
+            override fun onFailure(call: Call, e: IOException) {
+                Log.e("API", "fetchAreas failed: ${e.message}")
+                onResult(false, "")
+            }
+            override fun onResponse(call: Call, response: Response) {
+                val body = response.body?.string() ?: ""
+                onResult(response.isSuccessful, body)
+            }
+        })
+    }
 }

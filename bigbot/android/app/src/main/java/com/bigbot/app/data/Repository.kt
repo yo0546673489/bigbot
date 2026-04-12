@@ -50,6 +50,9 @@ class Repository @Inject constructor(
         val KEY_ETA_ENABLED = booleanPreferencesKey("eta_enabled")
         val KEY_MIN_PRICE = intPreferencesKey("min_price")
         val KEY_QUICK_REPLIES = stringPreferencesKey("quick_replies")
+        val KEY_AREAS_SHORTCUTS = stringPreferencesKey("areas_shortcuts_json")
+        val KEY_AREAS_SUPPORT = stringPreferencesKey("areas_support_json")
+        val KEY_AREAS_LAST_SYNC = longPreferencesKey("areas_last_sync")
     }
 
     val chatConversationsJson: Flow<String> = context.dataStore.data.map { it[KEY_CHAT_CONVERSATIONS] ?: "" }
@@ -106,6 +109,9 @@ class Repository @Inject constructor(
     val etaEnabled: Flow<Boolean> = context.dataStore.data.map { it[KEY_ETA_ENABLED] ?: true }
     val minPrice: Flow<Int> = context.dataStore.data.map { it[KEY_MIN_PRICE] ?: 0 }
     val quickReplies: Flow<String> = context.dataStore.data.map { it[KEY_QUICK_REPLIES] ?: "אני בדרך|||כמה דקות אני שם|||תודה" }
+    val areasShortcutsJson: Flow<String> = context.dataStore.data.map { it[KEY_AREAS_SHORTCUTS] ?: "" }
+    val areasSupportJson: Flow<String> = context.dataStore.data.map { it[KEY_AREAS_SUPPORT] ?: "" }
+    val areasLastSync: Flow<Long> = context.dataStore.data.map { it[KEY_AREAS_LAST_SYNC] ?: 0L }
 
     suspend fun saveDriverPhone(v: String) = context.dataStore.edit { it[KEY_DRIVER_PHONE] = v }
     suspend fun saveDriverName(v: String) = context.dataStore.edit { it[KEY_DRIVER_NAME] = v }
@@ -138,4 +144,7 @@ class Repository @Inject constructor(
     suspend fun saveEtaEnabled(v: Boolean) = context.dataStore.edit { it[KEY_ETA_ENABLED] = v }
     suspend fun saveMinPrice(v: Int) = context.dataStore.edit { it[KEY_MIN_PRICE] = v }
     suspend fun saveQuickReplies(v: String) = context.dataStore.edit { it[KEY_QUICK_REPLIES] = v }
+    suspend fun saveAreasShortcuts(json: String) = context.dataStore.edit { it[KEY_AREAS_SHORTCUTS] = json }
+    suspend fun saveAreasSupport(json: String) = context.dataStore.edit { it[KEY_AREAS_SUPPORT] = json }
+    suspend fun saveAreasLastSync(ts: Long) = context.dataStore.edit { it[KEY_AREAS_LAST_SYNC] = ts }
 }
