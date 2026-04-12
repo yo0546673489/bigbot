@@ -25,32 +25,32 @@ export default function DashboardClient() {
   }, []);
 
   const cards = [
-    { title: 'Drivers', value: stats?.drivers ?? 0, icon: <FaUsers className="h-6 w-6 text-blue-600" /> },
-    { title: 'Payments', value: stats?.payments ?? 0, icon: <FaMoneyBillWave className="h-6 w-6 text-green-600" /> },
-    { title: 'Invited Drivers', value: stats?.invitedDrivers ?? 0, icon: <FaUserPlus className="h-6 w-6 text-emerald-600" /> },
-    { title: 'WhatsApp Groups', value: stats?.groups ?? 0, icon: <FaWhatsapp className="h-6 w-6 text-[#25D366]" /> },
+    { title: 'נהגים', value: stats?.drivers ?? 0, icon: <FaUsers className="h-6 w-6 text-[#2E7D32]" /> },
+    { title: 'תשלומים', value: stats?.payments ?? 0, icon: <FaMoneyBillWave className="h-6 w-6 text-[#2E7D32]" /> },
+    { title: 'הזמנות', value: stats?.invitedDrivers ?? 0, icon: <FaUserPlus className="h-6 w-6 text-[#2E7D32]" /> },
+    { title: 'קבוצות וואטסאפ', value: stats?.groups ?? 0, icon: <FaWhatsapp className="h-6 w-6 text-[#25D366]" /> },
   ];
 
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Dashboard
+        <div className="bg-white shadow rounded-xl p-6">
+          <h2 className="text-2xl font-bold text-[#1B5E20]">
+            דשבורד
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Overview of your system.
+            מבט-על על המערכת
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {cards.map((card) => (
-            <div key={card.title} className="bg-white shadow rounded-lg p-6 flex items-center justify-between">
+            <div key={card.title} className="bg-white shadow rounded-xl p-6 flex items-center justify-between">
               <div>
                 <div className="text-sm text-gray-500">{card.title}</div>
                 <div className="mt-2 text-3xl font-semibold text-gray-900">{loading ? '...' : card.value}</div>
               </div>
-              <div className="p-3 bg-gray-100 rounded-full">
+              <div className="p-3 bg-[#E8F5E9] rounded-full">
                 {card.icon}
               </div>
             </div>
@@ -59,4 +59,4 @@ export default function DashboardClient() {
       </div>
     </MainLayout>
   );
-} 
+}

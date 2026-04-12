@@ -28,8 +28,8 @@ export default function DeleteConfirmationModal({
   description,
   itemName,
   itemIdentifier,
-  confirmButtonText = "Delete",
-  cancelButtonText = "Cancel",
+  confirmButtonText = "מחק",
+  cancelButtonText = "ביטול",
 }: DeleteConfirmationModalProps) {
   const handleConfirm = () => {
     onConfirm();
@@ -43,7 +43,7 @@ export default function DeleteConfirmationModal({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             {description} {itemName ? <strong>{itemName}</strong> : ''} ({itemIdentifier})? 
-            This action cannot be undone.
+            פעולה זו אינה ניתנת לביטול.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>

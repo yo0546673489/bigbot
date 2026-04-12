@@ -9,8 +9,8 @@ import toast from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z.string().email('כתובת אימייל לא תקינה'),
+  password: z.string().min(6, 'סיסמה חייבת להכיל לפחות 6 תווים'),
 });
 
 type LoginFormData = z.infer<typeof loginSchema>;
@@ -42,7 +42,7 @@ export default function LoginForm() {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data);
-      toast.success('Logged in successfully');
+      toast.success('התחברת בהצלחה');
     } catch (error) {
       // Error is handled in the useEffect above
     }
@@ -52,7 +52,7 @@ export default function LoginForm() {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-          Email address
+          אימייל
         </label>
         <div className="mt-1">
           <input
@@ -60,7 +60,7 @@ export default function LoginForm() {
             type="email"
             autoComplete="email"
             {...register('email')}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base h-11 px-4 py-2 text-black"
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#2E7D32] focus:ring-[#2E7D32] text-base h-11 px-4 py-2 text-black"
           />
           {errors.email && (
             <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
@@ -70,7 +70,7 @@ export default function LoginForm() {
 
       <div>
         <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-          Password
+          סיסמה
         </label>
         <div className="mt-1">
           <input
@@ -78,7 +78,7 @@ export default function LoginForm() {
             type="password"
             autoComplete="current-password"
             {...register('password')}
-            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-base h-11 px-4 py-2 text-black"
+            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-[#2E7D32] focus:ring-[#2E7D32] text-base h-11 px-4 py-2 text-black"
           />
           {errors.password && (
             <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
@@ -90,11 +90,11 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+          className="flex w-full justify-center rounded-md border border-transparent bg-[#2E7D32] py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-[#1B5E20] focus:outline-none focus:ring-2 focus:ring-[#2E7D32] focus:ring-offset-2 disabled:opacity-50"
         >
-          {loading ? 'Signing in...' : 'Sign in'}
+          {loading ? 'מתחבר...' : 'התחבר'}
         </button>
       </div>
     </form>
   );
-} 
+}

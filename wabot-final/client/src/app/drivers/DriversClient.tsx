@@ -161,13 +161,13 @@ export function DriversClient() {
   const handleApproveChange = (phone: string) => {
     sendApprovalMessage(phone)
       .then(() => {
-        toast.success("Driver status updated successfully");
+        toast.success("סטטוס הנהג עודכן בהצלחה");
       })
       .catch((error: unknown) => {
         if (error && typeof error === 'object' && 'message' in error) {
-          toast.error((error as { message: string }).message || "Failed to update driver status");
+          toast.error((error as { message: string }).message || "שגיאה בעדכון סטטוס");
         } else {
-          toast.error("Failed to update driver status");
+          toast.error("שגיאה בעדכון סטטוס");
         }
       });
   };
@@ -189,13 +189,13 @@ export function DriversClient() {
   const handleDeleteDriver = (phone: string) => {
     deleteDriver(phone)
       .then(() => {
-        toast.success("Driver deleted successfully");
+        toast.success("המשתמש נמחק בהצלחה");
       })
       .catch((error: unknown) => {
         if (error && typeof error === 'object' && 'message' in error) {
-          toast.error((error as { message: string }).message || "Failed to delete driver");
+          toast.error((error as { message: string }).message || "שגיאה במחיקת משתמש");
         } else {
-          toast.error("Failed to delete driver");
+          toast.error("שגיאה במחיקת משתמש");
         }
       });
   };
@@ -203,13 +203,13 @@ export function DriversClient() {
   const handleIgnorePaymentChange = (phone: string, value: boolean) => {
     updateDriverIgnorePayment(phone, value)
       .then(() => {
-        toast.success('Ignore Payment updated successfully');
+        toast.success('סטטוס תשלום עודכן בהצלחה');
       })
       .catch((error: unknown) => {
         if (error && typeof error === 'object' && 'message' in error) {
-          toast.error((error as { message: string }).message || 'Failed to update Ignore Payment');
+          toast.error((error as { message: string }).message || 'שגיאה בעדכון סטטוס תשלום');
         } else {
-          toast.error('Failed to update Ignore Payment');
+          toast.error('שגיאה בעדכון סטטוס תשלום');
         }
       });
   };
@@ -219,15 +219,15 @@ export function DriversClient() {
     try {
       const res = await sendWhatsappPairingCode(phone);
       if (res.success) {
-        toast.success('Pairing code sent to this phone!');
+        toast.success('קוד חיבור נשלח בהצלחה!');
       } else {
-        toast.error(res.message || 'Failed to send pairing code');
+        toast.error(res.message || 'שגיאה בשליחת קוד חיבור');
       }
     } catch (e: unknown) {
       if (e && typeof e === 'object' && 'message' in e) {
-        toast.error((e as { message: string }).message || 'Failed to send pairing code');
+        toast.error((e as { message: string }).message || 'שגיאה בשליחת קוד חיבור');
       } else {
-        toast.error('Failed to send pairing code');
+        toast.error('שגיאה בשליחת קוד חיבור');
       }
     } finally {
       setPairingLoading((prev) => ({ ...prev, [phone]: false }));
@@ -242,31 +242,31 @@ export function DriversClient() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-900">Drivers({total})</h2>
+        <div className="bg-white shadow rounded-xl p-6">
+          <h2 className="text-2xl font-bold text-gray-900">משתמשים ({total})</h2>
           <p className="mt-1 text-sm text-gray-500">
-            Manage your drivers and their status.
+            ניהול משתמשים וסטטוס
           </p>
         </div>
 
-        <div className="bg-white shadow rounded-lg p-6">
+        <div className="bg-white shadow rounded-xl p-6">
           {/* Search and filters */}
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-5 gap-5">
               <input
                 type="text"
-                placeholder="Search drivers..."
+                placeholder="חפש משתמש..."
                 className="w-full px-4 py-2 border rounded-md text-gray-900"
                 onChange={(e) => handleSearch(e.target.value)}
               />
               {/* Category Filter */}
               <div className="relative">
                 <select
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer pr-10"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#2E7D32] focus:border-[#2E7D32] appearance-none cursor-pointer pr-10"
                   value={filters.category}
                   onChange={(e) => handleFilterChange('category', e.target.value)}
                 >
-                  <option value="">All Categories</option>
+                  <option value="">כל הקטגוריות</option>
                   {CATEGORY_BUTTONS_IDS.map((category) => (
                     <option key={category} value={category}>
                       {category
@@ -283,11 +283,11 @@ export function DriversClient() {
               {/* Clothing Filter */}
               <div className="relative">
                 <select
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer pr-10"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#2E7D32] focus:border-[#2E7D32] appearance-none cursor-pointer pr-10"
                   value={filters.clothing}
                   onChange={(e) => handleFilterChange('clothing', e.target.value)}
                 >
-                  <option value="">All Clothing Types</option>
+                  <option value="">כל סוגי הלבוש</option>
                   {CLOTHING_BUTTONS_IDS.map((clothing) => (
                     <option key={clothing} value={clothing}>
                       {clothing
@@ -304,13 +304,13 @@ export function DriversClient() {
               {/* Approval Status Filter */}
               <div className="relative">
                 <select
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none cursor-pointer pr-10"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#2E7D32] focus:border-[#2E7D32] appearance-none cursor-pointer pr-10"
                   value={filters.isApproved}
                   onChange={(e) => handleFilterChange('isApproved', e.target.value)}
                 >
-                  <option value="">All Status</option>
-                  <option value="true">Approved</option>
-                  <option value="false">Pending</option>
+                  <option value="">כל הסטטוסים</option>
+                  <option value="true">מאושר</option>
+                  <option value="false">ממתין</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                   <IoChevronDown className="h-4 w-4" />
@@ -320,12 +320,12 @@ export function DriversClient() {
                 <button
                   onClick={() => setIsSendNotifyModalOpen(true)}
                   className="flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 float-right"
-                  title="Send Notify"
+                  title="שלח הודעה"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
-                  <span className="ml-2">Send Notify</span>
+                  <span className="ml-2">שלח הודעה</span>
                 </button>
               </div>
             </div>
@@ -340,20 +340,20 @@ export function DriversClient() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    שם
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Phone
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    טלפון
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vehicle
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    רכב
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    סטטוס
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    פעולות
                   </th>
                 </tr>
               </thead>
@@ -361,13 +361,13 @@ export function DriversClient() {
                 {loading && page === 1 ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                      Loading...
+                      טוען...
                     </td>
                   </tr>
                 ) : !drivers.length ? (
                   <tr>
                     <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                      No drivers found
+                      לא נמצאו משתמשים
                     </td>
                   </tr>
                 ) : (
@@ -377,7 +377,7 @@ export function DriversClient() {
                         <div className="text-sm font-medium text-gray-900 flex items-center">
                           <span
                             className='pr-2'
-                            title={whatsappStatus[driver.phone] ? 'Connected to WhatsApp' : 'Not connected to WhatsApp'}
+                            title={whatsappStatus[driver.phone] ? 'מחובר לוואטסאפ' : 'לא מחובר לוואטסאפ'}
                             style={{ color: whatsappStatus[driver.phone] ? 'green' : 'gray', fontSize: 23 }}
                           >
                             ●
@@ -392,12 +392,12 @@ export function DriversClient() {
                           </div>
                           {!whatsappStatus[driver.phone] && (
                             <button
-                              className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded hover:bg-blue-200 disabled:opacity-50"
+                              className="ml-2 px-2 py-1 text-xs bg-[#E8F5E9] text-[#2E7D32] rounded hover:bg-green-200 disabled:opacity-50"
                               disabled={pairingLoading[driver.phone]}
                               onClick={() => handleSendPairingCode(driver.phone)}
-                              title="Send WhatsApp Pairing Code"
+                              title="שלח קוד חיבור"
                             >
-                              {pairingLoading[driver.phone] ? 'Sending...' : 'Send Pair Code'}
+                              {pairingLoading[driver.phone] ? 'שולח...' : 'שלח קוד חיבור'}
                             </button>
                           )}
                         </div>
@@ -412,7 +412,7 @@ export function DriversClient() {
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           driver.isApproved ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                         }`}>
-                          {driver.isApproved ? 'Approved' : 'Pending'}
+                          {driver.isApproved ? 'מאושר' : 'ממתין'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -425,13 +425,13 @@ export function DriversClient() {
                                 : 'bg-green-100 text-green-800 hover:bg-green-200'
                             }`}
                           >
-                            {driver.isApproved ? 'Reject' : 'Approve'}
+                            {driver.isApproved ? 'דחה' : 'אשר'}
                           </button>
                           {/* Edit driver */}
                           <button
                             onClick={() => { setDriverToEdit(driver); setIsEditModalOpen(true); }}
-                            className="p-1 text-blue-400 hover:text-blue-600"
-                            title="Edit driver"
+                            className="p-1 text-[#2E7D32] hover:text-[#1B5E20]"
+                            title="ערוך"
                           >
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -440,7 +440,7 @@ export function DriversClient() {
                           <button
                             onClick={() => handleOpenMessageModal(driver)}
                             className="p-1 text-gray-400 hover:text-gray-500"
-                            title="Send message"
+                            title="שלח הודעה"
                           >
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
@@ -453,7 +453,7 @@ export function DriversClient() {
                               setIsDeleteModalOpen(true);
                             }}
                             className="p-1 text-gray-400 hover:text-gray-500"
-                            title="Delete driver"
+                            title="מחק"
                           >
                             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -461,7 +461,7 @@ export function DriversClient() {
                           </button>
                           <label
                             className="inline-flex items-center cursor-pointer"
-                            title={driver.ignorePayment ? 'Payment Ignored' : 'Payment Not Ignored'}
+                            title={driver.ignorePayment ? 'תשלום מבוטל' : 'תשלום פעיל'}
                           >
                             <input
                               type="checkbox"
@@ -470,7 +470,7 @@ export function DriversClient() {
                               onChange={e => handleIgnorePaymentChange(driver.phone, e.target.checked)}
                               id={`ignore-payment-switch-${driver.phone}`}
                             />
-                            <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600 dark:peer-checked:bg-blue-600"></div>
+                            <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 dark:peer-focus:ring-green-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-[#2E7D32] dark:peer-checked:bg-[#2E7D32]"></div>
                           </label>
                         </div>
                       </td>
@@ -480,7 +480,7 @@ export function DriversClient() {
                 {isFetchingMore && (
                   <tr>
                     <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                      Loading more...
+                      טוען עוד...
                     </td>
                   </tr>
                 )}
@@ -496,7 +496,7 @@ export function DriversClient() {
           onClose={() => { setIsEditModalOpen(false); setDriverToEdit(null); }}
           onSave={async (phone, data) => {
             await updateDriverFull(phone, data);
-            toast.success('Driver updated successfully');
+            toast.success('המשתמש עודכן בהצלחה');
           }}
         />
 
@@ -523,8 +523,8 @@ export function DriversClient() {
               setDriverToDelete(null);
               setIsDeleteModalOpen(false);
             }}
-            title="Delete Driver"
-            description="Are you sure you want to delete"
+            title="מחיקת משתמש"
+            description="האם אתה בטוח שברצונך למחוק"
             itemName={driverToDelete.name}
             itemIdentifier={driverToDelete.phone}
           />
@@ -534,7 +534,7 @@ export function DriversClient() {
           <MessageModal
             isOpen={isSendNotifyModalOpen}
             onClose={handleCloseSendNotifyModal}
-            driverName={'All drivers'}
+            driverName={'כל המשתמשים'}
           />
         )}
       </div>

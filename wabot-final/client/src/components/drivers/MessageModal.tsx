@@ -20,18 +20,18 @@ export default function MessageModal({ isOpen, onClose, driverPhone, driverName 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) {
-      toast.error('Please enter a message');
+      toast.error('נא להזין הודעה');
       return;
     }
 
     try {
       setIsSubmitting(true);
       await sendMessage(driverPhone || 'all', message.trim());
-      toast.success('Message sent successfully');
+      toast.success('ההודעה נשלחה בהצלחה');
       setMessage('');
       onClose();
     } catch (error) {
-      toast.error('Failed to send message');
+      toast.error('שגיאה בשליחת הודעה');
       console.error('Send message error:', error);
     } finally {
       setIsSubmitting(false);
@@ -43,7 +43,7 @@ export default function MessageModal({ isOpen, onClose, driverPhone, driverName 
       <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-gray-900">
-            Send Message to {driverName || driverPhone}
+            שליחת הודעה ל{driverName || driverPhone}
           </h3>
           <button
             onClick={onClose}
@@ -58,15 +58,15 @@ export default function MessageModal({ isOpen, onClose, driverPhone, driverName 
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-              Message
+              הודעה
             </label>
             <textarea
               id="message"
               rows={4}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
-              placeholder="Enter your message..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#2E7D32] focus:border-[#2E7D32] text-gray-900"
+              placeholder="הזן את ההודעה..."
             />
           </div>
 
@@ -76,14 +76,14 @@ export default function MessageModal({ isOpen, onClose, driverPhone, driverName 
               onClick={onClose}
               className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
             >
-              Cancel
+              ביטול
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#2E7D32] hover:bg-[#1B5E20] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2E7D32] disabled:opacity-50 transition-colors"
             >
-              {isSubmitting ? 'Sending...' : 'Send Message'}
+              {isSubmitting ? 'שולח...' : 'שלח הודעה'}
             </button>
           </div>
         </form>

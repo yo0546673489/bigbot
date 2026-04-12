@@ -32,7 +32,7 @@ export default function PhonesBulkModal({ isOpen, onClose, onSubmit }: PhonesBul
     <div className="fixed inset-0 bg-gray-500/30 backdrop-blur-sm z-50 flex items-center justify-center">
       <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">Add Multiple Phones</h3>
+          <h3 className="text-lg font-medium text-gray-900">הוספת מספרים</h3>
           <button
             onClick={onClose}
             className="text-gray-400 hover:text-gray-500 transition-colors"
@@ -45,7 +45,7 @@ export default function PhonesBulkModal({ isOpen, onClose, onSubmit }: PhonesBul
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="phones" className="block text-sm font-medium text-gray-700 mb-1">
-              Enter phone numbers separated by commas
+              הזן מספרי טלפון מופרדים בפסיקים
             </label>
             <textarea
               id="phones"
@@ -53,7 +53,7 @@ export default function PhonesBulkModal({ isOpen, onClose, onSubmit }: PhonesBul
               rows={4}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="e.g. 972501234567, 972507654321, ..."
+              placeholder="לדוגמה: 972501234567, 972507654321, ..."
               autoFocus
             />
           </div>
@@ -64,14 +64,14 @@ export default function PhonesBulkModal({ isOpen, onClose, onSubmit }: PhonesBul
               className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
               disabled={isSubmitting}
             >
-              Cancel
+              ביטול
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded bg-blue-700 text-white hover:bg-blue-800 disabled:opacity-50"
+              className="px-4 py-2 rounded bg-[#2E7D32] text-white hover:bg-[#1B5E20] disabled:opacity-50"
               disabled={isSubmitting}
             >
-              {isSubmitting ? 'Adding...' : 'Add Phones'}
+              {isSubmitting ? 'מוסיף...' : 'הוסף טלפונים'}
             </button>
           </div>
         </form>

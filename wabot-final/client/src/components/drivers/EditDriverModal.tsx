@@ -40,7 +40,7 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">עריכת נהג — {driver.phone}</h3>
+        <h3 className="text-lg font-bold text-gray-900 mb-4">עריכת משתמש — {driver.phone}</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">שם</label>
@@ -48,7 +48,7 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2E7D32]"
               placeholder="שם הנהג"
             />
           </div>
@@ -58,7 +58,7 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
               type="text"
               value={vehicle}
               onChange={e => setVehicle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2E7D32]"
               placeholder="סוג רכב"
             />
           </div>
@@ -68,7 +68,7 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
               type="text"
               value={clothing}
               onChange={e => setClothing(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2E7D32]"
               placeholder="לבוש"
             />
           </div>
@@ -76,7 +76,7 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="flex-1 py-2 bg-[#2E7D32] text-white rounded-lg font-medium hover:bg-[#1B5E20] disabled:opacity-50"
             >
               {saving ? 'שומר...' : 'שמור'}
             </button>
