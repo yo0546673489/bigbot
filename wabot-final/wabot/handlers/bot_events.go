@@ -93,21 +93,11 @@ func (s *WhatsAppHandlers) handleMessage(msg *events.Message, botPhone string) {
 		return
 	}
 
-	// Global deduplication — only ONE forwarding per message regardless of
-	// how many users are members of the group. The server-side matching
-	// iterates over every user who's a member of the group and checks their
-	// keywords individually, so duplicate forwards are wasteful.
-	if s.redisService != nil {
-		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-		defer cancel()
-
-		dedupeKey := "wa:msg:seen:" + msg.Info.ID
-		acquired, err := s.redisService.GetClient().SetNX(ctx, dedupeKey, botPhone, 30*time.Second).Result()
-		if err == nil && !acquired {
-			s.bot.GetLogger().Debugf("Message %s already forwarded by another user, skipping (user: %s)", msg.Info.ID, botPhone)
-			return
-		}
-	}
+	// Per-user forwarding: every connected user forwards every group message
+	// to the server. The server handles per-driver dedup internally
+	// (wa:regular:dedupe:{phone}:{groupId}:{messageId}).
+	// No global dedup here — each user's session must forward independently
+	// so the server can match against that user's keywords.
 
 	// Check if message timestamp is older than 20 seconds
 	cutoffTime := time.Now().Add(-20 * time.Second)
