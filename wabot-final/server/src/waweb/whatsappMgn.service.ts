@@ -1666,7 +1666,7 @@ ${fixBoldMultiLine(formattedMessage)}`;
 
     // Debug: log what we're processing
     const bodyPreview = (payload.body || '').slice(0, 60).replace(/\n/g, ' ');
-    this.logger.log(`[MSG-PROC] phone=${phone} group=${payload.groupId?.slice(0,15)} age=${ageMs}ms body="${bodyPreview}" participants=${payload.participants?.length || 0}`);
+    this.logger.log(`[MSG-PROC] phone=${phone} group=${payload.groupId?.slice(0,15)} age=${ageMs}ms type=${payload.type || '?'} body="${bodyPreview}" participants=${payload.participants?.length || 0}`);
 
     // Process the forwarding user's own driver (the user whose WhatsApp
     // session caught the message and forwarded it to us).
