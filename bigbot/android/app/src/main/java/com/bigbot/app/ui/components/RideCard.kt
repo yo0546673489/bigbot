@@ -247,7 +247,9 @@ fun RideCard(
                                     parsed.street != ride.origin &&
                                     parsed.street != ride.destination &&
                                     parsed.street != fullCityName(ride.origin) &&
-                                    parsed.street != fullCityName(ride.destination)
+                                    parsed.street != fullCityName(ride.destination) &&
+                                    parsed.street.trim() != "פנימי" &&
+                                    parsed.street.trim() != "פ"
                                 if (isRealStreet) {
                                     val addrText = buildString {
                                         append("\uD83D\uDCCD ")
