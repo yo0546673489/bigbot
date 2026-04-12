@@ -7,7 +7,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import DeleteConfirmationModal from "@/components/common/DeleteConfirmationModal";
 import toast from 'react-hot-toast';
 import debounce from 'lodash/debounce';
-import { IoChevronDown } from "react-icons/io5";
+import { Search, Trash2, Check } from 'lucide-react';
 import moment from 'moment-timezone';
 
 export function PaymentsClient() {
@@ -164,6 +164,15 @@ export function PaymentsClient() {
     }
   };
 
+  const getStatusLabel = (status: Payment['status']) => {
+    switch (status) {
+      case 'paid': return 'שולם';
+      case 'pending': return 'ממתין';
+      case 'failed': return 'נכשל';
+      default: return status;
+    }
+  };
+
   const getMethodColor = (method: Payment['method']) => {
     switch (method) {
       case 'payBox':
@@ -175,6 +184,14 @@ export function PaymentsClient() {
     }
   };
 
+  const getMethodLabel = (method: Payment['method']) => {
+    switch (method) {
+      case 'payBox': return 'PayBox';
+      case 'creditCard': return 'כרטיס אשראי';
+      default: return method;
+    }
+  };
+
   if (error) {
     toast.error(error);
   }
@@ -182,74 +199,62 @@ export function PaymentsClient() {
   return (
     <MainLayout>
       <div className="space-y-6">
-        <div className="bg-white shadow rounded-xl p-6">
+        {/* Page Header */}
+        <div className="bb-page-header">
           <h2 className="text-2xl font-bold text-gray-900">תשלומים ({total})</h2>
-          <p className="mt-1 text-sm text-gray-500">
-            ניהול תשלומים
-          </p>
+          <p className="mt-1 text-sm text-gray-500">ניהול תשלומים</p>
         </div>
 
-        <div className="bg-white shadow rounded-xl p-6">
+        <div className="bb-card">
           {/* Search and filters */}
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-              <input
-                type="text"
-                placeholder="חפש תשלום..."
-                className="w-full px-4 py-2 border rounded-md text-gray-900"
-                onChange={(e) => handleSearch(e.target.value)}
-              />
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="חפש תשלום..."
+                  className="bb-search pr-10"
+                  onChange={(e) => handleSearch(e.target.value)}
+                />
+              </div>
 
               {/* Status Filter */}
-              <div className="relative">
-                <select
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#2E7D32] focus:border-[#2E7D32] appearance-none cursor-pointer pr-10"
-                  value={filters.status}
-                  onChange={(e) => handleFilterChange('status', e.target.value)}
-                >
-                  <option value="">כל הסטטוסים</option>
-                  <option value="paid">שולם</option>
-                  <option value="pending">ממתין</option>
-                  <option value="failed">נכשל</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <IoChevronDown className="h-4 w-4" />
-                </div>
-              </div>
+              <select
+                className="bb-search"
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+              >
+                <option value="">כל הסטטוסים</option>
+                <option value="paid">שולם</option>
+                <option value="pending">ממתין</option>
+                <option value="failed">נכשל</option>
+              </select>
 
               {/* Method Filter */}
-              <div className="relative">
-                <select
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#2E7D32] focus:border-[#2E7D32] appearance-none cursor-pointer pr-10"
-                  value={filters.method}
-                  onChange={(e) => handleFilterChange('method', e.target.value)}
-                >
-                  <option value="">כל השיטות</option>
-                  <option value="creditCard">כרטיס אשראי</option>
-                  <option value="bit">Bit</option>
-                  <option value="payBox">PayBox</option>
-                  <option value="bankTransfer">העברה בנקאית</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <IoChevronDown className="h-4 w-4" />
-                </div>
-              </div>
+              <select
+                className="bb-search"
+                value={filters.method}
+                onChange={(e) => handleFilterChange('method', e.target.value)}
+              >
+                <option value="">כל השיטות</option>
+                <option value="creditCard">כרטיס אשראי</option>
+                <option value="bit">Bit</option>
+                <option value="payBox">PayBox</option>
+                <option value="bankTransfer">העברה בנקאית</option>
+              </select>
 
               {/* Recurring Filter */}
-              <div className="relative">
-                <select
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-[#2E7D32] focus:border-[#2E7D32] appearance-none cursor-pointer pr-10"
-                  value={filters.isRecurring}
-                  onChange={(e) => handleFilterChange('isRecurring', e.target.value)}
-                >
-                  <option value="">כל הסוגים</option>
-                  <option value="true">מנוי</option>
-                  <option value="false">חד פעמי</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <IoChevronDown className="h-4 w-4" />
-                </div>
-              </div>
+              <select
+                className="bb-search"
+                value={filters.isRecurring}
+                onChange={(e) => handleFilterChange('isRecurring', e.target.value)}
+              >
+                <option value="">כל הסוגים</option>
+                <option value="true">מנוי</option>
+                <option value="false">חד פעמי</option>
+              </select>
             </div>
           </div>
 
@@ -259,42 +264,28 @@ export function PaymentsClient() {
             ref={scrollContainerRef}
             style={{ overflowY: 'auto', maxHeight: tableMaxHeight }}
           >
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="bb-table">
+              <thead>
                 <tr>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    שם/טלפון
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    מוצר
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    סכום
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    סטטוס
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    שיטה
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    תאריך
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    פעולות
-                  </th>
+                  <th className="text-right">שם/טלפון</th>
+                  <th className="text-right">מוצר</th>
+                  <th className="text-right">סכום</th>
+                  <th className="text-right">סטטוס</th>
+                  <th className="text-right">שיטה</th>
+                  <th className="text-right">תאריך</th>
+                  <th className="text-right">פעולות</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody>
                 {loading && page === 1 ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                       טוען...
                     </td>
                   </tr>
                 ) : !payments.length ? (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                       לא נמצאו תשלומים
                     </td>
                   </tr>
@@ -319,13 +310,13 @@ export function PaymentsClient() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(payment.status)}`}>
-                          {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                        <span className={`bb-badge ${getStatusColor(payment.status)}`}>
+                          {getStatusLabel(payment.status)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getMethodColor(payment.method)}`}>
-                          {payment.method === 'payBox' ? 'PayBox' : 'Credit Card'}
+                        <span className={`bb-badge ${getMethodColor(payment.method)}`}>
+                          {getMethodLabel(payment.method)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -338,19 +329,21 @@ export function PaymentsClient() {
                               setPaymentToDelete(payment);
                               setIsDeleteModalOpen(true);
                             }}
-                            className="p-1 text-gray-400 hover:text-gray-500"
+                            className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
                             title="מחק תשלום"
                           >
-                            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
+                            <Trash2 className="h-4 w-4" />
                           </button>
-                          {payment.status === 'pending' && <button
-                            onClick={() => handleStatusChange(payment._id, 'paid')}
-                            className={`px-3 py-1 rounded-md bg-green-100 text-green-800 hover:bg-green-200`}
-                          >
-                            סמן כשולם
-                          </button>}
+                          {payment.status === 'pending' && (
+                            <button
+                              onClick={() => handleStatusChange(payment._id, 'paid')}
+                              className="p-1.5 text-[#2E7D32] hover:bg-[#E8F5E9] rounded-md transition-colors inline-flex items-center gap-1 text-xs font-medium"
+                              title="סמן כשולם"
+                            >
+                              <Check className="h-4 w-4" />
+                              סמן כשולם
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -358,7 +351,7 @@ export function PaymentsClient() {
                 )}
                 {isFetchingMore && (
                   <tr>
-                    <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
+                    <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
                       טוען עוד...
                     </td>
                   </tr>
@@ -366,8 +359,6 @@ export function PaymentsClient() {
               </tbody>
             </table>
           </div>
-
-
         </div>
 
         {/* Delete Confirmation Modal */}
@@ -392,4 +383,4 @@ export function PaymentsClient() {
       </div>
     </MainLayout>
   );
-} 
+}

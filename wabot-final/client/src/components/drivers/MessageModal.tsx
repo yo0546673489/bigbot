@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { X, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { sendMessage } from '@/services/driverService';
 
@@ -39,19 +40,17 @@ export default function MessageModal({ isOpen, onClose, driverPhone, driverName 
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-500/30 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">
+    <div className="bb-modal-overlay" onClick={onClose}>
+      <div className="bb-modal" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-bold text-gray-900">
             שליחת הודעה ל{driverName || driverPhone}
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="h-5 w-5" />
           </button>
         </div>
 
@@ -65,24 +64,25 @@ export default function MessageModal({ isOpen, onClose, driverPhone, driverName 
               rows={4}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-[#2E7D32] focus:border-[#2E7D32] text-gray-900"
+              className="bb-search resize-none"
               placeholder="הזן את ההודעה..."
             />
           </div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              className="bb-btn bb-btn-ghost flex-1"
             >
               ביטול
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#2E7D32] hover:bg-[#1B5E20] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#2E7D32] disabled:opacity-50 transition-colors"
+              className="bb-btn bb-btn-primary flex-1 inline-flex items-center justify-center gap-2"
             >
+              <Send className="h-4 w-4" />
               {isSubmitting ? 'שולח...' : 'שלח הודעה'}
             </button>
           </div>
@@ -90,4 +90,4 @@ export default function MessageModal({ isOpen, onClose, driverPhone, driverName 
       </div>
     </div>
   );
-} 
+}

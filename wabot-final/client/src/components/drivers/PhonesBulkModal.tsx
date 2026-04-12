@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { X, Plus } from 'lucide-react';
 
 interface PhonesBulkModalProps {
   isOpen: boolean;
@@ -29,17 +30,15 @@ export default function PhonesBulkModal({ isOpen, onClose, onSubmit }: PhonesBul
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-500/30 backdrop-blur-sm z-50 flex items-center justify-center">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-xl">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">הוספת מספרים</h3>
+    <div className="bb-modal-overlay" onClick={onClose}>
+      <div className="bb-modal" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-bold text-gray-900">הוספת מספרים</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 transition-colors"
+            className="text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <X className="h-5 w-5" />
           </button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -49,7 +48,7 @@ export default function PhonesBulkModal({ isOpen, onClose, onSubmit }: PhonesBul
             </label>
             <textarea
               id="phones"
-              className="w-full px-3 py-2 border rounded-md text-gray-900 resize-none"
+              className="bb-search resize-none"
               rows={4}
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -57,20 +56,21 @@ export default function PhonesBulkModal({ isOpen, onClose, onSubmit }: PhonesBul
               autoFocus
             />
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+              className="bb-btn bb-btn-ghost flex-1"
               disabled={isSubmitting}
             >
               ביטול
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded bg-[#2E7D32] text-white hover:bg-[#1B5E20] disabled:opacity-50"
+              className="bb-btn bb-btn-primary flex-1 inline-flex items-center justify-center gap-2"
               disabled={isSubmitting}
             >
+              <Plus className="h-4 w-4" />
               {isSubmitting ? 'מוסיף...' : 'הוסף טלפונים'}
             </button>
           </div>

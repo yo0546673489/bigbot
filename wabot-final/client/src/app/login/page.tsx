@@ -8,19 +8,22 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col justify-center py-12 sm:px-6 lg:px-8 bg-[#F6FBF7]" suppressHydrationWarning>
-      <div className="sm:mx-auto sm:w-full sm:max-w-md" suppressHydrationWarning>
-        <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-[#1B5E20]">
-          BigBot
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-500">התחבר לחשבון הניהול</p>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#F6FBF7] via-[#E8F5E9] to-[#F6FBF7]" suppressHydrationWarning>
+      <div className="w-full max-w-md mx-4" suppressHydrationWarning>
+        {/* Logo */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#1B5E20] to-[#2E7D32] shadow-lg mb-4">
+            <span className="text-white text-2xl font-bold">B</span>
+          </div>
+          <h1 className="text-3xl font-bold text-[#1B5E20]">BigBot</h1>
+          <p className="mt-1 text-sm text-gray-500">התחבר לחשבון הניהול</p>
+        </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white px-4 py-8 shadow sm:rounded-xl sm:px-10">
+        {/* Card */}
+        <div className="bb-card p-8">
           <LoginForm />
         </div>
       </div>
     </div>
   );
-} 
+}

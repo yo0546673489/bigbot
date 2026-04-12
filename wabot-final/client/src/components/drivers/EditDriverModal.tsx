@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import type { Driver } from '@/store/driversStore';
 
 interface Props {
@@ -38,9 +39,14 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-4">עריכת משתמש — {driver.phone}</h3>
+    <div className="bb-modal-overlay" onClick={onClose}>
+      <div className="bb-modal" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-bold text-gray-900">עריכת משתמש — {driver.phone}</h3>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">שם</label>
@@ -48,7 +54,7 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2E7D32]"
+              className="bb-search"
               placeholder="שם הנהג"
             />
           </div>
@@ -58,7 +64,7 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
               type="text"
               value={vehicle}
               onChange={e => setVehicle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2E7D32]"
+              className="bb-search"
               placeholder="סוג רכב"
             />
           </div>
@@ -68,7 +74,7 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
               type="text"
               value={clothing}
               onChange={e => setClothing(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2E7D32]"
+              className="bb-search"
               placeholder="לבוש"
             />
           </div>
@@ -76,14 +82,14 @@ export default function EditDriverModal({ isOpen, driver, onClose, onSave }: Pro
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 bg-[#2E7D32] text-white rounded-lg font-medium hover:bg-[#1B5E20] disabled:opacity-50"
+              className="bb-btn bb-btn-primary flex-1"
             >
               {saving ? 'שומר...' : 'שמור'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200"
+              className="bb-btn bb-btn-ghost flex-1"
             >
               ביטול
             </button>

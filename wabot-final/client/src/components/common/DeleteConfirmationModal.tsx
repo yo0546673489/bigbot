@@ -1,12 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { AlertTriangle, X } from 'lucide-react';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -36,25 +28,37 @@ export default function DeleteConfirmationModal({
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            {description} {itemName ? <strong>{itemName}</strong> : ''} ({itemIdentifier})? 
+    <div className="bb-modal-overlay" onClick={onClose}>
+      <div className="bb-modal max-w-sm" onClick={e => e.stopPropagation()}>
+        <div className="flex flex-col items-center text-center">
+          <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">
+            <AlertTriangle className="h-7 w-7 text-red-600" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+          <p className="text-sm text-gray-600">
+            {description} {itemName ? <strong>{itemName}</strong> : ''} ({itemIdentifier})?
+            <br />
             פעולה זו אינה ניתנת לביטול.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} className="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:hover:bg-gray-700 dark:hover:border-gray-600 dark:focus:ring-gray-700">
+          </p>
+        </div>
+        <div className="flex gap-3 mt-6">
+          <button
+            onClick={onClose}
+            className="bb-btn bb-btn-ghost flex-1"
+          >
             {cancelButtonText}
-          </Button>
-          <Button variant="destructive" onClick={handleConfirm} className="text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 focus:outline-none dark:focus:ring-red-800">
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="bb-btn bb-btn-danger flex-1"
+          >
             {confirmButtonText}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </button>
+        </div>
+      </div>
+    </div>
   );
-} 
+}
