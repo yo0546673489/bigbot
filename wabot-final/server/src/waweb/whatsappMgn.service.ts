@@ -1046,6 +1046,8 @@ ${fixBoldMultiLine(formattedMessage)}`;
           linkText: parsedLinkRegular?.messageText || (waLink ? 'ת' : ''),
           messageType,
           senderPhone: obj.senderPhone || '',
+          isInternalRide: isInternalRide(obj.body || ''),
+          isRoundTrip: isRoundTrip(obj.body || ''),
         });
         // Store context so we can handle ride actions from the Android app.
         // botPhone MUST be the bot that received the group message (member of
@@ -1526,6 +1528,8 @@ ${fixBoldMultiLine(formattedMessage)}`;
             chatPhone: block.chatPhone || '',
             chatText: block.chatText || '',
             senderPhone: obj.senderPhone || '',
+            isInternalRide: isInternalRide(obj.body || ''),
+            isRoundTrip: isRoundTrip(obj.body || ''),
           });
           this.rideContext.set(blockMessageId, {
             botPhone: phone,
