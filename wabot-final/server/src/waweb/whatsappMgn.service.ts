@@ -920,10 +920,9 @@ Output should be the cleaned lines only, in plain text.
   private async shouldHaveMinimumCitiesNumber(message: string) {
     const originAndDestination = await getOriginAndDestination(message, this.redisClient, await this.getAreasData());
     if (!originAndDestination) return '';
-    // Accept 1 or more cities — a single origin keyword is enough for matching.
-    // Previously required 2 cities (origin+destination) which silently dropped
-    // rides where the destination wasn't in the areas DB.
-    return originAndDestination;
+    const words = originAndDestination.split('_');
+    if (words.length >= 2) return words.join('_');
+    return '';
   }
 
   // Cache all approved drivers in Redis with key `driver:${phone}`
