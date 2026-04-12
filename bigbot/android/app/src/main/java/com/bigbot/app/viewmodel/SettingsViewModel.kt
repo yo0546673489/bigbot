@@ -146,4 +146,11 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun clearStatus() { _statusMessage.value = null }
+
+    fun createPairingCode(onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val phone = repo.driverPhone.first()
+            api.createPairingCode(phone) { ok, code -> onResult(ok, code) }
+        }
+    }
 }

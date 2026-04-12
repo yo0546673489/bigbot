@@ -40,6 +40,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val kmFilterVisible by viewModel.kmFilterVisible.collectAsState()
     var showMinPriceDialog by remember { mutableStateOf(false) }
     var minPriceText by remember { mutableStateOf("") }
+    var showPairingDialog by remember { mutableStateOf(false) }
+    var pairingCode by remember { mutableStateOf("") }
+    var pairingLoading by remember { mutableStateOf(false) }
     val statusMessage by viewModel.statusMessage.collectAsState()
 
     var showEtaDialog by remember { mutableStateOf(false) }
@@ -240,6 +243,27 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                 }
             }
 
+            // Section: Devices
+            item {
+                SettingsSection("📱 מכשירים") {
+                    Text(
+                        "🔵 זה לא חיבור וואטסאפ. זה רק חיבור של טלפון נוסף לחשבון שלך באפליקציה, כדי שתוכל לראות את הנסיעות גם בטאבלט או בטלפון שני.",
+                        fontSize = 10.sp,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    SettingsRow("הוסף מכשיר נוסף") {
+                        Box(
+                            modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                                .background(BlueBg).padding(horizontal = 10.dp, vertical = 3.dp)
+                                .clickable { showPairingDialog = true }
+                        ) {
+                            Text("+ הוסף", fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = Blue)
+                        }
+                    }
+                }
+            }
+
             // Section: Display
             item {
                 SettingsSection("👁 תצוגה") {
@@ -392,6 +416,57 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             },
             dismissButton = {
                 TextButton(onClick = { showMinPriceDialog = false }) { Text("ביטול") }
+            }
+        )
+    }
+
+    if (showPairingDialog) {
+        AlertDialog(
+            onDismissRequest = { showPairingDialog = false; pairingCode = "" },
+            title = { Text("הוסף מכשיר נוסף לחשבון") },
+            text = {
+                Column {
+                    Text(
+                        "🔵 זה לא חיבור וואטסאפ!\nהוואטסאפ שלך נשאר על הטלפון הראשי. זה רק מוסיף טלפון/טאבלט נוסף שיקבל את הנסיעות.",
+                        fontSize = 12.sp,
+                        color = TextSecondary,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    if (pairingCode.isNotEmpty()) {
+                        Text("קוד חיבור:", fontSize = 12.sp, color = TextSecondary)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "${pairingCode.take(4)}-${pairingCode.drop(4)}",
+                            fontSize = 28.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = GreenDark,
+                            letterSpacing = 3.sp,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text("הזן את הקוד בטלפון השני תוך 60 שניות", fontSize = 11.sp, color = TextSecondary,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center, modifier = Modifier.fillMaxWidth())
+                    } else if (pairingLoading) {
+                        Text("יוצר קוד...", fontSize = 13.sp, color = TextSecondary)
+                    } else {
+                        Text("לחץ 'צור קוד' כדי ליצור קוד חיבור למכשיר הנוסף.", fontSize = 13.sp, color = TextSecondary)
+                    }
+                }
+            },
+            confirmButton = {
+                if (pairingCode.isEmpty() && !pairingLoading) {
+                    TextButton(onClick = {
+                        pairingLoading = true
+                        viewModel.createPairingCode { ok, code ->
+                            pairingLoading = false
+                            if (ok && code.isNotEmpty()) pairingCode = code
+                        }
+                    }) { Text("צור קוד") }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPairingDialog = false; pairingCode = "" }) { Text("סגור") }
             }
         )
     }

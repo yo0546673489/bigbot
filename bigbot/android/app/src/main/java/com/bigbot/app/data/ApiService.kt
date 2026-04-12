@@ -102,6 +102,19 @@ class ApiService @Inject constructor(private val gson: Gson) {
         delete("/api/driver/keyword", mapOf("phone" to phone, "keyword" to keyword), onResult)
     }
 
+    /** Create a pairing code for multi-device. Returns (success, code). */
+    fun createPairingCode(phone: String, onResult: (Boolean, String) -> Unit) {
+        post("/api/devices/pairing/create", mapOf("phone" to phone)) { ok, body ->
+            if (ok && body.isNotEmpty()) {
+                try {
+                    val obj = com.google.gson.JsonParser.parseString(body).asJsonObject
+                    val code = obj.get("code")?.asString ?: ""
+                    onResult(code.isNotEmpty(), code)
+                } catch (_: Exception) { onResult(false, "") }
+            } else onResult(false, "")
+        }
+    }
+
     /** Fetch all areas data (shortcuts, support areas, neighborhoods) from the public endpoint. */
     fun fetchAreas(onResult: (Boolean, String) -> Unit) {
         val req = Request.Builder().url("$baseUrl/api/areas/all").get().build()
