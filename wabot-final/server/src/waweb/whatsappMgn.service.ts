@@ -82,6 +82,10 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
   // Dispatcher phones where the FIRST incoming reply should auto-open the chat.
   // Keyed by dispatcherPhone, value is driverPhone. Set on take_ride_link.
   private awaitingFirstReply = new Map<string, string>();
+  // Phones that are ride BOTS (wa.me link targets). Replies from these phones
+  // should NOT trigger "ride accepted" — only intermediary chat. Keyed by
+  // linkPhone, value is driverPhone.
+  private linkBotPhones = new Map<string, string>();
 
   // Pending chat tokens: token → { driverPhone, rideId, rideContext, expiresAt }.
   // After the user taps "💬 צ'אט עם סדרן", we send the chat code to the chat-bot
@@ -471,6 +475,7 @@ export class WhatsappServiceMgn implements OnModuleInit, OnModuleDestroy {
         // should now appear in the app's chat tab (the user "claimed" this convo).
         this.chatRouting.set(linkPhone, driverPhone);
         this.awaitingFirstReply.set(linkPhone, driverPhone);
+        this.linkBotPhones.set(linkPhone, driverPhone);
         // Note: no ride_update sent — card stays as-is, only button changed to "נשלח ✓" on client
         this.logger.log(`take_ride_link: sent "${msgText}" to ${linkPhone} via ${sendVia}`);
 
@@ -1727,7 +1732,28 @@ ${fixBoldMultiLine(formattedMessage)}`;
     // incoming private message means "you got the ride". Fire the success
     // ride_update so the app swaps the card to SuccessCard and shows the
     // "קיבלת את הנסיעה" notification. Only fire for incoming (not outgoing).
-    if (!isFromMe) {
+    //
+    // IMPORTANT: replies from link BOT phones (take_ride_link targets) do NOT
+    // count as "ride accepted". The bot is just an intermediary. Only a reply
+    // from the actual dispatcher (a different phone) confirms the ride.
+    const isLinkBot = this.linkBotPhones.has(senderPhone);
+    if (!isFromMe && isLinkBot) {
+      // Bot replied — check if it asks for ETA ("זמן")
+      const lowerBody = (body || '').toLowerCase();
+      if (lowerBody.includes('זמן')) {
+        // Auto-reply with the driver's configured default ETA
+        const conn = wsServer.getConnection(botPhone);
+        const defaultEta = conn?.defaultEta || 5;
+        try {
+          await this.wabotService.sendPrivateMessage(botPhone, senderPhone, String(defaultEta));
+          this.logger.log(`Auto-ETA reply: sent "${defaultEta}" to bot ${senderPhone} for driver ${botPhone}`);
+        } catch (e: any) {
+          this.logger.warn(`Auto-ETA reply failed: ${e?.message}`);
+        }
+      }
+      this.logger.log(`Link bot ${senderPhone} replied to ${botPhone} — NOT marking as success`);
+      // Don't fire success — fall through to chat sync only
+    } else if (!isFromMe) {
       const pendingKey = `${botPhone}:${senderPhone}`;
       const pending = this.pendingReplyRides.get(pendingKey);
       if (pending && pending.expiresAt > Date.now()) {

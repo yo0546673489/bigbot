@@ -14,6 +14,7 @@ export interface DriverWsConnection {
   keywords: string[];
   pausedKeywords: string[];
   autoMode: boolean;
+  defaultEta: number;
 }
 
 type RideActionCallback = (phone: string, data: any) => void;
@@ -101,7 +102,7 @@ export class DriverWsServer {
       const conn: DriverWsConnection = {
         ws, phone, name,
         available: false, keywords: [],
-        pausedKeywords: [], autoMode: false,
+        pausedKeywords: [], autoMode: false, defaultEta: 5,
       };
       this.connections.set(phone, conn);
       this.logger.log(`Driver connected via app: ${phone} (${name})`);
@@ -203,6 +204,9 @@ export class DriverWsServer {
         break;
       case 'set_auto_mode':
         conn.autoMode = !!data?.enabled;
+        break;
+      case 'set_default_eta':
+        conn.defaultEta = Number(data?.eta) || 5;
         break;
       case 'set_min_price': {
         const raw = data?.minPrice;

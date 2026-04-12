@@ -249,7 +249,7 @@ class WebSocketService @Inject constructor(private val gson: Gson) {
     fun sendChatMessage(to: String, text: String) =
         send("send_message", mapOf("to" to to, "text" to text))
 
-    fun setDefaultEta(minutes: Int) = send("set_default_eta", mapOf("minutes" to minutes))
+    fun setDefaultEta(minutes: Int) = send("set_default_eta", mapOf("eta" to minutes))
 
     // ── Pending queue: retry critical messages when WS reconnects ──
     private data class PendingMsg(val type: String, val data: Map<String, Any>, val ts: Long = System.currentTimeMillis())
