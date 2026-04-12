@@ -101,7 +101,7 @@ object RideTextParser {
         val vehicleHit = detectVehicleKeyword(rawText)
 
         val rawLines = rawText.split("\n", "\r")
-            .map { it.trim() }
+            .map { it.trim().replace("*", "").replace("_", "").replace("~", "").trim() }
             .filter { it.isNotBlank() }
 
         // פילטור שורות רעש
