@@ -3,6 +3,11 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value;
+  // Redirect old /areas.html to /areas (with sidebar)
+  if (request.nextUrl.pathname === '/areas.html') {
+    return NextResponse.redirect(new URL('/areas', request.url));
+  }
+
   const isAuthPage = request.nextUrl.pathname.startsWith('/login');
   const isPublicPage = request.nextUrl.pathname === '/';
 
@@ -34,6 +39,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public|login|areas\\.html).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|public|login|_legacy_areas).*)',
   ],
 }; 
