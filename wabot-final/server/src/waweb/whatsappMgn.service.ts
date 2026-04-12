@@ -1015,11 +1015,14 @@ ${fixBoldMultiLine(formattedMessage)}`;
     try {
       const wsServer = DriverWsServer.getInstance();
       const mainSearchKw = await this.validateSearchKeyword(phone, originAndDestination);
-      // Content dedup: same message text from any group within 5 min = skip.
-      // Uses first 80 chars of body as fingerprint — catches same ride forwarded
-      // by different people, but allows different rides on the same route.
-      const bodyFingerprint = (obj.body || '').replace(/[*_~`\s]/g, '').slice(0, 80);
-      const appDedupKey = `wa:ride:app-dedup:${phone}:${bodyFingerprint}`;
+      // Ride dedup: link-based (unique per ride) or content-based (fallback).
+      // If message has a wa.me link, use it as the unique key — same link from
+      // multiple groups = same ride. Otherwise fall back to body fingerprint.
+      const linkMatch = (obj.body || '').match(/wa\.me\/[\d]+\?[^\s]*/);
+      const dedupFingerprint = linkMatch
+        ? linkMatch[0].replace(/[*_~`\s]/g, '')
+        : (obj.body || '').replace(/[*_~`\s]/g, '').slice(0, 80);
+      const appDedupKey = `wa:ride:app-dedup:${phone}:${dedupFingerprint}`;
       const appDedupResult = await this.redisClient.set(appDedupKey, '1', 'EX', 300, 'NX');
       if (wsServer.isConnected(phone) && mainSearchKw && appDedupResult !== null) {
         const [originRaw, destinationRaw] = originAndDestination.split('_');
@@ -1253,11 +1256,13 @@ ${fixBoldMultiLine(formattedMessage)}`;
             if (routeDedupeResult === null) { this._benchLog(phone, obj, false, 'cross_group_duplicate', _benchStart, originAndDestination); continue; }
           }
 
-          // Content dedup: same message body from any group within 5 min = skip.
-          // Uses first 80 chars as fingerprint — blocks same ride forwarded by
-          // different people, but allows different rides on the same route.
+          // Ride dedup: link-based or content-based fingerprint.
+          // wa.me link = unique per ride. No link = first 80 chars of body.
           {
-            const fp = (obj.body || '').replace(/[*_~`\s]/g, '').slice(0, 80);
+            const lnk = (obj.body || '').match(/wa\.me\/[\d]+\?[^\s]*/);
+            const fp = lnk
+              ? lnk[0].replace(/[*_~`\s]/g, '')
+              : (obj.body || '').replace(/[*_~`\s]/g, '').slice(0, 80);
             const contentDedupKey = `wa:ride:content-dedup:${phone}:${fp}`;
             const contentDedupResult = await this.redisClient.set(contentDedupKey, '1', 'EX', 300, 'NX');
             if (contentDedupResult === null) {
