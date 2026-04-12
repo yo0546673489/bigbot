@@ -1,5 +1,15 @@
-import { AreasClient } from './AreasClient';
+"use client";
+
+import MainLayout from "@/components/layout/MainLayout";
 
 export default function Page() {
-  return <AreasClient />;
-} 
+  return (
+    <MainLayout>
+      <iframe
+        src="/areas.html"
+        className="w-full border-0 rounded-xl"
+        style={{ height: 'calc(100vh - 3rem)' }}
+      />
+    </MainLayout>
+  );
+}
