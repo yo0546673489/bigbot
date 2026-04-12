@@ -31,6 +31,7 @@ class SettingsViewModel @Inject constructor(
     val silentMode = repo.silentMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val serviceMode = repo.serviceMode.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
     val acceptDeliveries = repo.acceptDeliveries.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
+    val minPrice = repo.minPrice.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     private val _statusMessage = MutableStateFlow<String?>(null)
     val statusMessage: StateFlow<String?> = _statusMessage
@@ -116,6 +117,13 @@ class SettingsViewModel @Inject constructor(
 
     fun setServiceMode(v: Boolean) {
         viewModelScope.launch { repo.saveServiceMode(v) }
+    }
+
+    fun setMinPrice(v: Int) {
+        viewModelScope.launch {
+            repo.saveMinPrice(v)
+            repo.wsService.setMinPrice(if (v > 0) v else null)
+        }
     }
 
     fun setAcceptDeliveries(v: Boolean) {

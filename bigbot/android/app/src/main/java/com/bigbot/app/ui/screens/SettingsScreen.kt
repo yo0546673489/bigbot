@@ -36,6 +36,9 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
     val silentMode by viewModel.silentMode.collectAsState()
     val serviceMode by viewModel.serviceMode.collectAsState()
     val acceptDeliveries by viewModel.acceptDeliveries.collectAsState()
+    val minPrice by viewModel.minPrice.collectAsState()
+    var showMinPriceDialog by remember { mutableStateOf(false) }
+    var minPriceText by remember { mutableStateOf("") }
     val statusMessage by viewModel.statusMessage.collectAsState()
 
     var showEtaDialog by remember { mutableStateOf(false) }
@@ -204,6 +207,19 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                         )
                     }
                     HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
+                    SettingsRow("מחיר מינימלי") {
+                        Box(
+                            modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                                .background(GreenBg).padding(horizontal = 10.dp, vertical = 3.dp)
+                                .clickable { minPriceText = if (minPrice > 0) minPrice.toString() else ""; showMinPriceDialog = true }
+                        ) {
+                            Text(
+                                if (minPrice > 0) "$minPrice ₪" else "כבוי",
+                                fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = GreenDark
+                            )
+                        }
+                    }
+                    HorizontalDivider(color = DividerColor, thickness = 0.5.dp)
                     SettingsRow("סינון קבוצות") {
                         Text("הגדר", fontSize = 11.sp, color = Primary, fontWeight = FontWeight.Medium)
                     }
@@ -329,6 +345,39 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             },
             dismissButton = {
                 TextButton(onClick = { showVehicleDialog = false }) { Text("ביטול") }
+            }
+        )
+    }
+
+    if (showMinPriceDialog) {
+        AlertDialog(
+            onDismissRequest = { showMinPriceDialog = false },
+            title = { Text("מחיר מינימלי לנסיעה") },
+            text = {
+                Column {
+                    Text("נסיעות מתחת לסכום הזה לא יוצגו. 0 = כבוי.", color = TextSecondary, fontSize = 13.sp)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = minPriceText,
+                        onValueChange = { minPriceText = it.filter { c -> c.isDigit() } },
+                        label = { Text("סכום ב-₪") },
+                        singleLine = true,
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            keyboardType = androidx.compose.ui.text.input.KeyboardType.Number
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val v = minPriceText.trim().toIntOrNull() ?: 0
+                    viewModel.setMinPrice(v)
+                    showMinPriceDialog = false
+                }) { Text("שמור") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showMinPriceDialog = false }) { Text("ביטול") }
             }
         )
     }
