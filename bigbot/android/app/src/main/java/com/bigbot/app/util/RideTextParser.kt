@@ -162,7 +162,6 @@ object RideTextParser {
                 .filter { word ->
                     word !in knownAreas &&
                     word != origin && word != destination &&
-                    (word.toIntOrNull() == null || word == price) == false &&
                     word.toIntOrNull()?.let { it in 20..9999 } != true
                 }
                 .filter { it.any { c -> c.isLetter() } }
