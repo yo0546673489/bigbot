@@ -1024,6 +1024,7 @@ ${fixBoldMultiLine(formattedMessage)}`;
         : (obj.body || '').replace(/[*_~`\s]/g, '').slice(0, 80);
       const appDedupKey = `wa:ride:app-dedup:${phone}:${dedupFingerprint}`;
       const appDedupResult = await this.redisClient.set(appDedupKey, '1', 'EX', 300, 'NX');
+      this.logger.log(`[APP-DEDUP] phone=${phone} route=${originAndDestination} fp="${dedupFingerprint.slice(0,40)}" link=${!!linkMatch} result=${appDedupResult} group=${obj.groupId?.slice(-6)}`);
       if (wsServer.isConnected(phone) && mainSearchKw && appDedupResult !== null) {
         const [originRaw, destinationRaw] = originAndDestination.split('_');
         const origin = await this.resolveAreaName(originRaw || '');
@@ -1488,6 +1489,17 @@ ${fixBoldMultiLine(formattedMessage)}`;
 
       try {
         const wsServer = DriverWsServer.getInstance();
+        // Content dedup for forwarder path (same logic as main phone path)
+        const fwdLinkMatch = (obj.body || '').match(/wa\.me\/[\d]+\?[^\s]*/);
+        const fwdFp = fwdLinkMatch
+          ? fwdLinkMatch[0].replace(/[*_~`\s]/g, '')
+          : (obj.body || '').replace(/[*_~`\s]/g, '').slice(0, 80);
+        const fwdDedupKey = `wa:ride:app-dedup:${phone}:${fwdFp}`;
+        const fwdDedupResult = await this.redisClient.set(fwdDedupKey, '1', 'EX', 300, 'NX');
+        if (fwdDedupResult === null) {
+          this.logger.log(`[FWD-DEDUP] SKIP duplicate for ${phone} route=${originAndDestination}`);
+          // skip — already sent via another group
+        } else {
         const [originRaw3, destinationRaw3] = originAndDestination.split('_');
         const origin = await this.resolveAreaName(originRaw3 || '');
         const destination = await this.resolveAreaName(destinationRaw3 || '');
@@ -1535,6 +1547,7 @@ ${fixBoldMultiLine(formattedMessage)}`;
         );
         // ── Benchmark: log direct-path send ──
         this._benchLog(phone, obj, true, null, Date.now() - internalMs, originAndDestination);
+        } // end else (fwdDedupResult !== null)
       } catch (wsErr: any) {
         this.logger.warn(`Failed immediate WS send (main) for ${phone}: ${wsErr?.message}`);
       }
