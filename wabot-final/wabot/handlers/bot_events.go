@@ -237,6 +237,23 @@ func (s *WhatsAppHandlers) getMessageText(msg *events.Message) string {
 			return t
 		}
 	}
+	// Edited message — extract the edited content
+	if em := msg.Message.GetEditedMessage(); em != nil && em.GetMessage() != nil {
+		inner := &events.Message{Message: em.GetMessage()}
+		if t := s.getMessageText(inner); t != "" {
+			return t
+		}
+	}
+	// Highly structured message (legacy template)
+	if hs := msg.Message.GetHighlyStructuredMessage(); hs != nil {
+		if t := hs.GetHydratedHsm(); t != nil {
+			if h := t.GetHydratedTemplate(); h != nil {
+				if ct := h.GetHydratedContentText(); ct != "" {
+					return ct
+				}
+			}
+		}
+	}
 	return ""
 }
 
@@ -271,6 +288,53 @@ func (s *WhatsAppHandlers) getMessageType(msg *events.Message) string {
 	if msg.Message.GetReactionMessage() != nil {
 		return "reaction"
 	}
+	if msg.Message.GetProtocolMessage() != nil {
+		return "protocol"
+	}
+	if msg.Message.GetButtonsMessage() != nil {
+		return "buttons"
+	}
+	if msg.Message.GetListMessage() != nil {
+		return "list"
+	}
+	if msg.Message.GetTemplateMessage() != nil {
+		return "template"
+	}
+	if msg.Message.GetInteractiveMessage() != nil {
+		return "interactive"
+	}
+	if msg.Message.GetViewOnceMessage() != nil {
+		return "view_once"
+	}
+	if msg.Message.GetViewOnceMessageV2() != nil {
+		return "view_once_v2"
+	}
+	if msg.Message.GetEphemeralMessage() != nil {
+		return "ephemeral"
+	}
+	if msg.Message.GetEditedMessage() != nil {
+		return "edited"
+	}
+	if msg.Message.GetPollCreationMessage() != nil {
+		return "poll"
+	}
+	if msg.Message.GetPollUpdateMessage() != nil {
+		return "poll_update"
+	}
+	if msg.Message.GetHighlyStructuredMessage() != nil {
+		return "highly_structured"
+	}
+	if msg.Message.GetContactsArrayMessage() != nil {
+		return "contacts_array"
+	}
+	if msg.Message.GetLiveLocationMessage() != nil {
+		return "live_location"
+	}
+	if msg.Message.GetGroupInviteMessage() != nil {
+		return "group_invite"
+	}
+	// Log protobuf fields for truly unknown messages
+	s.bot.GetLogger().Warnf("[MSG-TYPE-UNKNOWN] msgId=%s proto=%v", msg.Info.ID, msg.Message.ProtoReflect().Descriptor().Fields())
 	return "unknown"
 }
 
