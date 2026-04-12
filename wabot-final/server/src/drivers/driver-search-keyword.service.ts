@@ -79,4 +79,8 @@ export class DriverSearchKeywordService {
   async removeAllSearchByPhone(phone: string): Promise<void> {
     await this.driverSearchKeywordModel.deleteMany({ phone });
   }
+
+  async removeKeyword(phone: string, keyword: string): Promise<void> {
+    await this.driverSearchKeywordModel.deleteOne({ phone, keyword });
+  }
 } 

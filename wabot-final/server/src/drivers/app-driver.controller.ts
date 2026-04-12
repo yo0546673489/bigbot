@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Logger, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Logger, Patch, Post, Query } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import Redis from 'ioredis';
@@ -7,6 +7,7 @@ import { Driver } from './schemas/driver.schema';
 import { APP_VEHICLE_FILTER_LABELS } from '../common/utils';
 import { EtaService } from './eta.service';
 import { WabotService } from '../services/wabot.service';
+import { DriverSearchKeywordService } from './driver-search-keyword.service';
 
 /**
  * Endpoints called by the BigBot Android app to mutate driver state.
@@ -22,6 +23,7 @@ export class AppDriverController {
     @Inject('REDIS_CLIENT') private readonly redisClient: Redis,
     private readonly etaService: EtaService,
     private readonly wabotService: WabotService,
+    private readonly driverSearchKeywordService: DriverSearchKeywordService,
   ) {}
 
   /**
@@ -178,6 +180,59 @@ export class AppDriverController {
       this.logger.error(`saveFilters failed for ${phone}: ${e?.message}`);
       return { success: false, message: e?.message || 'error' };
     }
+  }
+
+  // ── Keywords Sync ──────────────────────────────────────────────
+
+  /** Add a search keyword for a driver (called from Android app). */
+  @Post('keyword')
+  async addKeyword(@Body() body: { phone?: string; keyword?: string }) {
+    const phone = (body?.phone || '').trim();
+    const keyword = (body?.keyword || '').trim();
+    if (!phone || !keyword) return { success: false, message: 'phone and keyword required' };
+
+    try {
+      await this.driverSearchKeywordService.trackSearch(phone, keyword);
+      // Invalidate Redis keyword cache so matching picks it up immediately
+      await this.redisClient.del(`driverSearchHistory:${phone}`);
+      this.logger.log(`Keyword added: ${phone} → "${keyword}"`);
+      return { success: true };
+    } catch (e: any) {
+      this.logger.error(`addKeyword failed: ${e?.message}`);
+      return { success: false, message: e?.message };
+    }
+  }
+
+  /** Remove a search keyword for a driver (called from Android app). */
+  @Delete('keyword')
+  async removeKeyword(@Body() body: { phone?: string; keyword?: string }) {
+    const phone = (body?.phone || '').trim();
+    const keyword = (body?.keyword || '').trim();
+    if (!phone || !keyword) return { success: false, message: 'phone and keyword required' };
+
+    try {
+      await this.driverSearchKeywordService.removeKeyword(phone, keyword);
+      // Invalidate Redis keyword cache
+      await this.redisClient.del(`driverSearchHistory:${phone}`);
+      this.logger.log(`Keyword removed: ${phone} → "${keyword}"`);
+      return { success: true };
+    } catch (e: any) {
+      this.logger.error(`removeKeyword failed: ${e?.message}`);
+      return { success: false, message: e?.message };
+    }
+  }
+
+  /** Get all keywords for a driver (for app sync on startup). */
+  @Get('keywords')
+  async getKeywords(@Query('phone') phone: string) {
+    if (!phone) return { keywords: [] };
+    const docs = await this.driverSearchKeywordService.getDriverSearchHistory(phone);
+    return {
+      keywords: docs.map(d => ({
+        keyword: d.keyword,
+        isBlocked: d.isBlocked || false,
+      })),
+    };
   }
 
   // ── Groups Blacklist ──────────────────────────────────────────────
