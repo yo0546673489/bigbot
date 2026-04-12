@@ -176,8 +176,8 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     ActionChip(
-                        label = if (locationTrackingActive) "📍 מיקום פעיל" else "📍 פנוי מיקום",
-                        containerColor = if (locationTrackingActive) Color(0xFF2E7D32) else Primary,
+                        label = if (locationTrackingActive) "📍 מיקום פעיל" else "📍 מיקום כבוי",
+                        containerColor = if (locationTrackingActive) Color(0xFF2E7D32) else SlateGray,
                         contentColor = Color.White
                     ) {
                         if (locationTrackingActive) {

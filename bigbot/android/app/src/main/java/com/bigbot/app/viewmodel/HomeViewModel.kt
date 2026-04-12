@@ -314,16 +314,16 @@ class HomeViewModel @Inject constructor(
     /** Toggle GPS location tracking. Called when user taps "פנוי מיקום". */
     fun toggleLocationTracking() {
         if (_locationTrackingActive.value) {
-            // Turn off — restore keywords to pre-location state
+            // Turn off — pause ALL keywords (no scanning at all)
             locationTrackingJob?.cancel()
             locationTrackingJob = null
             _locationTrackingActive.value = false
             _locationCity.value = ""
             locationKeyword = ""
             viewModelScope.launch {
-                repo.savePausedKeywords(pausedBeforeLocation)
                 val kws = repo.keywords.first()
-                repo.wsService.setAvailability(isAvailable.value, kws.toList(), pausedBeforeLocation)
+                repo.savePausedKeywords(kws)
+                repo.wsService.setAvailability(isAvailable.value, kws.toList(), kws.toList())
                 pausedBeforeLocation = emptyList()
             }
         } else {
